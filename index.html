@@ -1353,14 +1353,14 @@
                     <div class="bg-slate-950 p-4 rounded-2xl border border-slate-850 space-y-3 shadow-inner">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-900 pb-2">
                             <span id="situationTitle" class="text-xs sm:text-sm font-black text-amber-400 tracking-wider">
-                                【0出局｜壘包：三壘有人｜你在三壘｜沒有其他隊友在壘】
+                                【跑壘指導員出題】
                             </span>
                             <span id="playerRoleBadge" class="bg-cyan-500/10 text-cyan-400 text-2xs px-2.5 py-0.5 rounded-full border border-cyan-500/30 font-black animate-pulse">
                                 扮演角色：三壘跑者
                             </span>
                         </div>
                         
-                        <div id="baseFactsBox" class="rounded-xl bg-white/70 border border-cyan-500/20 px-3 py-2 text-xs sm:text-sm font-black text-slate-700 leading-relaxed">
+                        <div id="baseFactsBox" class="hidden rounded-xl bg-white/70 border border-cyan-500/20 px-3 py-2 text-xs sm:text-sm font-black text-slate-700 leading-relaxed">
                             <span class="text-cyan-500">客觀條件：</span>
                             <span id="baseFactsText">尚未產生題目</span>
                         </div>
@@ -1754,8 +1754,8 @@
                 },
                 C: {
                     title: "踩",
-                    text: "腳踩原壘，等可以跑再出發",
-                    teaching: "完全站在原本壘包上，不先離開。適合：平飛球防雙殺、內野高飛先穩住、非強迫滾地球守住壘包、或 Tag up 等接殺後再跑。",
+                    text: "腳踩原壘，或先回踩原壘",
+                    teaching: "完全站在原本壘包上；如果已經離壘，就先回踩原壘。適合：平飛球防雙殺、內野高飛先穩住、非強迫滾地球守住壘包、或 Tag up 等接殺後再跑。",
                     miss: () => "這題不能只是踩住原壘。若你被強迫進壘、兩出局或球已經落地成安打，停在原壘會浪費進攻機會，甚至被封殺。"
                 }
             },
@@ -2033,14 +2033,98 @@
             return isForced ? "強迫進壘：是" : "強迫進壘：否";
         }
 
-        function describeScenarioTitle(outs, runners, playerBase) {
-            const teammates = runners.filter(base => base !== playerBase);
-            return `${outs}出局｜壘包：${describeOccupiedBases(runners)}｜${describeRunnerSituation(playerBase, teammates)}`;
+        function getNextBaseName(base) {
+            if (base === 1) return "二壘";
+            if (base === 2) return "三壘";
+            if (base === 3) return "本壘";
+            return "下一個壘包";
+        }
+
+        function describeTeammatesForInstructor(teammates) {
+            if (!teammates || teammates.length === 0) return "壘上沒有其他隊友。";
+            if (teammates.length === 1) return `你的隊友在【${getBaseName(teammates[0])}】。`;
+            return `你的隊友分別攻占【${teammates.map(getBaseName).join("、")}】。`;
+        }
+
+        function describeForcedIfBallLands(context) {
+            const nextBaseName = getNextBaseName(context.playerBase);
+            return context.isPlayerForced
+                ? `如果球落地，你會被後方跑者推進，需要往【${nextBaseName}】強迫進壘`
+                : `如果球落地，你沒有被強迫進壘，原本的【${context.playerBaseName}】仍是你的安全壘包`;
+        }
+
+        function describeRuleConditionForInstructor(context) {
+            const nextBaseName = getNextBaseName(context.playerBase);
+
+            if (context.outs === 2) {
+                return `現在已經兩出局；如果球被接殺，半局直接結束，不需要再回踩等待。如果球落地，你要盡快往【${nextBaseName}】推進。`;
+            }
+
+            if (context.isInfieldFly) {
+                return `因為一壘、二壘都有跑者且未滿兩出局，這球若成立內野高飛球，打者自動出局，強迫進壘解除；跑者不用被迫離壘。`;
+            }
+
+            if (context.hitType.id === "clean_hit") {
+                return `這球已經落地形成安打，沒有接殺回壘問題；你要優先往【${nextBaseName}】進攻。`;
+            }
+
+            if (context.hitType.id === "grounder") {
+                return context.isPlayerForced
+                    ? `這球是滾地球，打者會往一壘跑；你會被後方跑者推進，需要往【${nextBaseName}】強迫進壘。`
+                    : `這球是滾地球，但你沒有被強迫進壘；原本的【${context.playerBaseName}】仍是你的安全壘包，貿然往前容易被觸殺。`;
+            }
+
+            if (context.hitType.id === "line_drive") {
+                return `${describeForcedIfBallLands(context)}；但這是可能被直接接殺的平飛球，必須先防止離壘後被傳回原壘形成雙殺。`;
+            }
+
+            if (context.hitType.id === "fly_ball") {
+                return `${describeForcedIfBallLands(context)}；如果球被接殺，打者出局，強迫進壘解除，跑者必須先回踩原壘，或等接殺完成後再起跑。`;
+            }
+
+            return `請先確認出局數、隊友位置、球是否可能被接殺，以及你是否需要強迫進壘。`;
+        }
+
+        function describeHitForInstructor(context) {
+            const { hitType, fielder, isDeepFly, isInfieldFly } = context;
+
+            if (hitType.id === "clean_hit") {
+                return `打者擊出【外野落地安打】，球已經穿越內野防線，${fielder.name}正全速趕往落點處理球。`;
+            }
+            if (hitType.id === "line_drive") {
+                return `打者擊出【${fielder.name}方向強勁平飛球】，球低平又快速，可能直接進手套。`;
+            }
+            if (isInfieldFly) {
+                return `打者擊出【內野短高飛球】，球在內野上空高高升起，${fielder.name}已經站在球下方，裁判可能宣告內野高飛球。`;
+            }
+            if (hitType.id === "fly_ball" && isDeepFly) {
+                return `打者擊出【${fielder.name}方向深遠高飛球】，球飛得又高又遠，外野手退後準備接球。`;
+            }
+            if (hitType.id === "fly_ball") {
+                return `打者擊出【${fielder.name}方向短淺高飛球】，落點不深，可能落地，也可能被接住。`;
+            }
+            if (hitType.id === "grounder") {
+                return `打者擊出【${fielder.name}方向強勁滾地球】，球在地面快速彈跳，野手準備接球傳壘。`;
+            }
+
+            return `打者把球擊出，請依照球的落點與規則判斷跑壘。`;
+        }
+
+        function describeScenarioTitle(context) {
+            const { hitType, fielder, isDeepFly, isPlayerForced, isInfieldFly } = context;
+            if (hitType.id === "clean_hit") return `跑壘指導員出題：外野落地安打`;
+            if (hitType.id === "line_drive") return `跑壘指導員出題：${fielder.name}方向平飛球`;
+            if (isInfieldFly) return `跑壘指導員出題：內野高飛球`;
+            if (hitType.id === "fly_ball" && isDeepFly) return `跑壘指導員出題：深遠高飛球`;
+            if (hitType.id === "fly_ball") return `跑壘指導員出題：短淺高飛球`;
+            if (hitType.id === "grounder" && isPlayerForced) return `跑壘指導員出題：強迫進壘滾地球`;
+            if (hitType.id === "grounder") return `跑壘指導員出題：非強迫滾地球`;
+            return `跑壘指導員出題`;
         }
 
         function describeBaseFacts(context) {
             const teammates = context.runners.filter(base => base !== context.playerBase);
-            return `客觀條件：${context.outs}出局；壘包狀況：${describeOccupiedBases(context.runners)}；你的角色：${context.playerBaseName}跑者；${describeTeammates(teammates)}；${describeForceStatus(context.isPlayerForced)}。`;
+            return `${context.outs}出局｜壘包：${describeOccupiedBases(context.runners)}｜你在${context.playerBaseName}｜${describeTeammates(teammates)}｜${describeForceStatus(context.isPlayerForced)}`;
         }
 
         function describeBaseFactsForDisplay(question) {
@@ -2050,32 +2134,11 @@
         }
 
         function buildAnnouncerDescription(context) {
-            const { hitType, fielder, playerBaseName, isDeepFly, isPlayerForced, isInfieldFly } = context;
-            const baseFacts = describeBaseFacts(context);
-
-            if (hitType.id === "clean_hit") {
-                return `「${baseFacts} 打擊區傳來一聲清脆的擊球聲！打者揮棒咬中球心，球強勁地穿越內野防線，落入外野草地形成安打！${fielder.name}正全速趕往落點處理球！現在，身為【${playerBaseName}跑者】的你，該如何做出關鍵決策？」`;
-            }
-            if (hitType.id === "line_drive") {
-                return `「${baseFacts} 投手投出，打者猛力一拉！這是一記非常強勁的平飛球，低平且快速地直竄到${fielder.name}的守備範圍！手套早就就位了！現在，身為【${playerBaseName}跑者】的你，該做出何種決策？」`;
-            }
-            if (isInfieldFly) {
-                return `「${baseFacts} 揮棒打擊！這一球打得又高又短，在內野上空垂直升起！${fielder.name}已經在球下方張開雙手等待，裁判同時也高舉右手，宣告『Infield Fly 內野高飛球』！現在，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
-            }
-            if (hitType.id === "fly_ball" && isDeepFly) {
-                return `「${baseFacts} 這一棒拉得非常高、非常深遠！球高高地飛往外野深處，落點朝向${fielder.name}的防守範圍，外野手退到全壘打牆前準備接殺！現在，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
-            }
-            if (hitType.id === "fly_ball") {
-                return `「${baseFacts} 打擊出去！球棒切得比較薄，形成一個不深不淺的高飛球，球正飛往${fielder.name}的守備範圍，野手已經定位準備接球！現在，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
-            }
-            if (hitType.id === "grounder" && isPlayerForced) {
-                return `「${baseFacts} 一棒揮出！打成內野方向的強勁滾地球，球在地面快速彈跳，正滾向${fielder.name}的防守範圍！野手已經向前挺進準備接球傳壘！現在你面臨強迫進壘，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
-            }
-            if (hitType.id === "grounder") {
-                return `「${baseFacts} 出棒擊球！這是一顆內野滾地球，球沿著地面彈跳前進，正滾向${fielder.name}的守備位置！野手快速接球，準備傳向一壘抓出局數。身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
-            }
-
-            return `球打出去後，${baseFacts} 請依據出局數、壘包狀態與球的落點做出跑壘判斷。`;
+            const teammates = context.teammates || context.runners.filter(base => base !== context.playerBase);
+            const opening = `你是【${context.playerBaseName}跑壘員】。現在【${context.outs}出局】，${describeTeammatesForInstructor(teammates)}`;
+            const ruleCondition = describeRuleConditionForInstructor(context);
+            const hitDescription = describeHitForInstructor(context);
+            return `${opening}${ruleCondition}${hitDescription}這個情況下，你應該怎麼跑？`;
         }
 
         function isScenarioLanguageSafe(description, hitTypeId) {
@@ -2266,6 +2329,7 @@
                 runners: runners,
                 playerBase: playerBase,
                 playerBaseName: playerBaseName,
+                teammates: teammates,
                 hitType: hitType,
                 fielder: fielder,
                 isDeepFly: entry.isDeepFly,
@@ -2287,7 +2351,7 @@
                 teammates: teammates,
                 isPlayerForced: isPlayerForced,
                 category: isPlayerForced ? "【強迫進壘情境】" : "【非強迫進壘 / 飛球情境】",
-                title: describeScenarioTitle(entry.outs, runners, playerBase),
+                title: describeScenarioTitle(scenarioContext),
                 desc: announcerDesc,
                 baseFactsText: describeBaseFactsForDisplay({
                     outs: entry.outs,
@@ -2306,6 +2370,65 @@
                 hitDepth: entry.depth,
                 fielderKey: entry.fielderKey,
                 runTarget: getRunTarget(resolvedRule.ruleKey, resolvedRule.correct, isPlayerForced)
+            };
+        }
+
+        function validateScenarioIntegrity(scenario) {
+            if (!scenario || !scenario.desc) return { ok: false, reason: "題目不存在" };
+            const baseName = getBaseName(scenario.playerBase);
+            const teammates = scenario.teammates || scenario.runners.filter(base => base !== scenario.playerBase);
+            const requiredFragments = [
+                `你是【${baseName}跑壘員】`,
+                `現在【${scenario.outs}出局】`,
+                "這個情況下，你應該怎麼跑？"
+            ];
+
+            if (teammates.length === 0) {
+                requiredFragments.push("壘上沒有其他隊友");
+            } else if (teammates.length === 1) {
+                requiredFragments.push(`你的隊友在【${getBaseName(teammates[0])}】`);
+            } else {
+                requiredFragments.push(`你的隊友分別攻占【${teammates.map(getBaseName).join("、")}】`);
+            }
+
+            for (const fragment of requiredFragments) {
+                if (!scenario.desc.includes(fragment)) return { ok: false, reason: `缺少題目條件：${fragment}` };
+            }
+
+            if ((scenario.batType === "fly_ball" || scenario.batType === "line_drive") && scenario.outs < 2) {
+                if (!scenario.desc.includes("如果球落地") || !scenario.desc.includes("接殺")) {
+                    return { ok: false, reason: "飛球／平飛球題缺少落地與接殺規則" };
+                }
+            }
+
+            if (scenario.batType === "grounder") {
+                const needForceText = scenario.isPlayerForced ? "需要往" : "沒有被強迫進壘";
+                if (!scenario.desc.includes(needForceText)) {
+                    return { ok: false, reason: "滾地球題缺少強迫進壘判斷" };
+                }
+            }
+
+            if (scenario.ruleKey === "infieldFlyStay") {
+                if (!scenario.desc.includes("打者自動出局") || !scenario.desc.includes("強迫進壘解除")) {
+                    return { ok: false, reason: "內野高飛題缺少強迫解除說明" };
+                }
+            }
+
+            return { ok: true, reason: "PASS" };
+        }
+
+        function auditScenarioMatrix() {
+            const failures = [];
+            const matrix = getScenarioMatrix();
+            matrix.forEach((entry, idx) => {
+                const scenario = createScenarioFromMatrixEntry(entry, idx + 1);
+                const result = validateScenarioIntegrity(scenario);
+                if (!result.ok) failures.push({ matrixId: entry.matrixId, reason: result.reason });
+            });
+            return {
+                ok: failures.length === 0,
+                total: matrix.length,
+                failures: failures
             };
         }
 
@@ -2342,7 +2465,7 @@
                                 };
                                 const preview = createScenarioFromMatrixEntry(entry, matrix.length + 1);
 
-                                if (preview) {
+                                if (preview && validateScenarioIntegrity(preview).ok) {
                                     matrix.push({
                                         ...entry,
                                         correct: preview.correct,
@@ -2434,7 +2557,10 @@
                 }
 
                 const statusText = document.getElementById('validatorStatusText');
-                statusText.innerHTML = `🟢 成功驗證 ${successCount} 題！目前題型矩陣池共有 ${getScenarioMatrix().length} 組可用組合，邏輯 100% 通過（PASS）。`;
+                const audit = auditScenarioMatrix();
+                statusText.innerHTML = audit.ok
+                    ? `🟢 成功驗證 ${successCount} 題！目前題型矩陣池共有 ${audit.total} 組可用組合，題目文字、強迫進壘與接殺起跑條件皆通過檢查。`
+                    : `🔴 題目檢查發現 ${audit.failures.length} 個問題，請修正後再使用。`;
             }, 300);
         }
 
