@@ -1249,6 +1249,70 @@
                 border-radius: 0.9rem !important;
             }
         }
+
+
+        /* ANSWER MODAL: buttons stay directly below explanation, side by side */
+        #answerModal {
+            padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left)) !important;
+            align-items: flex-start !important;
+            justify-content: center !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        #answerModal > div {
+            display: block !important;
+            width: min(100%, 42rem) !important;
+            max-height: none !important;
+            overflow: visible !important;
+            margin: 0 auto !important;
+        }
+        #answerModalHeader,
+        #answerModalBody,
+        #answerModalFooter {
+            position: static !important;
+            flex: none !important;
+        }
+        #answerModalBody {
+            overflow: visible !important;
+            padding-bottom: 0.75rem !important;
+        }
+        #answerModalFooter {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 0.65rem !important;
+            background: var(--ui-card-soft) !important;
+            padding-bottom: max(1rem, calc(1rem + env(safe-area-inset-bottom))) !important;
+        }
+        #answerModalFooter button {
+            width: 100% !important;
+            min-height: 3rem !important;
+            white-space: nowrap !important;
+        }
+        @media (max-width: 640px) {
+            #answerModal {
+                padding: max(0.65rem, env(safe-area-inset-top)) max(0.65rem, env(safe-area-inset-right)) max(0.65rem, env(safe-area-inset-bottom)) max(0.65rem, env(safe-area-inset-left)) !important;
+            }
+            #answerModal > div {
+                border-radius: 1.35rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+            #answerModalHeader {
+                padding: 0.9rem 1rem !important;
+            }
+            #answerModalBody {
+                padding: 1rem !important;
+                padding-bottom: 0.75rem !important;
+            }
+            #answerModalFooter {
+                padding: 0.75rem 1rem max(0.95rem, calc(0.95rem + env(safe-area-inset-bottom))) !important;
+                gap: 0.55rem !important;
+            }
+            #answerModalFooter button {
+                min-height: 2.9rem !important;
+                padding: 0.65rem 0.55rem !important;
+                border-radius: 0.95rem !important;
+            }
+        }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden pb-4">
@@ -1287,7 +1351,7 @@
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
                         <span>你是跑壘王!!!</span> 
                         <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">少棒跑壘判斷</span>
-                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20260527-05</span>
+                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20260527-08</span>
                     </h1>
                     <p class="text-xs text-slate-400 font-medium">跑壘指導員互動出題版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
@@ -1594,7 +1658,7 @@
                 </div>
                 <span id="answerModalBadge" class="px-3 py-1 rounded-full text-xs font-black bg-emerald-600 text-white">SAFE</span>
             </div>
-            <div class="p-5 space-y-4 text-slate-800">
+            <div id="answerModalBody" class="p-5 space-y-4 text-slate-800">
                 <div class="grid sm:grid-cols-2 gap-3">
                     <div class="rounded-2xl bg-slate-50 border border-slate-200 p-3">
                         <p class="text-xs font-black text-slate-500 mb-1">你的選擇</p>
@@ -1621,9 +1685,9 @@
                     <p id="answerModalRule" class="text-sm leading-relaxed font-bold text-slate-700"></p>
                 </div>
             </div>
-            <div class="px-5 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row gap-2 sm:justify-end">
+            <div id="answerModalFooter" class="px-5 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row gap-2 sm:justify-end">
                 <button onclick="toggleAnswerModal(false)" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-black text-sm hover:bg-slate-100 transition-all">
-                    先留在本題
+                    回到題目
                 </button>
                 <button onclick="goNextQuestionFromModal()" class="px-5 py-3 rounded-2xl bg-blue-600 text-white font-black text-sm hover:bg-blue-500 transition-all">
                     下一題 <i class="fa-solid fa-arrow-right ml-1"></i>
@@ -1635,12 +1699,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20260527-05</span>
+        <span id="footerVersionText">版本：v20260527-08</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20260527-05";
+        const APP_VERSION = "v20260527-08";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
