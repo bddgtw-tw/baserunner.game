@@ -489,7 +489,7 @@
                 flex: 1 1 auto !important;
                 min-height: 0 !important;
                 display: grid !important;
-                grid-template-rows: repeat(3, minmax(3.4rem, 1fr)) auto !important;
+                grid-template-rows: repeat(4, minmax(3rem, 1fr)) auto !important;
                 align-content: stretch !important;
             }
             .option-btn {
@@ -525,7 +525,7 @@
                 -webkit-line-clamp: 3 !important;
             }
             #optionsContainer {
-                grid-template-rows: repeat(3, minmax(3rem, 1fr)) auto !important;
+                grid-template-rows: repeat(4, minmax(2.65rem, 1fr)) auto !important;
             }
         }
 
@@ -898,7 +898,7 @@
                 flex: 1 1 auto !important;
                 min-height: 0 !important;
                 display: grid !important;
-                grid-template-rows: repeat(3, minmax(3.8rem, 1fr)) auto !important;
+                grid-template-rows: repeat(4, minmax(3.25rem, 1fr)) auto !important;
                 gap: 0.65rem !important;
             }
             .option-btn {
@@ -970,7 +970,7 @@
                 overflow: hidden !important;
             }
             #optionsContainer {
-                grid-template-rows: repeat(3, minmax(3.15rem, 1fr)) auto !important;
+                grid-template-rows: repeat(4, minmax(2.9rem, 1fr)) auto !important;
             }
         }
         @media (max-width: 1023px) {
@@ -1243,7 +1243,7 @@
                 <div>
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
                         <span>棒球走壘王</span> 
-                        <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">衝・離・踩判斷訓練</span>
+                        <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">動態組合矩陣培訓系統</span>
                     </h1>
                     <p class="text-xs text-slate-400 font-medium">台灣少棒基層培訓專屬版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
@@ -1353,13 +1353,18 @@
                     <div class="bg-slate-950 p-4 rounded-2xl border border-slate-850 space-y-3 shadow-inner">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-900 pb-2">
                             <span id="situationTitle" class="text-xs sm:text-sm font-black text-amber-400 tracking-wider">
-                                【0出局，三壘有人】
+                                【0出局｜壘包：三壘有人｜你在三壘｜沒有其他隊友在壘】
                             </span>
                             <span id="playerRoleBadge" class="bg-cyan-500/10 text-cyan-400 text-2xs px-2.5 py-0.5 rounded-full border border-cyan-500/30 font-black animate-pulse">
                                 扮演角色：三壘跑者
                             </span>
                         </div>
                         
+                        <div id="baseFactsBox" class="rounded-xl bg-white/70 border border-cyan-500/20 px-3 py-2 text-xs sm:text-sm font-black text-slate-700 leading-relaxed">
+                            <span class="text-cyan-500">客觀條件：</span>
+                            <span id="baseFactsText">尚未產生題目</span>
+                        </div>
+
                         <p id="situationDesc" class="text-sm sm:text-base font-bold text-slate-100 leading-relaxed font-sans">
                             「揮棒打擊！這一棒打得非常扎實...」
                         </p>
@@ -1372,7 +1377,7 @@
                     <span id="targetRunnerText" class="text-xs sm:text-sm text-white font-black">【玩家二壘跑者】</span>
                 </div>
 
-                <!-- Four Option Buttons (使用 100% 統一等高比例配置) -->
+                <!-- Three Strategy Buttons：衝 / 離 / 踩 -->
                 <div class="grid grid-cols-1 gap-2.5" id="optionsContainer"></div>
             </div>
 
@@ -1423,7 +1428,7 @@
                             <th class="p-2.5">焦點跑者</th>
                             <th class="p-2.5 text-center">強迫進壘</th>
                             <th class="p-2.5 text-center">正確答案</th>
-                            <th class="p-2.5 text-center">判斷順序</th>
+                            <th class="p-2.5 text-center">觸發位階</th>
                             <th class="p-2.5 text-center">驗證</th>
                         </tr>
                     </thead>
@@ -1465,14 +1470,14 @@
             
             <div class="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
                 <div>
-                    <h4 class="font-black text-amber-400 text-xs sm:text-sm mb-2">🏆 跑壘判斷順序：</h4>
+                    <h4 class="font-black text-amber-400 text-xs sm:text-sm mb-2">🏆 跑壘判斷「四維規則位階」：</h4>
                     <div id="ruleHierarchyContent" class="space-y-2 border-l-2 border-blue-500 pl-4 my-3 text-xs"></div>
                 </div>
 
                 <hr class="border-slate-800">
                 
                 <div>
-                    <h4 class="font-black text-amber-400 text-xs sm:text-sm mb-2">⚾ 三種身體位置與跑壘策略：</h4>
+                    <h4 class="font-black text-amber-400 text-xs sm:text-sm mb-2">⚾ 跑壘四大決策核心含義：</h4>
                     <ul id="decisionMeaningList" class="list-disc pl-5 space-y-2 text-xs"></ul>
                 </div>
             </div>
@@ -1535,7 +1540,7 @@
 
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 棒球跑壘觀念訓練系統 - 專屬配合台灣少棒基層培訓</span>
-        <span id="footerFeatureText">系統功能：衝・離・踩三選項戰術生成引擎 • 50題邏輯自動校驗器</span>
+        <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
     </footer>
 
     <script>
@@ -1734,120 +1739,117 @@
             },
             decisions: {
                 A: {
-                    order: "①",
                     title: "衝",
-                    text: "現在就往下一個壘包跑。",
-                    teaching: "直接往下一個壘包進攻。適用於球已經落地、已經兩出局，或你被強迫進壘時。",
+                    text: "現在就往下一個壘包跑",
+                    teaching: "直接往下一個壘包進攻。適合：球已經落地、兩出局、或你被強迫進壘。",
                     miss: (ctx) => ctx.outs === 2
-                        ? "兩出局就是要衝；但這題如果不是兩出局，就要先看球會不會被接殺、或自己是否真的被強迫進壘。"
-                        : "這球還不能直接衝。球可能被接殺，或你沒有被強迫進壘；硬衝會把自己送到壘線上被殺。"
+                        ? "兩出局通常要衝，但這題的客觀條件不是兩出局。請先看球種、壘包狀況與是否被強迫進壘。"
+                        : "這一球還不能直接衝。若球可能被接殺、或你沒有被強迫進壘，直接衝很容易被雙殺或觸殺。"
                 },
                 B: {
-                    order: "②",
                     title: "離",
-                    text: "離壘幾步，看球落地還是接殺。",
-                    teaching: "離開壘包一小段，但保持回得去。球落地就衝；球被接殺就回原壘。適合多數無／一出局的飛球判斷。",
-                    miss: () => "這題不適合離壘看球。若球已經落地或你被強迫進壘，就應該衝；若是平飛球、內野高飛或非強迫滾地，離壘反而更危險。"
+                    text: "離壘幾步，看球落地還是接殺",
+                    teaching: "離開原壘幾步，眼睛看球。球落地就往前衝；球被接殺就回原壘。適合多數高飛球判斷。",
+                    miss: () => "這題不適合離壘看球。若已經必須衝，就不要猶豫；若必須踩住原壘，就不能離開壘包。"
                 },
                 C: {
-                    order: "③",
                     title: "踩",
-                    text: "腳踩原壘，等可以跑再出發。",
-                    teaching: "完全站在原本壘包上，不先離開。可用在 Tag up 等接殺後起跑，也可用在平飛球、內野高飛或非強迫滾地時先守住原壘。",
-                    miss: () => "這題不能只踩著等。若球已經落地、兩出局，或你被強迫進壘，停在原壘會錯過推進機會，甚至被封殺。"
+                    text: "腳踩原壘，等可以跑再出發",
+                    teaching: "完全站在原本壘包上，不先離開。適合：平飛球防雙殺、內野高飛先穩住、非強迫滾地球守住壘包、或 Tag up 等接殺後再跑。",
+                    miss: () => "這題不能只是踩住原壘。若你被強迫進壘、兩出局或球已經落地成安打，停在原壘會浪費進攻機會，甚至被封殺。"
                 }
             },
             teachingLevels: [
                 {
-                    title: "第一步：兩出局先衝",
-                    text: "只要兩出局，球打出去就先衝。被接殺也是換局，留在壘上沒有保留價值。"
+                    title: "第一判斷：有沒有必須衝？",
+                    text: "兩出局、球已經落地成安打、或滾地球造成強迫進壘時，直接選「衝」。"
                 },
                 {
-                    title: "第二步：先判斷球會不會被接殺",
-                    text: "平飛球、內野高飛或容易被接住的球，不要亂離壘；先踩住原壘，避免被雙殺或白白出局。"
+                    title: "第二判斷：球會不會被接殺？",
+                    text: "平飛球與內野高飛球要先回到或站穩原壘，因此選「踩」。外野飛球若還不確定落地或接殺，通常選「離」。"
                 },
                 {
-                    title: "第三步：球落地後看有沒有被強迫進壘",
-                    text: "安打落地要衝；滾地球若後方塞車、你被強迫進壘也要衝。沒有被強迫時，先踩住原壘，不要自己送出局。"
+                    title: "第三判斷：我是不是被強迫進壘？",
+                    text: "滾地球時，後方壘包有人把你往前推，就是被強迫進壘，選「衝」；沒有被強迫時，先守住原壘，選「踩」。"
                 },
                 {
-                    title: "第四步：飛球依深度決定離或踩",
-                    text: "一、二壘多半用『離』保持彈性；三壘遇到深遠高飛球，常用『踩』等接殺後再衝本壘。"
+                    title: "第四判斷：有沒有 Tag up 機會？",
+                    text: "三壘跑者遇到深遠外野飛球，先選「踩」等接殺完成，再起跑攻本壘。一、二壘多半選「離」，保持進退彈性。"
                 }
             ],
             rulePrinciples: {
                 1: {
                     title: "兩出局的跑壘原理",
-                    text: "兩出局時，這球只要被接殺或一壘封殺，半局就結束；跑者留在壘上沒有保留價值。因此擊球後應立刻起跑，爭取一切可能的落地、漏接或失誤推進機會。"
+                    text: "兩出局時，只要這球被接殺或一壘封殺，半局就結束；跑者留在壘上也沒有保留價值。因此擊球後應立刻起跑，爭取一切可能的落地或失誤推進機會。"
                 },
                 2: {
-                    title: "接殺風險與踩住原壘",
-                    text: "兩出局以前，只要球可能被接殺，跑者就不能把自己放在回不去的位置。平飛球要先踩住或趕快回到原壘；內野高飛宣告後，擊球員已出局，跑者不用被迫前進，應先踩住原壘。"
+                    title: "飛球接殺與回壘義務",
+                    text: "當擊出的球在空中被野手接殺時，跑者必須先回到原本占有的壘包，或在野手接到球時仍接觸該壘包；若提前離壘且未能及時回踩，守備方可傳回原壘 appeal 使跑者出局。這就是平飛球要立刻回壘、內野高飛球要先站穩原壘的原因。"
                 },
                 3: {
                     title: "強迫進壘與封殺規則",
-                    text: "當後方壘包有跑者推進，讓你失去原本壘包權利時，就形成強迫進壘。滾地球落地後，守備方只要持球踩到你被迫前往的下一個壘包即可封殺你；沒有被強迫時，盲目離壘會讓自己暴露在觸殺風險中。"
+                    text: "當後方壘包有跑者推進、使你失去原本壘包權利時，就形成強迫進壘。滾地球落地後，守備方只要持球踩到你被迫前往的下一個壘包即可封殺你，不需要觸碰跑者本人；沒有被強迫時，盲目離壘反而會讓自己暴露在觸殺風險中。"
                 },
                 4: {
-                    title: "飛球的離壘與 Tag up",
-                    text: "飛球被接殺時，跑者不能從提前離壘的位置直接推進；必須先接觸原壘，等野手完成接殺後才可以離壘前進。三壘深遠飛球常用『踩』等接殺後衝本壘；一、二壘距離較長，常用『離』兼顧落地推進與接殺回壘。"
+                    title: "Tag up 的規則原理",
+                    text: "飛球被接殺時，跑者不能從提前離壘的位置直接推進；必須先接觸原壘包，等野手完成接殺後才可以離壘前進，這個動作稱為 Tag up。三壘跑者要把腳踩在壘包上保持接觸，不是離開一點點；等外野手接到球的瞬間才起跑衝本壘。一、二壘距離較長，通常先離壘觀望，兼顧落地推進與接殺回壘安全。"
                 }
             },
             ruleResults: {
                 twoOutsRun: {
                     correct: 'A',
                     level: 1,
-                    explanation: "太棒了！兩出局時，球一打出去就選『衝』。被接殺也是換局；如果球落地或守備失誤，你才有機會多搶下一個壘包。"
+                    explanation: "兩出局時，球打出去就要衝。因為只要被接殺或形成第三個出局數，半局就結束，留在原壘沒有保留價值。"
                 },
                 lineDriveReturn: {
                     correct: 'C',
                     level: 2,
-                    explanation: "精準！平飛球是最容易形成雙殺的球。你的第一件事不是往前衝，也不是離壘看球，而是『踩』住原壘，避免被野手接殺後傳回原壘雙殺。"
+                    explanation: "平飛球最容易被直接接殺後形成雙殺。正確動作是先回到或踩住原本壘包，確保自己不被傳回原壘出局。"
                 },
                 infieldFlyStay: {
                     correct: 'C',
                     level: 2,
-                    explanation: "沒錯！內野高飛球宣告後，擊球員已經自動出局，原本的強迫進壘解除。跑者先『踩』住原壘，不需要冒險往前。"
+                    explanation: "內野高飛球成立時，打者自動出局，原本的強迫進壘壓力解除。跑者最穩定的動作是踩住原壘，不要亂衝。"
                 },
                 cleanHitRun: {
                     correct: 'A',
                     level: 3,
-                    explanation: "完全正確！球已經落地形成安打，沒有接殺風險，這時就是選『衝』，直接往下一個壘包進攻。"
+                    explanation: "球已經落地成安打，沒有被空中接殺的風險。這時要直接衝，爭取推進到下一個壘包。"
                 },
                 forcedGrounderRun: {
                     correct: 'A',
                     level: 3,
-                    explanation: "答對了！這是強迫進壘。後方跑者把你往前推，滾地球一落地就要選『衝』，否則守備方踩下一個壘包就能封殺你。"
+                    explanation: "這是強迫進壘：後方隊友把你往下一個壘包推。滾地球一出現，就要衝向下一個壘包，否則很容易被封殺。"
                 },
                 leftSideGrounderStay: {
                     correct: 'C',
                     level: 3,
-                    explanation: "判斷很好！二壘非強迫時，滾地球打向游擊手或三壘手，他們離三壘很近。這時不要硬衝三壘，先『踩』住二壘比較安全。"
+                    explanation: "二壘跑者遇到打向游擊手或三壘手方向的滾地球，而且沒有被強迫進壘時，貿然衝三壘很容易被觸殺。先踩住二壘守住壘包。"
                 },
                 unforcedGrounderStay: {
                     correct: 'C',
                     level: 3,
-                    explanation: "觀念清楚！這是非強迫進壘。你沒有被迫離開原壘，盲目往前會變成被觸殺的目標；先『踩』住原壘，不要自己送出局。"
+                    explanation: "這是非強迫進壘情境。內野滾地球時，如果你沒有被迫前進，先踩住原壘，避免自己跑進觸殺風險。"
                 },
                 deepFlyThirdTag: {
                     correct: 'C',
                     level: 4,
-                    explanation: "完美！三壘跑者遇到深遠外野高飛球，最好的攻擊方式不是提前離壘，而是先『踩』住三壘；等接殺完成瞬間，再起跑衝本壘。"
+                    explanation: "三壘跑者遇到深遠外野飛球，要先踩住三壘，等接殺完成瞬間再起跑攻本壘，這就是 Tag up。"
                 },
                 deepFlyHalfway: {
                     correct: 'B',
                     level: 4,
-                    explanation: "正確！一、二壘跑者遇到深遠高飛球，通常選『離』。離壘幾步保持彈性，球落地就往前衝；被接殺也要回得去。"
+                    explanation: "一、二壘跑者遇到深遠飛球，通常先離壘幾步看球。球落地就衝，球被接殺就回原壘。"
                 },
                 shortFlyHalfway: {
                     correct: 'B',
                     level: 4,
-                    explanation: "答對了！短淺飛球還不確定會不會落地，選『離』能同時準備進攻與回壘：落地就衝，被接殺就回。"
+                    explanation: "短淺飛球落地與接殺都可能發生。先離壘幾步看球，保留往前衝與回原壘的彈性。"
                 },
                 fallbackStay: {
                     correct: 'C',
                     level: 4,
-                    explanation: "這題沒有明確進攻機會時，先『踩』住原壘，不要把自己暴露在壘線上。"
+                    explanation: "先踩住原壘，確認可以跑再出發。"
                 }
             }
         };
@@ -1956,7 +1958,6 @@
         function buildDecisionOptions(resolvedRule, context) {
             return Object.entries(BASERUNNING_CONTENT.decisions).map(([id, decision]) => ({
                 id: id,
-                order: decision.order,
                 title: decision.title,
                 text: decision.text,
                 explain: resolvedRule.correct === id ? resolvedRule.explanation : decision.miss(context)
@@ -1965,7 +1966,7 @@
 
         function getDecisionLabel(choiceId) {
             const decision = BASERUNNING_CONTENT.decisions[choiceId];
-            return decision ? `${decision.order} ${decision.title}` : choiceId;
+            return decision ? decision.title : choiceId;
         }
 
         function getRuleTeachingByLevel(level) {
@@ -1976,11 +1977,10 @@
             return BASERUNNING_CONTENT.rulePrinciples[level] || null;
         }
 
-        function getRunTarget(ruleKey, context) {
-            if (ruleKey === 'twoOutsRun' || ruleKey === 'cleanHitRun') return "advance_one_base";
-            if (ruleKey === 'forcedGrounderRun') return "force_all";
-            if (ruleKey === 'deepFlyHalfway' || ruleKey === 'shortFlyHalfway') return "halfway_current_to_next";
+        function getRunTarget(ruleKey, correct, isPlayerForced) {
+            if (ruleKey === 'twoOutsRun' || ruleKey === 'cleanHitRun' || ruleKey === 'forcedGrounderRun') return "advance_one_base";
             if (ruleKey === 'deepFlyThirdTag') return "tag_up_3toH";
+            if (correct === 'B') return "lead_off";
             return "stay_on_bases";
         }
 
@@ -2004,41 +2004,78 @@
             return pool.slice(0, BASERUNNING_CONTENT.questionCount);
         }
 
+        function getOccupiedBaseNames(runners) {
+            return [1, 2, 3]
+                .filter(base => runners.includes(base))
+                .map(getBaseName);
+        }
+
+        function describeOccupiedBases(runners) {
+            const occupiedBaseNames = getOccupiedBaseNames(runners);
+
+            if (occupiedBaseNames.length === 0) return "無人在壘";
+            if (occupiedBaseNames.length === 3) return "滿壘（一壘、二壘、三壘都有跑者）";
+            return `${occupiedBaseNames.join("、")}有人`;
+        }
+
+        function describeTeammates(teammates) {
+            return teammates.length > 0
+                ? `隊友在${teammates.map(getBaseName).join("、")}`
+                : "沒有其他隊友在壘";
+        }
+
         function describeRunnerSituation(playerBase, teammates) {
             const playerBaseName = getBaseName(playerBase);
-            if (teammates.length > 0) {
-                const teamBasesText = teammates.map(getBaseName).join("、");
-                return `${playerBaseName}有人，隊友在${teamBasesText}`;
-            }
-            return `${playerBaseName}有人，一、二壘無人`;
+            return `你在${playerBaseName}｜${describeTeammates(teammates)}`;
+        }
+
+        function describeForceStatus(isForced) {
+            return isForced ? "強迫進壘：是" : "強迫進壘：否";
+        }
+
+        function describeScenarioTitle(outs, runners, playerBase) {
+            const teammates = runners.filter(base => base !== playerBase);
+            return `${outs}出局｜壘包：${describeOccupiedBases(runners)}｜${describeRunnerSituation(playerBase, teammates)}`;
+        }
+
+        function describeBaseFacts(context) {
+            const teammates = context.runners.filter(base => base !== context.playerBase);
+            return `客觀條件：${context.outs}出局；壘包狀況：${describeOccupiedBases(context.runners)}；你的角色：${context.playerBaseName}跑者；${describeTeammates(teammates)}；${describeForceStatus(context.isPlayerForced)}。`;
+        }
+
+        function describeBaseFactsForDisplay(question) {
+            const playerBaseName = getBaseName(question.playerBase);
+            const teammates = question.teammates || question.runners.filter(base => base !== question.playerBase);
+            return `${question.outs}出局｜壘包：${describeOccupiedBases(question.runners)}｜你在${playerBaseName}｜${describeTeammates(teammates)}｜${describeForceStatus(question.isPlayerForced)}`;
         }
 
         function buildAnnouncerDescription(context) {
             const { hitType, fielder, playerBaseName, isDeepFly, isPlayerForced, isInfieldFly } = context;
+            const baseFacts = describeBaseFacts(context);
 
             if (hitType.id === "clean_hit") {
-                return `「打擊區傳來一聲清脆的擊球聲！打者揮棒咬中球心，球強勁地穿越內野防線，落入外野草地形成安打！${fielder.name}正全速趕往落點處理球！現在，身為【${playerBaseName}跑者】的你，該如何做出關鍵決策？」`;
+                return `「${baseFacts} 打擊區傳來一聲清脆的擊球聲！打者揮棒咬中球心，球強勁地穿越內野防線，落入外野草地形成安打！${fielder.name}正全速趕往落點處理球！現在，身為【${playerBaseName}跑者】的你，該如何做出關鍵決策？」`;
             }
             if (hitType.id === "line_drive") {
-                return `「投手投出，打者猛力一拉！這是一記非常強勁的平飛球，低平且快速地直竄到${fielder.name}的守備範圍！手套早就就位了！現在，身為【${playerBaseName}跑者】的你，該做出何種決策？」`;
+                return `「${baseFacts} 投手投出，打者猛力一拉！這是一記非常強勁的平飛球，低平且快速地直竄到${fielder.name}的守備範圍！手套早就就位了！現在，身為【${playerBaseName}跑者】的你，該做出何種決策？」`;
             }
             if (isInfieldFly) {
-                return `「揮棒打擊！這一球打得又高又短，在內野上空垂直升起！${fielder.name}已經在球下方張開雙手等待，裁判同時也高舉右手，宣告『Infield Fly 內野高飛球』！現在，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
+                return `「${baseFacts} 揮棒打擊！這一球打得又高又短，在內野上空垂直升起！${fielder.name}已經在球下方張開雙手等待，裁判同時也高舉右手，宣告『Infield Fly 內野高飛球』！現在，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
             }
             if (hitType.id === "fly_ball" && isDeepFly) {
-                return `「這一棒拉得非常高、非常深遠！球高高地飛往外野深處，落點朝向${fielder.name}的防守範圍，外野手退到全壘打牆前準備接殺！現在，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
+                return `「${baseFacts} 這一棒拉得非常高、非常深遠！球高高地飛往外野深處，落點朝向${fielder.name}的防守範圍，外野手退到全壘打牆前準備接殺！現在，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
             }
             if (hitType.id === "fly_ball") {
-                return `「打擊出去！球棒切得比較薄，形成一個不深不淺的高飛球，球正飛往${fielder.name}的守備範圍，野手已經定位準備接球！現在，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
+                return `「${baseFacts} 打擊出去！球棒切得比較薄，形成一個不深不淺的高飛球，球正飛往${fielder.name}的守備範圍，野手已經定位準備接球！現在，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
             }
             if (hitType.id === "grounder" && isPlayerForced) {
-                return `「一棒揮出！打成內野方向的強勁滾地球，球在地面快速彈跳，正滾向${fielder.name}的防守範圍！野手已經向前挺進準備接球傳壘！現在你面臨強迫進壘，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
+                return `「${baseFacts} 一棒揮出！打成內野方向的強勁滾地球，球在地面快速彈跳，正滾向${fielder.name}的防守範圍！野手已經向前挺進準備接球傳壘！現在你面臨強迫進壘，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
             }
             if (hitType.id === "grounder") {
-                return `「出棒擊球！這是一顆內野滾地球，球沿著地面彈跳前進，正滾向${fielder.name}的守備位置！野手快速接球，準備傳向一壘抓出局數。現在一壘空空如也，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
+                return `「${baseFacts} 出棒擊球！這是一顆內野滾地球，球沿著地面彈跳前進，正滾向${fielder.name}的守備位置！野手快速接球，準備傳向一壘抓出局數。身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
             }
 
-            return "球打出去後，請依據出局數、壘包狀態與球的落點做出跑壘判斷。";
+            return `球打出去後，${baseFacts} 請依據出局數、壘包狀態與球的落點做出跑壘判斷。`;
         }
 
         function isScenarioLanguageSafe(description, hitTypeId) {
@@ -2061,7 +2098,7 @@
                 .join('');
 
             decisionList.innerHTML = Object.entries(BASERUNNING_CONTENT.decisions)
-                .map(([id, decision]) => `<li><strong class="text-white">${decision.order} ${decision.title}：</strong> ${decision.teaching}</li>`)
+                .map(([id, decision]) => `<li><strong class="text-white">${id}. 「${decision.title}」：</strong> ${decision.teaching}</li>`)
                 .join('');
         }
 
@@ -2114,10 +2151,11 @@
                 mistakeBox.classList.remove('hidden');
             }
 
-            document.getElementById('answerModalEyebrow').innerText = `第 ${currentQ.level} 步判斷`;
+            document.getElementById('answerModalEyebrow').innerText = `第 ${currentQ.level} 位階規則`;
             document.getElementById('answerModalYourChoice').innerText = getDecisionLabel(choiceId);
-            document.getElementById('answerModalCorrectChoice').innerText = `${getDecisionLabel(currentQ.correct)}｜${BASERUNNING_CONTENT.decisions[currentQ.correct].text}`;
-            document.getElementById('answerModalReason').innerText = correctOpt ? correctOpt.explain : selectedOpt.explain;
+            document.getElementById('answerModalCorrectChoice').innerText = `${getDecisionLabel(currentQ.correct)}：${BASERUNNING_CONTENT.decisions[currentQ.correct].text}`;
+            const answerFacts = currentQ.baseFactsText || describeBaseFactsForDisplay(currentQ);
+            document.getElementById('answerModalReason').innerText = `${answerFacts}。${correctOpt ? correctOpt.explain : selectedOpt.explain}`;
             document.getElementById('answerModalMistake').innerText = selectedOpt.explain;
             document.getElementById('answerModalRule').innerText = rulePrinciple
                 ? `${rulePrinciple.title}：${rulePrinciple.text}`
@@ -2135,59 +2173,59 @@
 
         /*
          * BASERUNNING RULE SEQUENCE
-         * 跑壘判斷順序與觸發條件集中在這裡，solveBaserunningRule 只依序套用，不再藏棒球規則。
+         * 規則位階與觸發條件集中在這裡，solveBaserunningRule 只依序套用，不再藏棒球規則。
          */
         const BASERUNNING_RULE_SEQUENCE = [
             {
                 id: 'twoOutsRun',
-                label: '第一步：兩出局先衝',
+                label: '第一位階：兩出局必跑',
                 matches: (ctx) => ctx.outs === 2
             },
             {
                 id: 'lineDriveReturn',
-                label: '第二步：平飛球先踩',
+                label: '第二位階：平飛球避雙殺',
                 matches: (ctx) => ctx.hitType.id === "line_drive"
             },
             {
                 id: 'infieldFlyStay',
-                label: '第二步：內野高飛先踩',
+                label: '第二位階：內野高飛球解除強迫',
                 matches: (ctx) => ctx.hasInfieldFly
             },
             {
                 id: 'cleanHitRun',
-                label: '第三步：安打落地就衝',
+                label: '第三位階：安打落地積極推進',
                 matches: (ctx) => ctx.hitType.id === "clean_hit"
             },
             {
                 id: 'forcedGrounderRun',
-                label: '第三步：強迫進壘就衝',
+                label: '第三位階：滾地球且被強迫進壘',
                 matches: (ctx) => ctx.hitType.id === "grounder" && ctx.isPlayerForced
             },
             {
                 id: 'leftSideGrounderStay',
-                label: '第三步：非強迫滾地先踩',
+                label: '第三位階：二壘非強迫且左半邊滾地',
                 matches: (ctx) => ctx.hitType.id === "grounder"
                     && ctx.playerBase === 2
                     && BASERUNNING_CONTENT.fielderGroups.leftSideInfield.includes(ctx.fielderKey)
             },
             {
                 id: 'unforcedGrounderStay',
-                label: '第三步：非強迫滾地先踩',
+                label: '第三位階：滾地球但非強迫進壘',
                 matches: (ctx) => ctx.hitType.id === "grounder"
             },
             {
                 id: 'deepFlyThirdTag',
-                label: '第四步：三壘深遠飛球先踩',
+                label: '第四位階：三壘深遠飛球 Tag up',
                 matches: (ctx) => ctx.hitType.id === "fly_ball" && ctx.isDeepFly && ctx.playerBase === 3
             },
             {
                 id: 'deepFlyHalfway',
-                label: '第四步：深遠飛球先離',
+                label: '第四位階：一二壘深遠飛球離壘觀望',
                 matches: (ctx) => ctx.hitType.id === "fly_ball" && ctx.isDeepFly
             },
             {
                 id: 'shortFlyHalfway',
-                label: '第四步：短淺飛球先離',
+                label: '第四位階：短淺飛球離壘觀望',
                 matches: (ctx) => ctx.hitType.id === "fly_ball"
             }
         ];
@@ -2249,8 +2287,15 @@
                 teammates: teammates,
                 isPlayerForced: isPlayerForced,
                 category: isPlayerForced ? "【強迫進壘情境】" : "【非強迫進壘 / 飛球情境】",
-                title: `${entry.outs}出局，${describeRunnerSituation(playerBase, teammates)}`,
+                title: describeScenarioTitle(entry.outs, runners, playerBase),
                 desc: announcerDesc,
+                baseFactsText: describeBaseFactsForDisplay({
+                    outs: entry.outs,
+                    runners: runners,
+                    playerBase: playerBase,
+                    teammates: teammates,
+                    isPlayerForced: isPlayerForced
+                }),
                 targetRunner: `玩家【${playerBaseName}跑者】`,
                 options: buildDecisionOptions(resolvedRule, scenarioContext),
                 correct: resolvedRule.correct,
@@ -2260,7 +2305,7 @@
                 hitDirection: entry.direction,
                 hitDepth: entry.depth,
                 fielderKey: entry.fielderKey,
-                runTarget: getRunTarget(resolvedRule.ruleKey, scenarioContext)
+                runTarget: getRunTarget(resolvedRule.ruleKey, resolvedRule.correct, isPlayerForced)
             };
         }
 
@@ -2361,8 +2406,7 @@
                     if (sc) {
                         usedMatrixIds.add(sc.matrixId);
                         const playerBaseName = getBaseName(sc.playerBase);
-                        const teamBases = sc.teammates.map(getBaseName).join("+");
-                        const runnersText = teamBases ? `我(${playerBaseName}) + 隊(${teamBases})` : `我(${playerBaseName})`;
+                        const runnersText = sc.baseFactsText || describeBaseFactsForDisplay(sc);
                         
                         let typeText = "";
                         if (sc.batType === "clean_hit") typeText = `⚾ 安打 / ${sc.hitDirection}`;
@@ -2381,7 +2425,7 @@
                             <td class="p-2.5 font-black text-cyan-400">${playerBaseName}</td>
                             <td class="p-2.5 text-center">${sc.isPlayerForced ? '🔥 是' : '❌ 否'}</td>
                             <td class="p-2.5 text-center"><span class="px-2 py-1 bg-blue-900/50 text-blue-300 rounded font-black border border-blue-700/60">${getDecisionLabel(sc.correct)}</span></td>
-                            <td class="p-2.5 text-center"><span class="text-amber-400">第 ${sc.level} 步</span></td>
+                            <td class="p-2.5 text-center"><span class="text-amber-400">第 ${sc.level} 位階</span></td>
                             <td class="p-2.5 text-center text-emerald-400 font-bold">✅ PASS</td>
                         `;
                         tbody.appendChild(row);
@@ -2905,27 +2949,6 @@
             });
         }
 
-        function getNextBasePosition(base) {
-            if (base === 1) return bases.second;
-            if (base === 2) return bases.third;
-            if (base === 3) return bases.home;
-            return null;
-        }
-
-        function moveRunnerToNextBase(runner) {
-            const nextBase = getNextBasePosition(runner.base);
-            if (!nextBase) return;
-            runner.targetX = nextBase.x;
-            runner.targetY = nextBase.y;
-        }
-
-        function moveRunnerHalfwayToNextBase(runner) {
-            const nextBase = getNextBasePosition(runner.base);
-            if (!nextBase) return;
-            runner.targetX = runner.x + (nextBase.x - runner.x) * 0.42;
-            runner.targetY = runner.y + (nextBase.y - runner.y) * 0.42;
-        }
-
         function animateRunners(action, isCorrect) {
             const currentQ = generatedQuestions[currentQuestionIdx];
             fieldRunners.forEach(runner => {
@@ -2934,14 +2957,21 @@
                 runner.animProgress = 0;
 
                 if (isCorrect) {
-                    if (currentQ.runTarget === "force_all") {
-                        moveRunnerToNextBase(runner);
-                    } else if (currentQ.runTarget === "advance_one_base" && runner.isPlayer) {
-                        moveRunnerToNextBase(runner);
-                    } else if (currentQ.runTarget === "halfway_current_to_next" && runner.isPlayer) {
-                        moveRunnerHalfwayToNextBase(runner);
-                    } else if (currentQ.runTarget === "tag_up_3toH" && runner.base === 3 && runner.isPlayer) {
-                        runner.targetX = bases.home.x; runner.targetY = bases.home.y;
+                    if (currentQ.runTarget === "advance_one_base" || currentQ.runTarget === "force_all") {
+                        const nextBase = getNextBasePosition(runner.base);
+                        if (nextBase) {
+                            runner.targetX = nextBase.x;
+                            runner.targetY = nextBase.y;
+                        }
+                    } else if (currentQ.runTarget === "lead_off" && runner.isPlayer) {
+                        const nextBase = getNextBasePosition(runner.base);
+                        if (nextBase) {
+                            runner.targetX = runner.x + (nextBase.x - runner.x) * 0.32;
+                            runner.targetY = runner.y + (nextBase.y - runner.y) * 0.32;
+                        }
+                    } else if (currentQ.runTarget === "tag_up_3toH" && runner.isPlayer && runner.base === 3) {
+                        runner.targetX = bases.home.x;
+                        runner.targetY = bases.home.y;
                     }
                 } else {
                     runner.taggedOut = true;
@@ -3030,12 +3060,12 @@
             });
 
             document.getElementById('questionNum').innerText = idx + 1;
-            document.getElementById('situationTitle').innerText = `【 ${currentQ.title.split('，')[0]}，${currentQ.title.split('，')[1] || '無人在壘'} 】`;
+            document.getElementById('situationTitle').innerText = `【 ${currentQ.title} 】`;
+            document.getElementById('baseFactsText').innerText = currentQ.baseFactsText || describeBaseFactsForDisplay(currentQ);
             document.getElementById('situationDesc').innerText = currentQ.desc;
             
             const playerBaseName = getBaseName(currentQ.playerBase);
             document.getElementById('playerRoleBadge').innerText = `扮演角色：${playerBaseName}跑者`;
-            document.getElementById('targetRunnerText').innerText = currentQ.targetRunner;
 
             const coachAvatar = document.getElementById('coachAvatar');
             coachAvatar.innerText = "🧐";
@@ -3046,23 +3076,13 @@
             }
 
             document.getElementById('coachFeedback').className = "text-xs text-slate-200 mt-1 leading-relaxed font-black";
-            document.getElementById('coachFeedback').innerText = "「先看自己在哪個壘包，再選身體位置：衝、離、踩。藍色角色就是你本局要判斷的跑者！」";
+            document.getElementById('coachFeedback').innerText = "「注意看球場上亮起藍光與放射光圈的跑壘點，那就是你在本局的防守決策分身！」";
 
             const outDots = document.getElementById('outDots').children;
             outDots[0].className = currentQ.outs >= 1 ? "w-4 h-4 rounded-full bg-red-600 border border-red-500 shadow-lg shadow-red-500/30" : "w-4 h-4 rounded-full bg-slate-800 border border-slate-700";
             outDots[1].className = currentQ.outs >= 2 ? "w-4 h-4 rounded-full bg-red-600 border border-red-500 shadow-lg shadow-red-500/30" : "w-4 h-4 rounded-full bg-slate-800 border border-slate-700";
 
-            let baseString = "";
-            if (currentQ.runners.includes(1) && currentQ.runners.includes(2) && currentQ.runners.includes(3)) {
-                baseString = "滿壘";
-            } else {
-                let parts = [];
-                if (currentQ.runners.includes(1)) parts.push(getBaseName(1));
-                if (currentQ.runners.includes(2)) parts.push(getBaseName(2));
-                if (currentQ.runners.includes(3)) parts.push(getBaseName(3));
-                baseString = parts.length > 0 ? parts.join("、") + "有人" : "無人在壘";
-            }
-            document.getElementById('baseStatusText').innerText = `${currentQ.outs}出局 - ${baseString}`;
+            document.getElementById('baseStatusText').innerText = `${currentQ.outs}出局 - ${describeOccupiedBases(currentQ.runners)}`;
 
             triggerBallFlight(currentQ.fielderKey, currentQ.batType);
 
@@ -3071,16 +3091,13 @@
             
             currentQ.options.forEach(opt => {
                 const btn = document.createElement('button');
-                btn.dataset.choiceId = opt.id;
                 btn.className = 'option-btn w-full text-left p-4 rounded-2xl border border-slate-800 bg-slate-900/60 hover:bg-slate-800/80 hover:border-slate-700 transition-all active:scale-95 relative overflow-hidden group min-h-[4.5rem] flex items-center';
+                btn.dataset.choiceId = opt.id;
                 btn.onclick = () => selectChoice(opt.id);
                 btn.innerHTML = `
-                    <div class="flex items-start gap-3 w-full">
-                        <span class="text-lg sm:text-xl font-black text-slate-500 group-hover:text-amber-400 leading-none pt-0.5">${opt.order}</span>
-                        <span class="flex-1 leading-snug">
-                            <span class="block text-xl sm:text-2xl font-black text-slate-200">${opt.title}</span>
-                            <span class="block text-xs sm:text-sm font-bold text-slate-400 mt-1">${opt.text}</span>
-                        </span>
+                    <div class="flex items-start gap-3">
+                        <span class="text-lg sm:text-xl font-black text-amber-500 leading-none min-w-[2rem]">${opt.title}</span>
+                        <span class="text-sm sm:text-base font-black text-slate-200 leading-snug">${opt.text}</span>
                     </div>
                 `;
                 container.appendChild(btn);
@@ -3284,7 +3301,7 @@
             
             const coachFeedback = document.getElementById('coachFeedback');
             coachFeedback.className = 'text-sm sm:text-base text-amber-300 mt-1 leading-relaxed font-black';
-            coachFeedback.innerText = `「太精彩了！這次題庫採用了「衝：離：踩 = ${getAnswerPoolRatioText()}」的配比，你已經練過三種最核心的跑壘身體位置。再挑戰一次，每次生成都是不同情境喔！」`;
+            coachFeedback.innerText = `「太精彩了！這次題庫採用了 ${getAnswerPoolRatioText()} 的完美配比，你已經受過最全方位的跑壘訓練了。再挑戰一次，每次生成都是不同情境喔！」`;
             
             document.getElementById('hitTypeBadge').innerText = 'GAME SET!';
             document.getElementById('hitTypeBadge').className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-amber-500 text-slate-950 tracking-wider';
