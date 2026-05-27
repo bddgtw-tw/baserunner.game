@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>棒球走壘王 - 小球員跑壘判斷力訓練</title>
+    <title>你是跑壘王!!! - 少棒跑壘判斷互動遊戲</title>
     <!-- Tailwind CSS for high fidelity responsive layout -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for icons -->
@@ -489,7 +489,7 @@
                 flex: 1 1 auto !important;
                 min-height: 0 !important;
                 display: grid !important;
-                grid-template-rows: repeat(4, minmax(3rem, 1fr)) auto !important;
+                grid-template-rows: repeat(3, minmax(3rem, 1fr)) auto !important;
                 align-content: stretch !important;
             }
             .option-btn {
@@ -525,7 +525,7 @@
                 -webkit-line-clamp: 3 !important;
             }
             #optionsContainer {
-                grid-template-rows: repeat(4, minmax(2.65rem, 1fr)) auto !important;
+                grid-template-rows: repeat(3, minmax(2.65rem, 1fr)) auto !important;
             }
         }
 
@@ -898,7 +898,7 @@
                 flex: 1 1 auto !important;
                 min-height: 0 !important;
                 display: grid !important;
-                grid-template-rows: repeat(4, minmax(3.25rem, 1fr)) auto !important;
+                grid-template-rows: repeat(3, minmax(3.25rem, 1fr)) auto !important;
                 gap: 0.65rem !important;
             }
             .option-btn {
@@ -970,7 +970,7 @@
                 overflow: hidden !important;
             }
             #optionsContainer {
-                grid-template-rows: repeat(4, minmax(2.9rem, 1fr)) auto !important;
+                grid-template-rows: repeat(3, minmax(2.9rem, 1fr)) auto !important;
             }
         }
         @media (max-width: 1023px) {
@@ -1031,6 +1031,7 @@
         #registryModal > div,
         #validatorModal > div,
         #helpModal > div,
+        #scoreboardModal > div,
         #answerModal > div {
             background: var(--ui-card) !important;
             color: var(--ui-text) !important;
@@ -1041,6 +1042,7 @@
         #registryModal,
         #validatorModal,
         #helpModal,
+        #scoreboardModal,
         #answerModal {
             background: rgba(237, 248, 245, 0.82) !important;
             backdrop-filter: blur(18px) !important;
@@ -1048,6 +1050,7 @@
         #registryModal h2,
         #validatorModal h3,
         #helpModal h3,
+        #scoreboardModal h3,
         #answerModal h3,
         h1 {
             color: var(--ui-text) !important;
@@ -1059,6 +1062,8 @@
         #validatorModal p,
         #helpModal p,
         #helpModal li,
+        #scoreboardModal p,
+        #scoreboardModal td,
         #answerModal p,
         .text-slate-400,
         .text-slate-300,
@@ -1109,12 +1114,14 @@
         #registryModal button,
         #validatorModal button,
         #helpModal button,
+        #scoreboardModal button,
         #answerModal button {
             border-radius: 1rem !important;
             border: 1px solid var(--ui-line) !important;
             box-shadow: none !important;
         }
         #registryModal button,
+        #scoreboardModal .primary-score-button,
         #answerModal button:last-child,
         #helpModal .bg-blue-600,
         #validatorModal .bg-emerald-600 {
@@ -1123,6 +1130,7 @@
             border-color: transparent !important;
         }
         header button,
+        #scoreboardModal .secondary-score-button,
         #answerModal button:first-child,
         #validatorModal .bg-slate-800 {
             background: var(--ui-card-soft) !important;
@@ -1242,10 +1250,10 @@
                 </div>
                 <div>
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
-                        <span>棒球走壘王</span> 
-                        <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">動態組合矩陣培訓系統</span>
+                        <span>你是跑壘王!!!</span> 
+                        <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">少棒跑壘判斷</span>
                     </h1>
-                    <p class="text-xs text-slate-400 font-medium">台灣少棒基層培訓專屬版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
+                    <p class="text-xs text-slate-400 font-medium">跑壘指導員互動出題版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
             </div>
             
@@ -1254,6 +1262,12 @@
                 <button onclick="run50ScenariosValidator()" class="bg-emerald-900 hover:bg-emerald-800 text-emerald-300 hover:text-white px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-black border border-emerald-800 transition-all shadow-lg">
                     <i class="fa-solid fa-flask-vial"></i>
                     <span id="validatorButtonText">🧪 50題邏輯驗證</span>
+                </button>
+
+                <!-- Scoreboard Button -->
+                <button onclick="toggleScoreboardModal(true)" class="bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-3 py-2 rounded-xl flex items-center gap-2 text-xs font-bold border border-slate-800 transition-all">
+                    <i class="fa-solid fa-ranking-star text-amber-500"></i>
+                    <span>成績紀錄</span>
                 </button>
 
                 <!-- Stadium lights switch -->
@@ -1300,19 +1314,14 @@
             </div>
 
             <div id="fieldStage" class="relative w-full aspect-square bg-slate-950 rounded-3xl overflow-hidden stadium-border flex flex-col justify-between">
-                <!-- Out Counter & Status Indicators (Overlay Top-Left) -->
-                <div class="absolute top-4 left-4 z-10 glass-panel px-3 py-2 rounded-2xl flex flex-col gap-1 shadow-lg">
-                    <div class="flex items-center gap-2">
-                        <span class="text-2xs font-black text-red-500 w-8">OUT</span>
-                        <div class="flex gap-1.5" id="outDots">
-                            <span class="w-3.5 h-3.5 rounded-full bg-slate-800 border border-slate-700"></span>
-                            <span class="w-3.5 h-3.5 rounded-full bg-slate-800 border border-slate-700"></span>
-                        </div>
+                <!-- Out Counter Overlay (Top-Left): only show outs, keep field unobstructed -->
+                <div id="outCounterOverlay" class="absolute top-4 left-4 z-10 glass-panel px-3 py-2 rounded-2xl flex items-center gap-2 shadow-lg">
+                    <span id="outCountText" class="text-xs sm:text-sm font-black text-red-500 whitespace-nowrap">0 OUT</span>
+                    <div class="flex gap-1.5" id="outDots">
+                        <span class="w-3.5 h-3.5 rounded-full bg-slate-800 border border-slate-700"></span>
+                        <span class="w-3.5 h-3.5 rounded-full bg-slate-800 border border-slate-700"></span>
                     </div>
-                    <div class="flex items-center gap-2 border-t border-slate-800 pt-1 mt-1">
-                        <span class="text-2xs font-black text-amber-500 w-8">RUN</span>
-                        <span id="baseStatusText" class="text-xs font-bold text-slate-300">無人在壘</span>
-                    </div>
+                    <span id="baseStatusText" class="hidden">無人在壘</span>
                 </div>
 
                 <!-- Game Phase Badge (Overlay Top-Right) -->
@@ -1373,8 +1382,7 @@
 
                 <!-- Target Runner Highlight -->
                 <div class="bg-cyan-950/40 border border-cyan-800/40 p-3 rounded-2xl my-4 text-center shadow-inner">
-                    <span class="text-2xs text-cyan-400 font-bold block mb-1">🚨 當前焦點：請替下方藍色角色做出判斷</span>
-                    <span id="targetRunnerText" class="text-xs sm:text-sm text-white font-black">【玩家二壘跑者】</span>
+                    <span id="targetRunnerText" class="text-sm sm:text-base text-white font-black">你是【二壘跑者】請做決定！</span>
                 </div>
 
                 <!-- Three Strategy Buttons：衝 / 離 / 踩 -->
@@ -1477,7 +1485,7 @@
                 <hr class="border-slate-800">
                 
                 <div>
-                    <h4 class="font-black text-amber-400 text-xs sm:text-sm mb-2">⚾ 跑壘四大決策核心含義：</h4>
+                    <h4 class="font-black text-amber-400 text-xs sm:text-sm mb-2">⚾ 三個核心跑壘動作：</h4>
                     <ul id="decisionMeaningList" class="list-disc pl-5 space-y-2 text-xs"></ul>
                 </div>
             </div>
@@ -1486,6 +1494,56 @@
                 <button onclick="toggleHelpModal(false)" class="bg-blue-600 hover:bg-blue-500 text-white font-black px-6 py-3 rounded-2xl transition-all w-full sm:w-auto text-sm sm:text-base">
                     我記住了，下場挑戰！
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCOREBOARD MODAL -->
+    <div id="scoreboardModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col p-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-4">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-ranking-star text-amber-500 text-2xl"></i>
+                    <div>
+                        <h3 class="text-lg font-black text-white">成績紀錄</h3>
+                        <p class="text-xs text-slate-400">同一台裝置會自動保存每位小球員的歷史成績。</p>
+                    </div>
+                </div>
+                <button onclick="toggleScoreboardModal(false)" class="text-slate-400 hover:text-white text-xl secondary-score-button">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="scoreboardCurrentPlayer" class="mb-4 rounded-2xl bg-slate-950/60 border border-slate-800 p-4 text-sm font-bold text-slate-200">
+                目前還沒有球員成績。
+            </div>
+
+            <div class="overflow-y-auto flex-grow rounded-2xl border border-slate-800 bg-slate-950/80">
+                <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-slate-400 font-black">
+                            <th class="p-2.5">排名</th>
+                            <th class="p-2.5">球員</th>
+                            <th class="p-2.5 text-center">場次</th>
+                            <th class="p-2.5 text-center">最高分</th>
+                            <th class="p-2.5 text-center">平均分</th>
+                            <th class="p-2.5 text-center">平均答對率</th>
+                            <th class="p-2.5 text-center">最佳連勝</th>
+                            <th class="p-2.5">最近一次</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreboardTableBody" class="divide-y divide-slate-900 font-bold">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4 flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-950/60 p-4 rounded-2xl border border-slate-850">
+                <p class="text-xs text-slate-400 leading-relaxed">資料存在目前瀏覽器的 localStorage。換裝置或清除瀏覽資料後，紀錄不會自動同步。</p>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="resetScoreboardRecords()" class="secondary-score-button px-4 py-2.5 rounded-xl text-xs font-black text-slate-700">清除紀錄</button>
+                    <button onclick="toggleScoreboardModal(false)" class="primary-score-button px-4 py-2.5 rounded-xl text-xs font-black text-white">回到遊戲</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1539,7 +1597,7 @@
     </div>
 
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
-        <span>© 2026 棒球跑壘觀念訓練系統 - 專屬配合台灣少棒基層培訓</span>
+        <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
     </footer>
 
@@ -1553,6 +1611,185 @@
 
         let hitSynth, successSynth, failSynth, cheerNoise;
 
+        const SCOREBOARD_STORAGE_KEY = "runnerKingScoreboard.v1";
+
+        function getPlayerRecordKey() {
+            const jersey = String(playerJersey || "99").trim() || "99";
+            const name = String(playerName || "未命名球員").trim() || "未命名球員";
+            return `${jersey}__${name}`;
+        }
+
+        function loadScoreRecords() {
+            try {
+                const raw = localStorage.getItem(SCOREBOARD_STORAGE_KEY);
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                console.warn("成績紀錄讀取失敗，已改用空白紀錄。", error);
+                return [];
+            }
+        }
+
+        function saveScoreRecords(records) {
+            try {
+                localStorage.setItem(SCOREBOARD_STORAGE_KEY, JSON.stringify(records));
+            } catch (error) {
+                console.warn("成績紀錄儲存失敗。", error);
+            }
+        }
+
+        function formatPlayedAt(isoString) {
+            if (!isoString) return "—";
+            const date = new Date(isoString);
+            if (Number.isNaN(date.getTime())) return "—";
+            return date.toLocaleString("zh-TW", {
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+        }
+
+        function getPlayerRecordSummary(record) {
+            if (!record) return "尚未完成任何一局。";
+            const avgScore = record.gamesPlayed ? Math.round(record.totalScore / record.gamesPlayed) : 0;
+            const avgAccuracy = record.totalQuestions ? Math.round((record.totalCorrect / record.totalQuestions) * 100) : 0;
+            return `已完成 ${record.gamesPlayed} 局｜最高 ${record.bestScore} 分｜平均 ${avgScore} 分｜平均答對率 ${avgAccuracy}%｜最佳連勝 ${record.bestStreak}`;
+        }
+
+        function findCurrentPlayerRecord() {
+            const key = getPlayerRecordKey();
+            return loadScoreRecords().find(record => record.key === key) || null;
+        }
+
+        function updateHeaderPlayerRecordHint() {
+            const header = document.getElementById('headerPlayerDisplay');
+            if (!header) return;
+            const summary = getPlayerRecordSummary(findCurrentPlayerRecord());
+            header.title = summary;
+        }
+
+        function saveCurrentGameRecord() {
+            const key = getPlayerRecordKey();
+            const now = new Date().toISOString();
+            const totalQuestions = BASERUNNING_CONTENT.questionCount;
+            const gameAccuracy = totalQuestions ? Math.round((currentCorrectCount / totalQuestions) * 100) : 0;
+            const records = loadScoreRecords();
+            let record = records.find(item => item.key === key);
+
+            if (!record) {
+                record = {
+                    key,
+                    jersey: String(playerJersey || "99"),
+                    name: String(playerName || "未命名球員"),
+                    gamesPlayed: 0,
+                    totalScore: 0,
+                    totalCorrect: 0,
+                    totalQuestions: 0,
+                    bestScore: 0,
+                    bestAccuracy: 0,
+                    bestStreak: 0,
+                    lastScore: 0,
+                    lastCorrect: 0,
+                    lastQuestions: totalQuestions,
+                    lastPlayedAt: now,
+                    history: []
+                };
+                records.push(record);
+            }
+
+            record.jersey = String(playerJersey || "99");
+            record.name = String(playerName || "未命名球員");
+            record.gamesPlayed += 1;
+            record.totalScore += score;
+            record.totalCorrect += currentCorrectCount;
+            record.totalQuestions += totalQuestions;
+            record.bestScore = Math.max(record.bestScore || 0, score);
+            record.bestAccuracy = Math.max(record.bestAccuracy || 0, gameAccuracy);
+            record.bestStreak = Math.max(record.bestStreak || 0, maxStreakThisGame);
+            record.lastScore = score;
+            record.lastCorrect = currentCorrectCount;
+            record.lastQuestions = totalQuestions;
+            record.lastPlayedAt = now;
+            record.history = Array.isArray(record.history) ? record.history : [];
+            record.history.unshift({
+                playedAt: now,
+                score,
+                correct: currentCorrectCount,
+                wrong: currentWrongCount,
+                questionCount: totalQuestions,
+                accuracy: gameAccuracy,
+                maxStreak: maxStreakThisGame
+            });
+            record.history = record.history.slice(0, 20);
+
+            records.sort((a, b) =>
+                (b.bestScore || 0) - (a.bestScore || 0) ||
+                ((b.totalCorrect || 0) / Math.max(1, b.totalQuestions || 0)) - ((a.totalCorrect || 0) / Math.max(1, a.totalQuestions || 0)) ||
+                (b.gamesPlayed || 0) - (a.gamesPlayed || 0)
+            );
+            saveScoreRecords(records);
+            updateHeaderPlayerRecordHint();
+            return record;
+        }
+
+        function renderScoreboardModal() {
+            const records = loadScoreRecords();
+            const tbody = document.getElementById('scoreboardTableBody');
+            const currentBox = document.getElementById('scoreboardCurrentPlayer');
+            if (!tbody || !currentBox) return;
+
+            const currentRecord = findCurrentPlayerRecord();
+            currentBox.innerHTML = currentRecord
+                ? `<span class="text-amber-400 font-black">#${currentRecord.jersey} ${currentRecord.name}</span>｜${getPlayerRecordSummary(currentRecord)}｜最近一次 ${currentRecord.lastScore} 分（${currentRecord.lastCorrect}/${currentRecord.lastQuestions} 題）`
+                : `<span class="text-amber-400 font-black">#${playerJersey} ${playerName}</span> 目前尚未完成任何一局，完成後會自動記錄。`;
+
+            if (!records.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="p-6 text-center text-slate-400 font-black">目前沒有成績紀錄。完成一局後，這裡會自動出現排行榜。</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = records.map((record, index) => {
+                const avgScore = record.gamesPlayed ? Math.round(record.totalScore / record.gamesPlayed) : 0;
+                const avgAccuracy = record.totalQuestions ? Math.round((record.totalCorrect / record.totalQuestions) * 100) : 0;
+                const isCurrent = record.key === getPlayerRecordKey();
+                return `
+                    <tr class="${isCurrent ? 'bg-amber-500/10' : ''}">
+                        <td class="p-2.5 font-black text-amber-400">#${index + 1}</td>
+                        <td class="p-2.5 font-black text-slate-100">#${record.jersey} ${record.name}${isCurrent ? ' <span class="text-amber-400">●</span>' : ''}</td>
+                        <td class="p-2.5 text-center">${record.gamesPlayed}</td>
+                        <td class="p-2.5 text-center font-black text-emerald-400">${record.bestScore}</td>
+                        <td class="p-2.5 text-center">${avgScore}</td>
+                        <td class="p-2.5 text-center">${avgAccuracy}%</td>
+                        <td class="p-2.5 text-center">${record.bestStreak || 0}</td>
+                        <td class="p-2.5 text-slate-400">${formatPlayedAt(record.lastPlayedAt)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function toggleScoreboardModal(show) {
+            const modal = document.getElementById('scoreboardModal');
+            if (!modal) return;
+            if (show) {
+                renderScoreboardModal();
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function resetScoreboardRecords() {
+            if (!confirm('確定要清除這台裝置上的所有成績紀錄嗎？')) return;
+            localStorage.removeItem(SCOREBOARD_STORAGE_KEY);
+            renderScoreboardModal();
+            updateHeaderPlayerRecordHint();
+        }
+
         function submitPlayerRegistry() {
             const jerseyInput = document.getElementById('playerJersey').value;
             const nameInput = document.getElementById('playerName').value;
@@ -1561,6 +1798,7 @@
             if (nameInput) playerName = nameInput;
 
             document.getElementById('headerPlayerDisplay').innerText = `#${playerJersey} ${playerName}`;
+            updateHeaderPlayerRecordHint();
             document.getElementById('registryModal').classList.add('hidden');
             
             initAudio();
@@ -1749,7 +1987,7 @@
                 B: {
                     title: "離",
                     text: "離壘幾步，看球落地還是接殺",
-                    teaching: "離開原壘幾步，眼睛看球。球落地就往前衝；球被接殺就回原壘。適合多數高飛球判斷。",
+                    teaching: "離開原壘幾步，眼睛看球。球落地就往前衝；球被接殺就回原壘。適合一、二壘多數高飛球判斷。",
                     miss: () => "這題不適合離壘看球。若已經必須衝，就不要猶豫；若必須踩住原壘，就不能離開壘包。"
                 },
                 C: {
@@ -1774,7 +2012,7 @@
                 },
                 {
                     title: "第四判斷：有沒有 Tag up 機會？",
-                    text: "三壘跑者遇到深遠外野飛球，先選「踩」等接殺完成，再起跑攻本壘。一、二壘多半選「離」，保持進退彈性。"
+                    text: "三壘跑者遇到深遠外野飛球，先選「踩」等接殺完成，再起跑攻本壘；三壘短淺飛球則先守住三壘。一、二壘多半選「離」，保持進退彈性。"
                 }
             ],
             rulePrinciples: {
@@ -1835,6 +2073,11 @@
                     correct: 'C',
                     level: 4,
                     explanation: "三壘跑者遇到深遠外野飛球，要先踩住三壘，等接殺完成瞬間再起跑攻本壘，這就是 Tag up。"
+                },
+                shortFlyThirdHold: {
+                    correct: 'C',
+                    level: 4,
+                    explanation: "三壘跑者遇到短淺飛球，通常不要離太遠。先踩住三壘，避免球被接殺後回壘不及；等球確定落地或教練指示再判斷是否衝本壘。"
                 },
                 deepFlyHalfway: {
                     correct: 'B',
@@ -2030,7 +2273,7 @@
         }
 
         function describeForceStatus(isForced) {
-            return isForced ? "強迫進壘：是" : "強迫進壘：否";
+            return isForced ? "這是一個強迫進壘的狀態" : "這不是強迫進壘的狀態";
         }
 
         function getNextBaseName(base) {
@@ -2038,6 +2281,36 @@
             if (base === 2) return "三壘";
             if (base === 3) return "本壘";
             return "下一個壘包";
+        }
+
+        function getBasePosition(base) {
+            if (base === 1) return bases.first;
+            if (base === 2) return bases.second;
+            if (base === 3) return bases.third;
+            if (base === 4 || base === "home") return bases.home;
+            return null;
+        }
+
+        function getNextBaseNumber(base) {
+            if (base === 1) return 2;
+            if (base === 2) return 3;
+            if (base === 3) return 4;
+            return null;
+        }
+
+        function getNextBasePosition(base) {
+            const nextBaseNumber = getNextBaseNumber(base);
+            return getBasePosition(nextBaseNumber);
+        }
+
+        function getRunnerStartPosition(base, offset = true) {
+            const basePos = getBasePosition(base);
+            if (!basePos) return { x: bases.home.x, y: bases.home.y };
+            if (!offset) return { x: basePos.x, y: basePos.y };
+            if (base === 1) return { x: basePos.x - 14, y: basePos.y - 14 };
+            if (base === 2) return { x: basePos.x - 14, y: basePos.y + 14 };
+            if (base === 3) return { x: basePos.x + 14, y: basePos.y + 14 };
+            return { x: basePos.x, y: basePos.y };
         }
 
         function describeTeammatesForInstructor(teammates) {
@@ -2057,69 +2330,69 @@
             const nextBaseName = getNextBaseName(context.playerBase);
 
             if (context.outs === 2) {
-                return `現在已經兩出局；如果球被接殺，半局直接結束，不需要再回踩等待。如果球落地，你要盡快往【${nextBaseName}】推進。`;
+                return `兩出局，球落地就往【${nextBaseName}】推進。`;
             }
 
             if (context.isInfieldFly) {
-                return `因為一壘、二壘都有跑者且未滿兩出局，這球若成立內野高飛球，打者自動出局，強迫進壘解除；跑者不用被迫離壘。`;
+                return `若宣告內野高飛，打者自動出局、強迫進壘解除；如果球被接殺，先踩原壘；如果球落地，也別誤衝。`;
             }
 
             if (context.hitType.id === "clean_hit") {
-                return `這球已經落地形成安打，沒有接殺回壘問題；你要優先往【${nextBaseName}】進攻。`;
+                return `球已落地，往【${nextBaseName}】進攻。`;
             }
 
             if (context.hitType.id === "grounder") {
                 return context.isPlayerForced
-                    ? `這球是滾地球，打者會往一壘跑；你會被後方跑者推進，需要往【${nextBaseName}】強迫進壘。`
-                    : `這球是滾地球，但你沒有被強迫進壘；原本的【${context.playerBaseName}】仍是你的安全壘包，貿然往前容易被觸殺。`;
+                    ? `滾地球，你需要往【${nextBaseName}】強迫進壘。`
+                    : `滾地球，但你沒有被強迫進壘；原壘仍安全。`;
             }
 
             if (context.hitType.id === "line_drive") {
-                return `${describeForcedIfBallLands(context)}；但這是可能被直接接殺的平飛球，必須先防止離壘後被傳回原壘形成雙殺。`;
+                return `${describeForcedIfBallLands(context)}；若被接殺，要避免離壘後被雙殺。`;
             }
 
             if (context.hitType.id === "fly_ball") {
-                return `${describeForcedIfBallLands(context)}；如果球被接殺，打者出局，強迫進壘解除，跑者必須先回踩原壘，或等接殺完成後再起跑。`;
+                return `${describeForcedIfBallLands(context)}；如果球被接殺，先回踩原壘或等接殺後 Tag up。`;
             }
 
-            return `請先確認出局數、隊友位置、球是否可能被接殺，以及你是否需要強迫進壘。`;
+            return `先看出局數、隊友位置、球種與強迫進壘。`;
         }
 
         function describeHitForInstructor(context) {
             const { hitType, fielder, isDeepFly, isInfieldFly } = context;
 
             if (hitType.id === "clean_hit") {
-                return `打者擊出【外野落地安打】，球已經穿越內野防線，${fielder.name}正全速趕往落點處理球。`;
+                return `打者擊出【外野落地安打】。`;
             }
             if (hitType.id === "line_drive") {
-                return `打者擊出【${fielder.name}方向強勁平飛球】，球低平又快速，可能直接進手套。`;
+                return `打者擊出【${fielder.name}方向強勁平飛球】。`;
             }
             if (isInfieldFly) {
-                return `打者擊出【內野短高飛球】，球在內野上空高高升起，${fielder.name}已經站在球下方，裁判可能宣告內野高飛球。`;
+                return `打者擊出【內野短高飛球】。`;
             }
             if (hitType.id === "fly_ball" && isDeepFly) {
-                return `打者擊出【${fielder.name}方向深遠高飛球】，球飛得又高又遠，外野手退後準備接球。`;
+                return `打者擊出【${fielder.name}方向深遠高飛球】。`;
             }
             if (hitType.id === "fly_ball") {
-                return `打者擊出【${fielder.name}方向短淺高飛球】，落點不深，可能落地，也可能被接住。`;
+                return `打者擊出【${fielder.name}方向短淺高飛球】。`;
             }
             if (hitType.id === "grounder") {
-                return `打者擊出【${fielder.name}方向強勁滾地球】，球在地面快速彈跳，野手準備接球傳壘。`;
+                return `打者擊出【${fielder.name}方向強勁滾地球】。`;
             }
 
-            return `打者把球擊出，請依照球的落點與規則判斷跑壘。`;
+            return `打者把球擊出。`;
         }
 
         function describeScenarioTitle(context) {
             const { hitType, fielder, isDeepFly, isPlayerForced, isInfieldFly } = context;
-            if (hitType.id === "clean_hit") return `跑壘指導員出題：外野落地安打`;
-            if (hitType.id === "line_drive") return `跑壘指導員出題：${fielder.name}方向平飛球`;
-            if (isInfieldFly) return `跑壘指導員出題：內野高飛球`;
-            if (hitType.id === "fly_ball" && isDeepFly) return `跑壘指導員出題：深遠高飛球`;
-            if (hitType.id === "fly_ball") return `跑壘指導員出題：短淺高飛球`;
-            if (hitType.id === "grounder" && isPlayerForced) return `跑壘指導員出題：強迫進壘滾地球`;
-            if (hitType.id === "grounder") return `跑壘指導員出題：非強迫滾地球`;
-            return `跑壘指導員出題`;
+            if (hitType.id === "clean_hit") return `外野落地安打`;
+            if (hitType.id === "line_drive") return `${fielder.name}方向平飛球`;
+            if (isInfieldFly) return `內野高飛球`;
+            if (hitType.id === "fly_ball" && isDeepFly) return `深遠高飛球`;
+            if (hitType.id === "fly_ball") return `短淺高飛球`;
+            if (hitType.id === "grounder" && isPlayerForced) return `強迫進壘滾地球`;
+            if (hitType.id === "grounder") return `非強迫滾地球`;
+            return `跑壘判斷`;
         }
 
         function describeBaseFacts(context) {
@@ -2135,10 +2408,10 @@
 
         function buildAnnouncerDescription(context) {
             const teammates = context.teammates || context.runners.filter(base => base !== context.playerBase);
-            const opening = `你是【${context.playerBaseName}跑壘員】。現在【${context.outs}出局】，${describeTeammatesForInstructor(teammates)}`;
-            const ruleCondition = describeRuleConditionForInstructor(context);
+            const opening = `現在【${context.outs}出局】，你是【${context.playerBaseName}跑壘員】，${describeTeammatesForInstructor(teammates)}`;
+            const forceText = context.isPlayerForced ? "這是一個強迫進壘的狀態。" : "這不是強迫進壘的狀態。";
             const hitDescription = describeHitForInstructor(context);
-            return `${opening}${ruleCondition}${hitDescription}這個情況下，你應該怎麼跑？`;
+            return `${opening}${forceText}${hitDescription}這個情況下，你應該怎麼跑？`;
         }
 
         function isScenarioLanguageSafe(description, hitTypeId) {
@@ -2287,6 +2560,11 @@
                 matches: (ctx) => ctx.hitType.id === "fly_ball" && ctx.isDeepFly
             },
             {
+                id: 'shortFlyThirdHold',
+                label: '第四位階：三壘短淺飛球守住原壘',
+                matches: (ctx) => ctx.hitType.id === "fly_ball" && !ctx.isDeepFly && ctx.playerBase === 3
+            },
+            {
                 id: 'shortFlyHalfway',
                 label: '第四位階：短淺飛球離壘觀望',
                 matches: (ctx) => ctx.hitType.id === "fly_ball"
@@ -2334,7 +2612,8 @@
                 fielder: fielder,
                 isDeepFly: entry.isDeepFly,
                 isPlayerForced: isPlayerForced,
-                isInfieldFly: hasInfieldFly
+                isInfieldFly: hasInfieldFly,
+                fielderKey: entry.fielderKey
             };
             const announcerDesc = buildAnnouncerDescription(scenarioContext);
 
@@ -2366,6 +2645,7 @@
                 level: resolvedRule.level,
                 ruleKey: resolvedRule.ruleKey,
                 batType: hitType.id,
+                hitTypeText: hitType.text,
                 hitDirection: entry.direction,
                 hitDepth: entry.depth,
                 fielderKey: entry.fielderKey,
@@ -2395,22 +2675,22 @@
                 if (!scenario.desc.includes(fragment)) return { ok: false, reason: `缺少題目條件：${fragment}` };
             }
 
-            if ((scenario.batType === "fly_ball" || scenario.batType === "line_drive") && scenario.outs < 2) {
-                if (!scenario.desc.includes("如果球落地") || !scenario.desc.includes("接殺")) {
-                    return { ok: false, reason: "飛球／平飛球題缺少落地與接殺規則" };
-                }
+            const forceFragment = scenario.isPlayerForced ? "這是一個強迫進壘的狀態" : "這不是強迫進壘的狀態";
+            if (!scenario.desc.includes(forceFragment)) {
+                return { ok: false, reason: "題目缺少強迫進壘狀態" };
             }
 
-            if (scenario.batType === "grounder") {
-                const needForceText = scenario.isPlayerForced ? "需要往" : "沒有被強迫進壘";
-                if (!scenario.desc.includes(needForceText)) {
-                    return { ok: false, reason: "滾地球題缺少強迫進壘判斷" };
-                }
+            if (scenario.batType === "fly_ball" && !scenario.desc.includes("高飛球")) {
+                return { ok: false, reason: "飛球題缺少客觀擊球型態" };
+            }
+
+            if (scenario.batType === "line_drive" && !scenario.desc.includes("平飛球")) {
+                return { ok: false, reason: "平飛球題缺少客觀擊球型態" };
             }
 
             if (scenario.ruleKey === "infieldFlyStay") {
-                if (!scenario.desc.includes("打者自動出局") || !scenario.desc.includes("強迫進壘解除")) {
-                    return { ok: false, reason: "內野高飛題缺少強迫解除說明" };
+                if (!scenario.desc.includes("內野短高飛球")) {
+                    return { ok: false, reason: "內野高飛題缺少客觀擊球型態" };
                 }
             }
 
@@ -2567,6 +2847,10 @@
         let currentQuestionIdx = 0;
         let score = 0;
         let consecutiveStreak = 0;
+        let currentCorrectCount = 0;
+        let currentWrongCount = 0;
+        let maxStreakThisGame = 0;
+        let gameResultSaved = false;
         let generatedQuestions = [];
         let answered = false;
 
@@ -2600,7 +2884,8 @@
             bounceCount: 0,
             trailColor: "rgba(255,255,255,0.35)"
         };
-        let fieldRunners = []; 
+        let fieldRunners = [];
+        let currentVisualOccupiedBases = []; 
 
         function resizeCanvas() {
             const size = canvas.parentElement.clientWidth;
@@ -2826,11 +3111,12 @@
         }
 
         function checkBaseOccupiedStatic(type) {
-            const currentQ = generatedQuestions[currentQuestionIdx];
-            if (!currentQ) return false;
-            if (type === "1B" && currentQ.runners.includes(1)) return true;
-            if (type === "2B" && currentQ.runners.includes(2)) return true;
-            if (type === "3B" && currentQ.runners.includes(3)) return true;
+            const occupiedBases = currentVisualOccupiedBases && currentVisualOccupiedBases.length
+                ? currentVisualOccupiedBases
+                : (generatedQuestions[currentQuestionIdx]?.runners || []);
+            if (type === "1B" && occupiedBases.includes(1)) return true;
+            if (type === "2B" && occupiedBases.includes(2)) return true;
+            if (type === "3B" && occupiedBases.includes(3)) return true;
             return false;
         }
 
@@ -3023,27 +3309,25 @@
                 ctx.fillStyle = "#ffffff";
                 ctx.font = `900 ${9 * scale}px Noto Sans TC`;
                 ctx.textAlign = "center";
-                ctx.fillText(runner.isPlayer ? "我" : "隊", rX, rY + 3 * scale);
+                ctx.fillText(runner.label || (runner.isPlayer ? "我" : "隊"), rX, rY + 3 * scale);
 
                 if (runner.taggedOut) {
                     ctx.fillStyle = "#ef4444";
                     ctx.font = `900 ${12 * scale}px Inter`;
-                    ctx.fillText("❌ OUT", rX, rY - 16 * scale);
+                    ctx.fillText(runner.outLabel || "❌ OUT", rX, rY - 16 * scale);
                 }
             });
         }
 
         function setupRunnersForScenario(q) {
             fieldRunners = [];
-            
-            let pPos = { x: 0, y: 0 };
-            if (q.playerBase === 1) pPos = { x: bases.first.x - 14, y: bases.first.y - 14 };
-            else if (q.playerBase === 2) pPos = { x: bases.second.x - 14, y: bases.second.y + 14 };
-            else if (q.playerBase === 3) pPos = { x: bases.third.x + 14, y: bases.third.y + 14 };
+            currentVisualOccupiedBases = [...q.runners];
 
+            const pPos = getRunnerStartPosition(q.playerBase);
             fieldRunners.push({
                 base: q.playerBase,
                 isPlayer: true,
+                label: "我",
                 startX: pPos.x,
                 startY: pPos.y,
                 x: pPos.x,
@@ -3055,14 +3339,11 @@
             });
 
             q.teammates.forEach(base => {
-                let tPos = { x: 0, y: 0 };
-                if (base === 1) tPos = { x: bases.first.x - 14, y: bases.first.y - 14 };
-                else if (base === 2) tPos = { x: bases.second.x - 14, y: bases.second.y + 14 };
-                else if (base === 3) tPos = { x: bases.third.x + 14, y: bases.third.y + 14 };
-
+                const tPos = getRunnerStartPosition(base);
                 fieldRunners.push({
                     base: base,
                     isPlayer: false,
+                    label: "隊",
                     startX: tPos.x,
                     startY: tPos.y,
                     x: tPos.x,
@@ -3075,44 +3356,109 @@
             });
         }
 
+        function getVisualBasesFromRunners(runners) {
+            return [...new Set(runners
+                .filter(runner => !runner.taggedOut && runner.base >= 1 && runner.base <= 3)
+                .map(runner => runner.base))].sort((a, b) => a - b);
+        }
+
+        function shouldShowBatterRunner(q, choiceId, isCorrect) {
+            if (q.ruleKey === "infieldFlyStay") return false;
+            if (q.batType === "line_drive") return false;
+            if (q.batType === "fly_ball" && q.outs < 2) return false;
+            if (q.batType === "grounder" || q.batType === "clean_hit") return true;
+            return choiceId === "A" && q.outs === 2;
+        }
+
+        function addBatterRunnerToFirst() {
+            const start = { x: bases.home.x, y: bases.home.y - 20 };
+            const target = getRunnerStartPosition(1);
+            const firstAlreadyRepresented = fieldRunners.some(runner => !runner.taggedOut && runner.base === 1 && runner.targetX === target.x && runner.targetY === target.y);
+            if (firstAlreadyRepresented) return;
+            fieldRunners.push({
+                base: 1,
+                isPlayer: false,
+                label: "打",
+                startX: start.x,
+                startY: start.y,
+                x: start.x,
+                y: start.y,
+                targetX: target.x,
+                targetY: target.y,
+                animProgress: 0,
+                taggedOut: false
+            });
+        }
+
+        function moveRunnerToBase(runner, nextBaseNumber) {
+            const nextPos = getRunnerStartPosition(nextBaseNumber);
+            runner.targetX = nextPos.x;
+            runner.targetY = nextPos.y;
+            runner.base = nextBaseNumber === 4 ? 4 : nextBaseNumber;
+        }
+
+        function moveRunnerTowardNextBase(runner, ratio = 0.32) {
+            const nextBase = getNextBasePosition(runner.base);
+            if (!nextBase) return;
+            runner.targetX = runner.x + (nextBase.x - runner.x) * ratio;
+            runner.targetY = runner.y + (nextBase.y - runner.y) * ratio;
+        }
+
+        function markPlayerOutForWrongChoice(runner, choiceId) {
+            runner.taggedOut = true;
+            runner.outLabel = choiceId === "C" ? "❌ 封殺" : "❌ 觸殺";
+            if (choiceId === "A") {
+                moveRunnerTowardNextBase(runner, 0.68);
+            } else if (choiceId === "B") {
+                moveRunnerTowardNextBase(runner, 0.38);
+            } else {
+                const original = getRunnerStartPosition(runner.base);
+                runner.targetX = original.x;
+                runner.targetY = original.y;
+            }
+        }
+
         function animateRunners(action, isCorrect) {
             const currentQ = generatedQuestions[currentQuestionIdx];
+
             fieldRunners.forEach(runner => {
                 runner.startX = runner.x;
                 runner.startY = runner.y;
                 runner.animProgress = 0;
-
-                if (isCorrect) {
-                    if (currentQ.runTarget === "advance_one_base" || currentQ.runTarget === "force_all") {
-                        const nextBase = getNextBasePosition(runner.base);
-                        if (nextBase) {
-                            runner.targetX = nextBase.x;
-                            runner.targetY = nextBase.y;
-                        }
-                    } else if (currentQ.runTarget === "lead_off" && runner.isPlayer) {
-                        const nextBase = getNextBasePosition(runner.base);
-                        if (nextBase) {
-                            runner.targetX = runner.x + (nextBase.x - runner.x) * 0.32;
-                            runner.targetY = runner.y + (nextBase.y - runner.y) * 0.32;
-                        }
-                    } else if (currentQ.runTarget === "tag_up_3toH" && runner.isPlayer && runner.base === 3) {
-                        runner.targetX = bases.home.x;
-                        runner.targetY = bases.home.y;
-                    }
-                } else {
-                    runner.taggedOut = true;
-                    if (runner.base === 1) {
-                        runner.targetX = bases.first.x - 38; runner.targetY = bases.first.y - 38;
-                    } else if (runner.base === 3) {
-                        runner.targetX = bases.third.x + 38; runner.targetY = bases.third.y + 38;
-                    } else if (runner.base === 2) {
-                        runner.targetX = bases.second.x - 38; runner.targetY = bases.second.y + 38;
-                    }
-                }
+                runner.taggedOut = false;
+                runner.outLabel = "❌ OUT";
             });
 
+            if (isCorrect) {
+                if (currentQ.runTarget === "advance_one_base" || currentQ.runTarget === "force_all") {
+                    fieldRunners.forEach(runner => {
+                        const nextBaseNumber = getNextBaseNumber(runner.base);
+                        if (nextBaseNumber) moveRunnerToBase(runner, nextBaseNumber);
+                    });
+                } else if (currentQ.runTarget === "lead_off") {
+                    fieldRunners.forEach(runner => {
+                        if (runner.isPlayer) moveRunnerTowardNextBase(runner, 0.32);
+                    });
+                } else if (currentQ.runTarget === "tag_up_3toH") {
+                    fieldRunners.forEach(runner => {
+                        if (runner.isPlayer && runner.base === 3) moveRunnerToBase(runner, 4);
+                    });
+                }
+            } else {
+                fieldRunners.forEach(runner => {
+                    if (runner.isPlayer) markPlayerOutForWrongChoice(runner, action);
+                });
+            }
+
+            if (shouldShowBatterRunner(currentQ, action, isCorrect)) {
+                addBatterRunnerToFirst();
+            }
+
+            currentVisualOccupiedBases = getVisualBasesFromRunners(fieldRunners);
+            document.getElementById('baseStatusText').innerText = `${currentQ.outs}出局 - 選擇後：${describeOccupiedBases(currentVisualOccupiedBases)}`;
+
             let start = null;
-            const duration = 1500; 
+            const duration = 1200;
 
             function step(timestamp) {
                 if (!start) start = timestamp;
@@ -3171,7 +3517,12 @@
             answered = false;
             currentQuestionIdx = idx;
             const currentQ = generatedQuestions[idx];
+            if (!currentQ) {
+                endGame();
+                return;
+            }
 
+            currentVisualOccupiedBases = [...currentQ.runners];
             setupRunnersForScenario(currentQ);
             drawStadium();
 
@@ -3188,10 +3539,12 @@
             document.getElementById('questionNum').innerText = idx + 1;
             document.getElementById('situationTitle').innerText = `【 ${currentQ.title} 】`;
             document.getElementById('baseFactsText').innerText = currentQ.baseFactsText || describeBaseFactsForDisplay(currentQ);
+            document.getElementById('baseFactsBox').classList.add('hidden');
             document.getElementById('situationDesc').innerText = currentQ.desc;
             
             const playerBaseName = getBaseName(currentQ.playerBase);
             document.getElementById('playerRoleBadge').innerText = `扮演角色：${playerBaseName}跑者`;
+            document.getElementById('targetRunnerText').innerText = `你是【${playerBaseName}跑者】請做決定！`;
 
             const coachAvatar = document.getElementById('coachAvatar');
             coachAvatar.innerText = "🧐";
@@ -3202,11 +3555,12 @@
             }
 
             document.getElementById('coachFeedback').className = "text-xs text-slate-200 mt-1 leading-relaxed font-black";
-            document.getElementById('coachFeedback').innerText = "「注意看球場上亮起藍光與放射光圈的跑壘點，那就是你在本局的防守決策分身！」";
+            document.getElementById('coachFeedback').innerText = "「注意看出局數、壘包上的隊友、球的型態，以及你是否被強迫進壘。」";
 
             const outDots = document.getElementById('outDots').children;
             outDots[0].className = currentQ.outs >= 1 ? "w-4 h-4 rounded-full bg-red-600 border border-red-500 shadow-lg shadow-red-500/30" : "w-4 h-4 rounded-full bg-slate-800 border border-slate-700";
             outDots[1].className = currentQ.outs >= 2 ? "w-4 h-4 rounded-full bg-red-600 border border-red-500 shadow-lg shadow-red-500/30" : "w-4 h-4 rounded-full bg-slate-800 border border-slate-700";
+            document.getElementById('outCountText').innerText = `${currentQ.outs} OUT`;
 
             document.getElementById('baseStatusText').innerText = `${currentQ.outs}出局 - ${describeOccupiedBases(currentQ.runners)}`;
 
@@ -3308,6 +3662,32 @@
             requestAnimationFrame(renderLoop);
         }
 
+        function ensureNextButtonVisible() {
+            const container = document.getElementById('optionsContainer');
+            if (!container) return null;
+            const existing = document.getElementById('nextQuestionButton');
+            if (existing) return existing;
+
+            const nextBtn = document.createElement('button');
+            nextBtn.id = 'nextQuestionButton';
+            nextBtn.className = 'w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-500/20 transition-all active:scale-95 flex justify-center items-center gap-2 text-sm sm:text-base min-h-[4.2rem] border-2 border-blue-400';
+            nextBtn.innerHTML = `下一題 <i class="fa-solid fa-arrow-right"></i>`;
+            nextBtn.onclick = () => loadQuestion(currentQuestionIdx + 1);
+
+            // 放在選項最上方，手機版不用往下滑才找得到。
+            container.prepend(nextBtn);
+            setTimeout(() => {
+                try { nextBtn.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+            }, 120);
+            return nextBtn;
+        }
+
+        window.addEventListener('error', function(event) {
+            // 任何瀏覽器相容性或動畫錯誤，都不要卡住下一題流程。
+            if (answered) ensureNextButtonVisible();
+            console.error('遊戲流程錯誤：', event.message, event.error);
+        });
+
         function selectChoice(choiceId) {
             if (answered) return;
             answered = true;
@@ -3349,6 +3729,8 @@
                 playCheerSound();
                 score += 10 + (consecutiveStreak * 2);
                 consecutiveStreak++;
+                currentCorrectCount++;
+                maxStreakThisGame = Math.max(maxStreakThisGame, consecutiveStreak);
                 document.getElementById('scoreText').innerText = String(score).padStart(3, '0');
                 
                 const streakText = document.getElementById('streakText');
@@ -3369,6 +3751,7 @@
                 document.getElementById('hitTypeBadge').className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-emerald-500 text-slate-950 tracking-wider";
             } else {
                 playFailSound();
+                currentWrongCount++;
                 consecutiveStreak = 0;
                 
                 const streakText = document.getElementById('streakText');
@@ -3385,18 +3768,27 @@
                 document.getElementById('hitTypeBadge').className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-red-600 text-white tracking-wider";
             }
 
-            animateRunners(choiceId, isCorrect);
-            insertNextButton();
-            setTimeout(() => showAnswerExplanationModal(choiceId, selectedOpt, isCorrect), 450);
+            // 先把「下一題」顯示出來，再跑動畫與解釋彈窗。
+            // 這樣即使 LINE 內建瀏覽器或舊版 Safari 對動畫/彈窗支援不穩，也不會卡住。
+            ensureNextButtonVisible();
+
+            try {
+                animateRunners(choiceId, isCorrect);
+            } catch (error) {
+                console.error('跑者動畫失敗，但已保留下一題按鈕：', error);
+            }
+
+            setTimeout(() => {
+                try {
+                    showAnswerExplanationModal(choiceId, selectedOpt, isCorrect);
+                } catch (error) {
+                    console.error('解釋彈窗失敗，但已保留下一題按鈕：', error);
+                }
+            }, 450);
         }
 
         function insertNextButton() {
-            const container = document.getElementById('optionsContainer');
-            const nextBtn = document.createElement('button');
-            nextBtn.className = 'mt-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-500/20 transition-all active:scale-95 flex justify-center items-center gap-2 text-sm sm:text-base h-[4.5rem]';
-            nextBtn.innerHTML = `下一題 <i class="fa-solid fa-arrow-right"></i>`;
-            nextBtn.onclick = () => loadQuestion(currentQuestionIdx + 1);
-            container.appendChild(nextBtn);
+            return ensureNextButtonVisible();
         }
 
         function getHonorTitle(finalScore) {
@@ -3408,12 +3800,22 @@
 
         function endGame() {
             const honor = getHonorTitle(score);
+            let savedRecord = findCurrentPlayerRecord();
+            if (!gameResultSaved) {
+                savedRecord = saveCurrentGameRecord();
+                gameResultSaved = true;
+            }
+            const totalQuestions = BASERUNNING_CONTENT.questionCount;
+            const accuracyText = totalQuestions ? `${Math.round((currentCorrectCount / totalQuestions) * 100)}%` : '0%';
+            const recordSummary = savedRecord ? getPlayerRecordSummary(savedRecord) : '本局已完成。';
 
             document.getElementById('situationTitle').innerText = '訓練完成！🏆';
             document.getElementById('playerRoleBadge').innerText = 'GAME SET!';
             document.getElementById('situationDesc').innerHTML = `
                 恭喜背號 <span class="text-amber-400 font-black">#${playerJersey} ${playerName}</span> 完成了 ${BASERUNNING_CONTENT.questionCount} 題實戰跑壘決策訓練！<br>
                 在今日的球場推演中，你最終獲得了 <span class="text-emerald-400 font-black">${score} 分</span>！<br>
+                本局答對 <span class="text-emerald-400 font-black">${currentCorrectCount} / ${totalQuestions}</span> 題，答對率 <span class="text-amber-400 font-black">${accuracyText}</span>，最高連勝 <span class="text-cyan-400 font-black">${maxStreakThisGame}</span> 題。<br>
+                <span class="text-xs text-slate-300">個人成績：${recordSummary}</span>
                 <div class="mt-4 bg-slate-950/60 p-4 rounded-2xl border border-slate-850 text-center">
                     <span class="text-xs text-slate-400 block mb-1">🏅 榮獲跑壘稱號勳章</span>
                     <span class="text-lg font-black text-amber-400 block">${honor.title}</span>
@@ -3433,6 +3835,9 @@
             document.getElementById('hitTypeBadge').className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-amber-500 text-slate-950 tracking-wider';
             
             document.getElementById('optionsContainer').innerHTML = `
+                <button onclick="toggleScoreboardModal(true)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 rounded-2xl shadow-lg shadow-emerald-600/20 transition-all active:scale-95 flex justify-center items-center gap-2 text-sm sm:text-base h-[4.5rem]">
+                    查看成績紀錄 <i class="fa-solid fa-ranking-star"></i>
+                </button>
                 <button onclick="restartGame()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-4 rounded-2xl shadow-lg shadow-amber-600/20 transition-all active:scale-95 flex justify-center items-center gap-2 text-sm sm:text-base h-[4.5rem]">
                     生成全新 ${BASERUNNING_CONTENT.questionCount} 題隨機考驗 <i class="fa-solid fa-rotate-right"></i>
                 </button>
@@ -3444,6 +3849,10 @@
             currentQuestionIdx = 0;
             score = 0;
             consecutiveStreak = 0;
+            currentCorrectCount = 0;
+            currentWrongCount = 0;
+            maxStreakThisGame = 0;
+            gameResultSaved = false;
             answered = false;
             document.getElementById('scoreText').innerText = "000";
             document.getElementById('streakText').innerText = "🔥 0";
@@ -3458,6 +3867,7 @@
             resizeCanvas();
             generateGameScenarios();
             loadQuestion(0);
+            updateHeaderPlayerRecordHint();
             renderLoop();
         };
     </script>
