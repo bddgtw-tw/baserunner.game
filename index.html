@@ -1,0 +1,3297 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>棒球走壘王 - 小球員跑壘判斷力訓練</title>
+    <!-- Tailwind CSS for high fidelity responsive layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for professional typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- Tone.js for real-time sound synthesis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background-color: #0b0f19;
+        }
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .stadium-border {
+            border: 4px solid #1e3a8a;
+            box-shadow: 0 0 25px rgba(30, 58, 138, 0.6);
+        }
+        @keyframes pulse-cyan {
+            0%, 100% { box-shadow: 0 0 10px rgba(14, 165, 233, 0.6); transform: scale(1); }
+            50% { box-shadow: 0 0 25px rgba(14, 165, 233, 1); transform: scale(1.1); }
+        }
+        .player-glow {
+            animation: pulse-cyan 1.5s infinite;
+        }
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
+        .animate-wiggle {
+            animation: wiggle 0.3s ease-in-out infinite;
+        }
+        /* Fire effect for streaks */
+        @keyframes fire-glow {
+            0%, 100% { text-shadow: 0 0 4px #f59e0b, 0 0 10px #f97316, 0 0 20px #ef4444; }
+            50% { text-shadow: 0 0 8px #f59e0b, 0 0 20px #ea580c, 0 0 30px #f43f5e; }
+        }
+        .fire-text {
+            animation: fire-glow 1s ease-in-out infinite;
+        }
+        html {
+            height: 100%;
+            overflow: hidden;
+        }
+        body {
+            height: 100dvh;
+            min-height: 100dvh;
+            overflow: hidden;
+            padding-bottom: 0 !important;
+        }
+        header {
+            flex: 0 0 auto;
+            padding-top: clamp(0.45rem, 1vh, 0.75rem) !important;
+            padding-bottom: clamp(0.45rem, 1vh, 0.75rem) !important;
+        }
+        #gameShell {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow: hidden;
+            align-items: stretch;
+            padding-top: clamp(0.5rem, 1vh, 1rem) !important;
+            padding-bottom: clamp(0.35rem, 1vh, 0.75rem) !important;
+            gap: clamp(0.6rem, 1.1vw, 1.25rem) !important;
+        }
+        #gameShell > section {
+            min-height: 0;
+            overflow: hidden;
+        }
+        #scorePanel {
+            flex: 0 0 auto;
+            padding: clamp(0.75rem, 1.2vw, 1rem) !important;
+        }
+        #fieldStage {
+            aspect-ratio: 1 / 1;
+            flex: 0 0 auto;
+            height: auto !important;
+            min-height: 0;
+            margin-inline: auto;
+        }
+        #fieldCanvas {
+            display: block;
+            aspect-ratio: 1 / 1;
+            height: auto !important;
+        }
+        #rightGameColumn {
+            min-height: 0;
+        }
+        #coachPanel {
+            min-height: 0;
+            overflow: hidden;
+            padding: clamp(0.8rem, 1.2vw, 1.25rem) !important;
+        }
+        #optionsContainer {
+            gap: clamp(0.45rem, 0.8vh, 0.625rem) !important;
+        }
+        .option-btn {
+            min-height: clamp(3.15rem, 8.5vh, 4.5rem) !important;
+            padding: clamp(0.75rem, 1.4vh, 1rem) !important;
+        }
+        #coachMascotBox {
+            flex: 0 0 auto;
+            padding: clamp(0.65rem, 1vh, 1rem) !important;
+        }
+        footer {
+            flex: 0 0 auto;
+            margin-top: 0 !important;
+            padding-top: 0.35rem !important;
+            padding-bottom: 0.35rem !important;
+        }
+        #registryModal,
+        #validatorModal,
+        #helpModal {
+            overflow-y: auto;
+        }
+        @media (min-width: 1024px) {
+            #gameShell {
+                grid-template-columns: minmax(0, 1.38fr) minmax(360px, 0.92fr);
+            }
+            #leftGameColumn {
+                display: flex;
+                flex-direction: column;
+            }
+            #fieldStage {
+                width: min(100%, calc(100dvh - 18rem), 620px);
+                max-width: min(100%, calc(100dvh - 18rem), 620px);
+                max-height: none;
+            }
+            #rightGameColumn {
+                display: flex;
+                flex-direction: column;
+            }
+            #situationDesc {
+                display: -webkit-box;
+                -webkit-line-clamp: 4;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+        }
+        @media (max-width: 1023px) {
+            header .max-w-7xl {
+                gap: 0.65rem !important;
+            }
+            #gameShell {
+                grid-template-rows: auto auto;
+            }
+            #leftGameColumn {
+                display: flex;
+                flex-direction: column;
+            }
+            #fieldStage {
+                width: min(100%, 46dvh);
+                max-width: min(100%, 46dvh);
+                max-height: none;
+            }
+            #rightGameColumn {
+                gap: 0.55rem !important;
+            }
+            #coachPanel {
+                flex: 1 1 auto;
+            }
+            #coachMascotBox {
+                display: none !important;
+            }
+            footer {
+                display: none !important;
+            }
+        }
+        @media (orientation: landscape) and (min-width: 700px) and (max-width: 1023px) {
+            #gameShell {
+                grid-template-columns: minmax(0, 0.92fr) minmax(340px, 1.08fr);
+                grid-template-rows: minmax(0, 1fr);
+            }
+            #leftGameColumn,
+            #rightGameColumn {
+                min-height: 0;
+            }
+            #leftGameColumn {
+                justify-content: center;
+            }
+            #scorePanel {
+                display: none !important;
+            }
+            #fieldStage {
+                width: min(100%, calc(100dvh - 7.5rem), 520px);
+                max-width: min(100%, calc(100dvh - 7.5rem), 520px);
+            }
+            #coachPanel {
+                flex: 1 1 auto;
+            }
+            #situationDesc {
+                display: -webkit-box;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+            .option-btn {
+                min-height: 2.85rem !important;
+                padding: 0.65rem 0.85rem !important;
+            }
+        }
+        @media (orientation: portrait) and (max-width: 1023px) {
+            html,
+            body {
+                overflow-y: auto;
+            }
+            #gameShell {
+                overflow: visible;
+            }
+            #fieldStage {
+                width: min(100%, 68vw, 42dvh, 520px);
+                max-width: min(100%, 68vw, 42dvh, 520px);
+            }
+        }
+        @media (max-height: 820px) and (min-width: 1024px) {
+            footer {
+                display: none !important;
+            }
+            #fieldStage {
+                width: min(100%, calc(100dvh - 15.5rem), 560px);
+                max-width: min(100%, calc(100dvh - 15.5rem), 560px);
+                max-height: none;
+            }
+            #coachMascotBox {
+                display: none !important;
+            }
+            #situationDesc {
+                -webkit-line-clamp: 3;
+            }
+            .option-btn {
+                min-height: 3rem !important;
+            }
+        }
+        @media (max-width: 640px) {
+            html,
+            body {
+                overflow-y: auto;
+            }
+            #gameShell {
+                overflow: visible;
+            }
+            header {
+                padding-inline: 0.75rem !important;
+            }
+            header h1 {
+                font-size: 1rem !important;
+            }
+            header p {
+                display: none;
+            }
+            header .flex.items-center.gap-3.w-full {
+                gap: 0.4rem !important;
+            }
+            header button {
+                padding: 0.45rem 0.55rem !important;
+            }
+            header button span {
+                display: none;
+            }
+            #gameShell {
+                padding-left: 0.65rem !important;
+                padding-right: 0.65rem !important;
+                grid-template-rows: minmax(0, 0.38fr) minmax(0, 0.62fr);
+            }
+            #scorePanel {
+                display: none !important;
+            }
+            #fieldStage {
+                width: min(100%, 78vw, 38dvh);
+                max-width: min(100%, 78vw, 38dvh);
+                max-height: none;
+            }
+            #coachPanel {
+                border-radius: 1.15rem !important;
+                gap: 0.45rem !important;
+            }
+            #coachPanel .bg-slate-950,
+            #coachPanel .bg-cyan-950\/40 {
+                padding: 0.62rem !important;
+                border-radius: 1rem !important;
+            }
+            #coachPanel .my-4 {
+                margin-top: 0.45rem !important;
+                margin-bottom: 0.45rem !important;
+            }
+            #situationDesc {
+                font-size: 0.78rem !important;
+                line-height: 1.35 !important;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+            .option-btn {
+                min-height: 2.35rem !important;
+                padding: 0.48rem 0.65rem !important;
+            }
+            .option-btn span:last-child {
+                font-size: 0.76rem !important;
+                line-height: 1.18 !important;
+            }
+        }
+
+        /*
+         * PLAYABILITY-FIRST RWD RESET
+         * 前面的嘗試太積極地鎖住高度，會讓球場或選項被裁切。這組規則放在最後，
+         * 以「一定能完整看到球場、一定能點到選項」為優先，再保持桌機/平板/手機可讀。
+         */
+        html {
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+        }
+        body {
+            height: auto !important;
+            min-height: 100dvh !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+        }
+        #gameShell {
+            overflow: visible !important;
+            align-items: start !important;
+        }
+        #gameShell > section,
+        #coachPanel,
+        #rightGameColumn,
+        #leftGameColumn {
+            overflow: visible !important;
+        }
+        #fieldStage {
+            aspect-ratio: 1 / 1 !important;
+            height: auto !important;
+            width: min(100%, 88vw, 620px) !important;
+            max-width: min(100%, 88vw, 620px) !important;
+            max-height: none !important;
+            flex: 0 0 auto !important;
+        }
+        #fieldCanvas {
+            width: 100% !important;
+            height: 100% !important;
+            aspect-ratio: 1 / 1 !important;
+        }
+        .option-btn {
+            min-height: 3.2rem !important;
+        }
+        footer {
+            display: flex !important;
+        }
+        @media (min-width: 900px) {
+            #gameShell {
+                grid-template-columns: minmax(420px, 1fr) minmax(390px, 0.82fr) !important;
+                grid-template-rows: auto !important;
+            }
+            #fieldStage {
+                width: min(100%, 52vw, calc(100dvh - 12.5rem), 680px) !important;
+                max-width: min(100%, 52vw, calc(100dvh - 12.5rem), 680px) !important;
+            }
+            #leftGameColumn {
+                display: flex !important;
+                flex-direction: column !important;
+            }
+            #rightGameColumn {
+                display: flex !important;
+                flex-direction: column !important;
+            }
+        }
+        @media (max-width: 899px) {
+            #gameShell {
+                grid-template-columns: 1fr !important;
+                grid-template-rows: auto auto !important;
+            }
+            #scorePanel {
+                display: flex !important;
+            }
+            #fieldStage {
+                width: min(92vw, 56dvh, 560px) !important;
+                max-width: min(92vw, 56dvh, 560px) !important;
+            }
+            #coachMascotBox {
+                display: none !important;
+            }
+            footer {
+                display: none !important;
+            }
+        }
+        @media (max-width: 640px) {
+            #fieldStage {
+                width: min(94vw, 44dvh, 440px) !important;
+                max-width: min(94vw, 44dvh, 440px) !important;
+            }
+            #scorePanel {
+                display: none !important;
+            }
+            #situationDesc {
+                display: block !important;
+                overflow: visible !important;
+                -webkit-line-clamp: unset !important;
+            }
+            .option-btn {
+                min-height: 3rem !important;
+            }
+        }
+
+        /*
+         * TWO-PANE GAME LAYOUT
+         * 左側固定為球場圖，右側固定為遊玩區域；只有窄版手機才改為上下排列。
+         */
+        @media (min-width: 760px) {
+            html,
+            body {
+                height: 100dvh !important;
+                overflow: hidden !important;
+            }
+            body {
+                display: flex !important;
+                flex-direction: column !important;
+            }
+            footer {
+                display: none !important;
+            }
+            #gameShell {
+                flex: 1 1 auto !important;
+                width: 100% !important;
+                max-width: 1600px !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+                display: grid !important;
+                grid-template-columns: minmax(420px, 1.05fr) minmax(390px, 0.95fr) !important;
+                grid-template-rows: minmax(0, 1fr) !important;
+                align-items: stretch !important;
+                padding: clamp(0.6rem, 1.1vh, 1rem) clamp(1rem, 2vw, 2rem) !important;
+                gap: clamp(0.85rem, 1.6vw, 1.5rem) !important;
+            }
+            #leftGameColumn,
+            #rightGameColumn {
+                min-height: 0 !important;
+                overflow: hidden !important;
+            }
+            #leftGameColumn {
+                display: grid !important;
+                grid-template-rows: auto minmax(0, 1fr) !important;
+                align-content: start !important;
+                gap: clamp(0.75rem, 1.2vh, 1rem) !important;
+            }
+            #rightGameColumn {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: clamp(0.6rem, 1vh, 1rem) !important;
+            }
+            #scorePanel {
+                display: flex !important;
+                min-height: 0 !important;
+            }
+            #fieldStage {
+                align-self: center !important;
+                justify-self: center !important;
+                width: min(100%, 54vw, calc(100dvh - 13.5rem), 720px) !important;
+                max-width: min(100%, 54vw, calc(100dvh - 13.5rem), 720px) !important;
+                aspect-ratio: 1 / 1 !important;
+                height: auto !important;
+                max-height: none !important;
+                flex: 0 0 auto !important;
+            }
+            #fieldCanvas {
+                width: 100% !important;
+                height: 100% !important;
+                aspect-ratio: 1 / 1 !important;
+            }
+            #coachPanel {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+                display: flex !important;
+                gap: clamp(0.65rem, 1vh, 1rem) !important;
+            }
+            #coachPanel > div:first-child {
+                flex: 0 0 auto !important;
+            }
+            #optionsContainer {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                display: grid !important;
+                grid-template-rows: repeat(4, minmax(3rem, 1fr)) auto !important;
+                align-content: stretch !important;
+            }
+            .option-btn {
+                min-height: 0 !important;
+                height: 100% !important;
+                padding: clamp(0.65rem, 1.1vh, 0.95rem) clamp(0.8rem, 1.2vw, 1rem) !important;
+            }
+            #coachMascotBox {
+                flex: 0 0 auto !important;
+                display: flex !important;
+            }
+            #situationDesc {
+                display: -webkit-box !important;
+                -webkit-line-clamp: 4 !important;
+                -webkit-box-orient: vertical !important;
+                overflow: hidden !important;
+            }
+        }
+
+        @media (min-width: 760px) and (max-height: 780px) {
+            header {
+                padding-top: 0.45rem !important;
+                padding-bottom: 0.45rem !important;
+            }
+            #fieldStage {
+                width: min(100%, 50vw, calc(100dvh - 11.5rem), 620px) !important;
+                max-width: min(100%, 50vw, calc(100dvh - 11.5rem), 620px) !important;
+            }
+            #coachMascotBox {
+                display: none !important;
+            }
+            #situationDesc {
+                -webkit-line-clamp: 3 !important;
+            }
+            #optionsContainer {
+                grid-template-rows: repeat(4, minmax(2.65rem, 1fr)) auto !important;
+            }
+        }
+
+        @media (max-width: 759px) {
+            html,
+            body {
+                height: auto !important;
+                overflow-y: auto !important;
+            }
+            #gameShell {
+                display: grid !important;
+                grid-template-columns: 1fr !important;
+                grid-template-rows: auto auto !important;
+                overflow: visible !important;
+            }
+            #fieldStage {
+                width: min(94vw, 460px) !important;
+                max-width: min(94vw, 460px) !important;
+                aspect-ratio: 1 / 1 !important;
+            }
+            #coachPanel,
+            #rightGameColumn,
+            #leftGameColumn {
+                overflow: visible !important;
+            }
+        }
+
+        /*
+         * CLEAN VERSION OVERRIDE
+         * 清爽版：正常捲動、不卡住；桌機/平板橫向固定左圖右玩，手機直向上下排列。
+         */
+        :root {
+            --clean-bg: #eef5f1;
+            --clean-panel: #ffffff;
+            --clean-panel-soft: #f7fbf8;
+            --clean-line: #dbe7df;
+            --clean-ink: #17312a;
+            --clean-muted: #60766e;
+            --clean-accent: #0f9f73;
+            --clean-accent-2: #f5a623;
+        }
+        html,
+        body {
+            height: auto !important;
+            min-height: 100dvh !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            background: var(--clean-bg) !important;
+            color: var(--clean-ink) !important;
+        }
+        body {
+            display: block !important;
+            padding-bottom: 0 !important;
+        }
+        header {
+            position: static !important;
+            background: rgba(255, 255, 255, 0.92) !important;
+            border-bottom: 1px solid var(--clean-line) !important;
+            box-shadow: 0 8px 30px rgba(21, 49, 42, 0.08) !important;
+            padding: 0.7rem 1rem !important;
+        }
+        header h1 {
+            color: var(--clean-ink) !important;
+            background: none !important;
+            -webkit-text-fill-color: currentColor !important;
+        }
+        header p,
+        header .text-slate-400 {
+            color: var(--clean-muted) !important;
+        }
+        header button {
+            background: var(--clean-panel-soft) !important;
+            color: var(--clean-ink) !important;
+            border: 1px solid var(--clean-line) !important;
+            box-shadow: none !important;
+        }
+        header button:hover {
+            background: #edf7f1 !important;
+        }
+        #gameShell {
+            display: grid !important;
+            width: min(100%, 1560px) !important;
+            max-width: 1560px !important;
+            margin: 0 auto !important;
+            padding: clamp(0.75rem, 1.6vw, 1.5rem) !important;
+            gap: clamp(0.9rem, 1.6vw, 1.4rem) !important;
+            overflow: visible !important;
+            align-items: start !important;
+        }
+        .glass-panel {
+            background: var(--clean-panel) !important;
+            border: 1px solid var(--clean-line) !important;
+            box-shadow: 0 14px 40px rgba(21, 49, 42, 0.08) !important;
+            backdrop-filter: none !important;
+        }
+        #leftGameColumn,
+        #rightGameColumn,
+        #coachPanel {
+            overflow: visible !important;
+            min-height: 0 !important;
+        }
+        #leftGameColumn {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.9rem !important;
+        }
+        #scorePanel {
+            display: flex !important;
+            border-radius: 1.4rem !important;
+            color: var(--clean-ink) !important;
+        }
+        #scorePanel .text-slate-400,
+        #scorePanel .text-2xs {
+            color: var(--clean-muted) !important;
+        }
+        #fieldStage {
+            width: min(100%, 680px) !important;
+            max-width: min(100%, 680px) !important;
+            aspect-ratio: 1 / 1 !important;
+            height: auto !important;
+            max-height: none !important;
+            border: 0 !important;
+            border-radius: 1.5rem !important;
+            box-shadow: 0 20px 50px rgba(21, 49, 42, 0.14) !important;
+            align-self: center !important;
+            overflow: hidden !important;
+        }
+        #fieldCanvas {
+            width: 100% !important;
+            height: 100% !important;
+            aspect-ratio: 1 / 1 !important;
+        }
+        #coachPanel {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.9rem !important;
+            border: 0 !important;
+            border-radius: 1.5rem !important;
+            padding: clamp(1rem, 1.8vw, 1.35rem) !important;
+        }
+        #coachPanel .bg-cyan-950\/60,
+        #coachPanel .bg-slate-950,
+        #coachPanel .bg-cyan-950\/40 {
+            background: var(--clean-panel-soft) !important;
+            border: 1px solid var(--clean-line) !important;
+            box-shadow: none !important;
+        }
+        #coachPanel .text-slate-100,
+        #coachPanel .text-slate-200,
+        #coachPanel .text-white,
+        #situationDesc,
+        .option-btn span:last-child {
+            color: var(--clean-ink) !important;
+        }
+        #coachPanel .text-slate-400,
+        #coachPanel .text-slate-300 {
+            color: var(--clean-muted) !important;
+        }
+        #situationTitle,
+        #questionNum,
+        #totalQuestionNum {
+            color: #925f00 !important;
+        }
+        #playerRoleBadge,
+        #targetRunnerText,
+        #coachPanel .text-cyan-400 {
+            color: var(--clean-accent) !important;
+        }
+        #optionsContainer {
+            display: grid !important;
+            gap: 0.7rem !important;
+            overflow: visible !important;
+            min-height: 0 !important;
+        }
+        .option-btn {
+            background: #ffffff !important;
+            border: 1px solid var(--clean-line) !important;
+            border-radius: 1rem !important;
+            box-shadow: none !important;
+            min-height: 4.1rem !important;
+            height: auto !important;
+            color: var(--clean-ink) !important;
+        }
+        .option-btn:hover {
+            background: #f1faf5 !important;
+            border-color: #9ad9bf !important;
+        }
+        .option-btn span:first-child {
+            color: var(--clean-muted) !important;
+        }
+        #coachMascotBox,
+        footer {
+            display: none !important;
+        }
+        @media (min-width: 980px) {
+            #gameShell {
+                grid-template-columns: minmax(430px, 0.92fr) minmax(430px, 1.08fr) !important;
+            }
+            #fieldStage {
+                width: min(100%, 44vw, calc(100dvh - 11.5rem), 680px) !important;
+                max-width: min(100%, 44vw, calc(100dvh - 11.5rem), 680px) !important;
+            }
+            #rightGameColumn {
+                display: flex !important;
+                flex-direction: column !important;
+            }
+            #coachPanel {
+                min-height: min(680px, calc(100dvh - 8rem)) !important;
+            }
+            #situationDesc {
+                display: block !important;
+                overflow: visible !important;
+                -webkit-line-clamp: unset !important;
+            }
+        }
+        @media (max-width: 979px) {
+            #gameShell {
+                grid-template-columns: 1fr !important;
+            }
+            #fieldStage {
+                width: min(92vw, 560px) !important;
+                max-width: min(92vw, 560px) !important;
+            }
+        }
+        @media (max-width: 640px) {
+            header .max-w-7xl {
+                align-items: stretch !important;
+            }
+            header button span {
+                display: none !important;
+            }
+            #gameShell {
+                padding: 0.8rem !important;
+            }
+            #scorePanel {
+                display: none !important;
+            }
+            #fieldStage {
+                width: min(94vw, 420px) !important;
+                max-width: min(94vw, 420px) !important;
+            }
+            #coachPanel {
+                padding: 0.9rem !important;
+            }
+            .option-btn {
+                min-height: 3.4rem !important;
+                padding: 0.75rem !important;
+            }
+        }
+
+        /*
+         * COOL CLEAN FINAL LAYOUT
+         * 最終版面：桌機第一眼就是左球場、右答題；手機才上下排列。
+         */
+        :root {
+            --ice-bg: #edf8f5;
+            --ice-panel: #ffffff;
+            --ice-panel-2: #f4fbf9;
+            --ice-border: #cfe5de;
+            --ice-text: #12352f;
+            --ice-muted: #66847c;
+            --ice-green: #13a87d;
+            --ice-cyan: #1fbad6;
+            --ice-orange: #f4a62a;
+        }
+        html,
+        body {
+            background:
+                radial-gradient(circle at 20% 12%, rgba(31, 186, 214, 0.16), transparent 30rem),
+                radial-gradient(circle at 84% 20%, rgba(19, 168, 125, 0.14), transparent 28rem),
+                var(--ice-bg) !important;
+            color: var(--ice-text) !important;
+        }
+        header {
+            background: rgba(255, 255, 255, 0.96) !important;
+            border-bottom: 1px solid var(--ice-border) !important;
+            box-shadow: 0 8px 24px rgba(18, 53, 47, 0.08) !important;
+        }
+        header h1 {
+            color: var(--ice-text) !important;
+            background: none !important;
+            -webkit-text-fill-color: currentColor !important;
+        }
+        header button {
+            background: #f7fcfb !important;
+            color: var(--ice-text) !important;
+            border: 1px solid var(--ice-border) !important;
+            box-shadow: none !important;
+        }
+        header button:first-child {
+            background: #dff8ef !important;
+            color: #087456 !important;
+            border-color: #a9e4d0 !important;
+        }
+        @media (min-width: 1024px) {
+            html,
+            body {
+                height: 100dvh !important;
+                overflow: hidden !important;
+            }
+            body {
+                display: flex !important;
+                flex-direction: column !important;
+            }
+            #gameShell {
+                flex: 1 1 auto !important;
+                display: grid !important;
+                grid-template-columns: minmax(430px, 0.95fr) minmax(460px, 1.05fr) !important;
+                grid-template-rows: minmax(0, 1fr) !important;
+                width: min(100%, 1680px) !important;
+                max-width: 1680px !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+                padding: clamp(0.75rem, 1.5vh, 1.25rem) clamp(1rem, 2vw, 2rem) !important;
+                gap: clamp(1rem, 1.8vw, 1.6rem) !important;
+                align-items: stretch !important;
+            }
+            #leftGameColumn {
+                grid-column: 1 !important;
+                grid-row: 1 !important;
+                display: grid !important;
+                grid-template-rows: auto minmax(0, 1fr) !important;
+                gap: 0.8rem !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+            }
+            #rightGameColumn {
+                grid-column: 2 !important;
+                grid-row: 1 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+            }
+            #scorePanel {
+                display: flex !important;
+                border-radius: 1.35rem !important;
+                padding: 0.85rem 1rem !important;
+                background: rgba(255, 255, 255, 0.92) !important;
+                color: var(--ice-text) !important;
+            }
+            #fieldStage {
+                align-self: center !important;
+                justify-self: center !important;
+                width: min(100%, 45vw, calc(100dvh - 12.25rem), 660px) !important;
+                max-width: min(100%, 45vw, calc(100dvh - 12.25rem), 660px) !important;
+                aspect-ratio: 1 / 1 !important;
+                height: auto !important;
+                border: 0 !important;
+                border-radius: 1.75rem !important;
+                box-shadow: 0 22px 52px rgba(18, 53, 47, 0.15) !important;
+            }
+            #coachPanel {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 0.85rem !important;
+                padding: clamp(0.95rem, 1.5vh, 1.25rem) !important;
+                border: 0 !important;
+                border-radius: 1.75rem !important;
+                background: rgba(255, 255, 255, 0.94) !important;
+                box-shadow: 0 22px 52px rgba(18, 53, 47, 0.12) !important;
+            }
+            #coachPanel > div:first-child {
+                flex: 0 0 auto !important;
+            }
+            #optionsContainer {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                display: grid !important;
+                grid-template-rows: repeat(4, minmax(3.25rem, 1fr)) auto !important;
+                gap: 0.65rem !important;
+            }
+            .option-btn {
+                height: 100% !important;
+                min-height: 0 !important;
+                padding: 0.75rem 0.95rem !important;
+            }
+            #coachMascotBox,
+            footer {
+                display: none !important;
+            }
+        }
+        #coachPanel .bg-cyan-950\/60,
+        #coachPanel .bg-slate-950,
+        #coachPanel .bg-cyan-950\/40 {
+            background: var(--ice-panel-2) !important;
+            border: 1px solid var(--ice-border) !important;
+            box-shadow: none !important;
+        }
+        #coachPanel,
+        .glass-panel,
+        .option-btn {
+            color: var(--ice-text) !important;
+        }
+        #coachPanel .text-white,
+        #coachPanel .text-slate-100,
+        #coachPanel .text-slate-200,
+        #situationDesc,
+        .option-btn span:last-child {
+            color: var(--ice-text) !important;
+        }
+        #coachPanel .text-slate-300,
+        #coachPanel .text-slate-400,
+        .option-btn span:first-child {
+            color: var(--ice-muted) !important;
+        }
+        #playerRoleBadge,
+        #targetRunnerText,
+        #coachPanel .text-cyan-400 {
+            color: var(--ice-cyan) !important;
+        }
+        #situationTitle,
+        #questionNum,
+        #totalQuestionNum {
+            color: #9a6500 !important;
+        }
+        .option-btn {
+            background: var(--ice-panel) !important;
+            border: 1px solid var(--ice-border) !important;
+            border-radius: 1.05rem !important;
+            box-shadow: none !important;
+        }
+        .option-btn:hover {
+            background: #eefaf6 !important;
+            border-color: #9edfcc !important;
+        }
+        @media (min-width: 1024px) and (max-height: 760px) {
+            #fieldStage {
+                width: min(100%, 39vw, calc(100dvh - 9.5rem), 560px) !important;
+                max-width: min(100%, 39vw, calc(100dvh - 9.5rem), 560px) !important;
+            }
+            #scorePanel {
+                display: none !important;
+            }
+            #situationDesc {
+                display: -webkit-box !important;
+                -webkit-line-clamp: 3 !important;
+                -webkit-box-orient: vertical !important;
+                overflow: hidden !important;
+            }
+            #optionsContainer {
+                grid-template-rows: repeat(4, minmax(2.9rem, 1fr)) auto !important;
+            }
+        }
+        @media (max-width: 1023px) {
+            html,
+            body {
+                height: auto !important;
+                overflow-y: auto !important;
+            }
+            #gameShell {
+                display: grid !important;
+                grid-template-columns: 1fr !important;
+                grid-template-rows: auto auto !important;
+                overflow: visible !important;
+            }
+            #leftGameColumn,
+            #rightGameColumn,
+            #coachPanel {
+                grid-column: auto !important;
+                grid-row: auto !important;
+                overflow: visible !important;
+            }
+            #fieldStage {
+                width: min(92vw, 560px) !important;
+                max-width: min(92vw, 560px) !important;
+            }
+        }
+
+        /*
+         * UNIFIED COOL THEME
+         * 統一所有介面配色：薄荷背景、白色卡片、冰藍/青綠重點、琥珀少量提示。
+         */
+        :root {
+            --ui-bg: #edf8f5;
+            --ui-bg-deep: #dff3ee;
+            --ui-card: rgba(255, 255, 255, 0.96);
+            --ui-card-soft: #f5fbf9;
+            --ui-line: #c8e2da;
+            --ui-line-strong: #9fd5c7;
+            --ui-text: #12352f;
+            --ui-muted: #617d75;
+            --ui-faint: #8ba39c;
+            --ui-green: #12a77a;
+            --ui-green-dark: #087456;
+            --ui-cyan: #20b8d3;
+            --ui-blue: #3b82f6;
+            --ui-amber: #f5a524;
+            --ui-rose: #ef4d61;
+            --ui-shadow: 0 18px 46px rgba(18, 53, 47, 0.12);
+        }
+        body {
+            background:
+                radial-gradient(circle at 12% 15%, rgba(32, 184, 211, 0.17), transparent 30rem),
+                radial-gradient(circle at 88% 10%, rgba(18, 167, 122, 0.16), transparent 28rem),
+                linear-gradient(180deg, #f6fcfa 0%, var(--ui-bg) 100%) !important;
+            color: var(--ui-text) !important;
+        }
+        .glass-panel,
+        #registryModal > div,
+        #validatorModal > div,
+        #helpModal > div,
+        #answerModal > div {
+            background: var(--ui-card) !important;
+            color: var(--ui-text) !important;
+            border: 1px solid var(--ui-line) !important;
+            box-shadow: var(--ui-shadow) !important;
+            backdrop-filter: blur(14px) !important;
+        }
+        #registryModal,
+        #validatorModal,
+        #helpModal,
+        #answerModal {
+            background: rgba(237, 248, 245, 0.82) !important;
+            backdrop-filter: blur(18px) !important;
+        }
+        #registryModal h2,
+        #validatorModal h3,
+        #helpModal h3,
+        #answerModal h3,
+        h1 {
+            color: var(--ui-text) !important;
+            background: none !important;
+            -webkit-text-fill-color: currentColor !important;
+        }
+        #registryModal p,
+        #registryModal label,
+        #validatorModal p,
+        #helpModal p,
+        #helpModal li,
+        #answerModal p,
+        .text-slate-400,
+        .text-slate-300,
+        .text-slate-200,
+        .text-slate-100 {
+            color: var(--ui-muted) !important;
+        }
+        .text-white {
+            color: var(--ui-text) !important;
+        }
+        .text-cyan-400,
+        .text-blue-400 {
+            color: var(--ui-cyan) !important;
+        }
+        .text-amber-400,
+        .text-amber-500 {
+            color: var(--ui-amber) !important;
+        }
+        .text-emerald-400,
+        .text-emerald-500 {
+            color: var(--ui-green) !important;
+        }
+        .text-red-400,
+        .text-red-500 {
+            color: var(--ui-rose) !important;
+        }
+        input,
+        #registryModal input {
+            background: #ffffff !important;
+            color: var(--ui-text) !important;
+            border: 1px solid var(--ui-line) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+        }
+        input:focus,
+        #registryModal input:focus {
+            border-color: var(--ui-cyan) !important;
+            box-shadow: 0 0 0 3px rgba(32, 184, 211, 0.16) !important;
+        }
+        input::placeholder {
+            color: var(--ui-faint) !important;
+        }
+        header {
+            background: rgba(255, 255, 255, 0.96) !important;
+            border-bottom: 1px solid var(--ui-line) !important;
+            box-shadow: 0 10px 28px rgba(18, 53, 47, 0.08) !important;
+        }
+        header button,
+        #registryModal button,
+        #validatorModal button,
+        #helpModal button,
+        #answerModal button {
+            border-radius: 1rem !important;
+            border: 1px solid var(--ui-line) !important;
+            box-shadow: none !important;
+        }
+        #registryModal button,
+        #answerModal button:last-child,
+        #helpModal .bg-blue-600,
+        #validatorModal .bg-emerald-600 {
+            background: linear-gradient(135deg, var(--ui-green), var(--ui-cyan)) !important;
+            color: white !important;
+            border-color: transparent !important;
+        }
+        header button,
+        #answerModal button:first-child,
+        #validatorModal .bg-slate-800 {
+            background: var(--ui-card-soft) !important;
+            color: var(--ui-text) !important;
+        }
+        header button:hover,
+        #answerModal button:first-child:hover,
+        #validatorModal .bg-slate-800:hover {
+            background: #eaf8f3 !important;
+        }
+        #validatorButtonText,
+        #playerRoleBadge,
+        #targetRunnerText,
+        #answerModalEyebrow {
+            color: var(--ui-green) !important;
+        }
+        #hitTypeBadge,
+        #questionNum,
+        #totalQuestionNum,
+        #answerModalBadge {
+            color: #1f2937 !important;
+        }
+        .bg-slate-950,
+        .bg-slate-900,
+        .bg-slate-800,
+        .bg-cyan-950\/60,
+        .bg-cyan-950\/40,
+        .bg-slate-950\/60,
+        .bg-slate-950\/80 {
+            background: var(--ui-card-soft) !important;
+        }
+        .border-slate-800,
+        .border-slate-850,
+        .border-slate-900,
+        .border-cyan-800\/40,
+        .border-cyan-500\/30 {
+            border-color: var(--ui-line) !important;
+        }
+        .option-btn {
+            background: #ffffff !important;
+            color: var(--ui-text) !important;
+            border: 1px solid var(--ui-line) !important;
+        }
+        .option-btn:hover {
+            background: #eefaf6 !important;
+            border-color: var(--ui-line-strong) !important;
+        }
+        .option-btn.border-emerald-500,
+        .option-btn.border-emerald-600 {
+            background: #e9f9f1 !important;
+            border-color: var(--ui-green) !important;
+        }
+        .option-btn.border-red-500 {
+            background: #fff0f2 !important;
+            border-color: var(--ui-rose) !important;
+        }
+        #answerModalHeader,
+        #answerModal .bg-emerald-50,
+        #answerModal .bg-sky-50 {
+            background: #eefaf6 !important;
+            border-color: var(--ui-line) !important;
+        }
+        #answerModal .bg-rose-50 {
+            background: #fff0f2 !important;
+            border-color: #f8c9d1 !important;
+        }
+        #answerModal .bg-slate-50,
+        #answerModal .bg-white {
+            background: var(--ui-card-soft) !important;
+        }
+        #answerModal .text-slate-900,
+        #answerModal .text-slate-800,
+        #answerModal .text-slate-700 {
+            color: var(--ui-text) !important;
+        }
+        #answerModal .text-rose-700,
+        #answerModal .text-rose-800 {
+            color: #bd2940 !important;
+        }
+        #answerModal .text-sky-700,
+        #answerModal .text-emerald-600 {
+            color: var(--ui-green-dark) !important;
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden pb-4">
+
+    <!-- PLAYER REGISTRY OVERLAY MODAL -->
+    <div id="registryModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-lg">
+        <div class="bg-slate-900 border-2 border-blue-500 rounded-3xl max-w-md w-full p-6 shadow-2xl text-center">
+            <div class="mb-4">
+                <span class="text-4xl">⚾</span>
+                <h2 class="text-2xl font-black text-amber-400 mt-2">先發小球員登錄</h2>
+                <p class="text-slate-400 text-xs mt-1">請輸入你的背號與名字，開啟今日的跑壘模擬實戰！</p>
+            </div>
+            <div class="space-y-4 mb-6 text-left">
+                <div>
+                    <label class="block text-xs font-black text-slate-400 mb-1">球衣背號 (Jersey Number)</label>
+                    <input type="number" id="playerJersey" placeholder="例如：99" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 text-sm font-bold">
+                </div>
+                <div>
+                    <label class="block text-xs font-black text-slate-400 mb-1">球員名字 / 綽號 (Name)</label>
+                    <input type="text" id="playerName" placeholder="例如：王小明" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 text-sm font-bold">
+                </div>
+            </div>
+            <button onclick="submitPlayerRegistry()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black py-3 rounded-2xl shadow-lg transition-all active:scale-95 text-sm sm:text-base">
+                登錄名單，踏入球場！
+            </button>
+        </div>
+    </div>
+
+    <header class="w-full bg-slate-950 border-b border-slate-900 py-3 px-6 sticky top-0 z-40 shadow-xl">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-br from-amber-400 to-red-600 p-2 rounded-2xl shadow-lg">
+                    <i id="headerBaseballIcon" class="fa-solid fa-baseball text-2xl text-slate-950 animate-spin" style="animation-duration: 10s;"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
+                        <span>棒球走壘王</span> 
+                        <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">動態組合矩陣培訓系統</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 font-medium">台灣少棒基層培訓專屬版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <!-- LOGIC VALIDATOR BUTTON -->
+                <button onclick="run50ScenariosValidator()" class="bg-emerald-900 hover:bg-emerald-800 text-emerald-300 hover:text-white px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-black border border-emerald-800 transition-all shadow-lg">
+                    <i class="fa-solid fa-flask-vial"></i>
+                    <span id="validatorButtonText">🧪 50題邏輯驗證</span>
+                </button>
+
+                <!-- Stadium lights switch -->
+                <button id="lightsBtn" onclick="toggleLights()" class="bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-black border border-slate-800 transition-all">
+                    <i id="lightsIcon" class="fa-solid fa-moon text-blue-400"></i>
+                    <span id="lightsLabel">夜間開燈</span>
+                </button>
+
+                <!-- Sound Toggle -->
+                <button id="soundBtn" class="bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-3 py-2 rounded-xl flex items-center gap-2 text-xs font-bold border border-slate-800 transition-all">
+                    <i id="soundIcon" class="fa-solid fa-volume-high text-amber-500"></i>
+                    <span id="soundLabel">音效：開</span>
+                </button>
+
+                <!-- Help Button -->
+                <button onclick="toggleHelpModal(true)" class="bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-3 py-2 rounded-xl flex items-center gap-2 text-xs font-bold border border-slate-800 transition-all">
+                    <i class="fa-solid fa-circle-question text-blue-400"></i>
+                    <span>跑壘戰術講義</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main id="gameShell" class="max-w-7xl mx-auto px-4 py-4 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- LEFT PANEL: Dynamic Stadium Visualizer (Canvas) -->
+        <section id="leftGameColumn" class="lg:col-span-7 flex flex-col gap-4">
+            <!-- Score & Progress Dashboard -->
+            <div id="scorePanel" class="glass-panel rounded-3xl p-4 flex justify-between items-center shadow-2xl">
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-400 text-xs font-bold">關卡進度:</span>
+                    <div class="flex gap-1.5" id="progressBar"></div>
+                </div>
+                <div class="flex items-center gap-5">
+                    <div class="text-right">
+                        <span class="block text-slate-400 text-2xs uppercase tracking-wider font-bold">目前分數</span>
+                        <span id="scoreText" class="text-xl sm:text-2xl font-black text-amber-400">000</span>
+                    </div>
+                    <div class="text-right border-l border-slate-800 pl-4">
+                        <span class="block text-slate-400 text-2xs uppercase tracking-wider font-bold">連勝紀錄</span>
+                        <span id="streakText" class="text-xl sm:text-2xl font-black text-emerald-400">🔥 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="fieldStage" class="relative w-full aspect-square bg-slate-950 rounded-3xl overflow-hidden stadium-border flex flex-col justify-between">
+                <!-- Out Counter & Status Indicators (Overlay Top-Left) -->
+                <div class="absolute top-4 left-4 z-10 glass-panel px-3 py-2 rounded-2xl flex flex-col gap-1 shadow-lg">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xs font-black text-red-500 w-8">OUT</span>
+                        <div class="flex gap-1.5" id="outDots">
+                            <span class="w-3.5 h-3.5 rounded-full bg-slate-800 border border-slate-700"></span>
+                            <span class="w-3.5 h-3.5 rounded-full bg-slate-800 border border-slate-700"></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 border-t border-slate-800 pt-1 mt-1">
+                        <span class="text-2xs font-black text-amber-500 w-8">RUN</span>
+                        <span id="baseStatusText" class="text-xs font-bold text-slate-300">無人在壘</span>
+                    </div>
+                </div>
+
+                <!-- Game Phase Badge (Overlay Top-Right) -->
+                <div class="absolute top-4 right-4 z-10">
+                    <span id="hitTypeBadge" class="px-3 py-1.5 rounded-xl text-xs font-black bg-slate-900/90 border border-slate-800 text-slate-300 tracking-wider">
+                        準備擊球
+                    </span>
+                </div>
+
+                <!-- Dynamic Canvas -->
+                <canvas id="fieldCanvas" class="w-full h-full cursor-pointer bg-emerald-950"></canvas>
+
+                <!-- Audio Status Notice overlay -->
+                <div id="audioToast" class="absolute bottom-4 left-4 right-4 bg-amber-500/90 text-slate-950 text-xs font-black py-2.5 px-3 rounded-xl text-center pointer-events-none transition-all duration-300 flex items-center justify-center gap-2 shadow-lg animate-bounce">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>點擊球場任意處開啟「木棒打擊」與「全場歡呼聲」音效！</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL: Simplified Unified Telecast Dashboard (精簡體育台轉播箱) -->
+        <section id="rightGameColumn" class="lg:col-span-5 flex flex-col gap-4">
+            
+            <!-- Coach Dashboard -->
+            <div id="coachPanel" class="glass-panel rounded-3xl p-5 flex flex-col justify-between flex-grow shadow-2xl border-2 border-cyan-500/30">
+                <div>
+                    <!-- LIVE Header Bar -->
+                    <div class="flex justify-between items-center bg-cyan-950/60 px-4 py-2.5 rounded-2xl border border-cyan-800/40 mb-3.5 shadow-inner">
+                        <span class="text-xs font-black text-cyan-400 flex items-center gap-1.5 animate-pulse">
+                            <i class="fa-solid fa-satellite-dish"></i> LIVE 現場即時轉播
+                        </span>
+                        <span class="px-2.5 py-0.5 text-2xs font-black bg-amber-500 text-slate-950 rounded flex items-center gap-1">
+                            第 <span id="questionNum">1</span> 局 <span class="text-slate-800">/</span> <span id="totalQuestionNum">10</span>局
+                        </span>
+                    </div>
+
+                    <!-- Unified News Ticker (場中播報氣泡箱) -->
+                    <div class="bg-slate-950 p-4 rounded-2xl border border-slate-850 space-y-3 shadow-inner">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-900 pb-2">
+                            <span id="situationTitle" class="text-xs sm:text-sm font-black text-amber-400 tracking-wider">
+                                【0出局，三壘有人】
+                            </span>
+                            <span id="playerRoleBadge" class="bg-cyan-500/10 text-cyan-400 text-2xs px-2.5 py-0.5 rounded-full border border-cyan-500/30 font-black animate-pulse">
+                                扮演角色：三壘跑者
+                            </span>
+                        </div>
+                        
+                        <p id="situationDesc" class="text-sm sm:text-base font-bold text-slate-100 leading-relaxed font-sans">
+                            「揮棒打擊！這一棒打得非常扎實...」
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Target Runner Highlight -->
+                <div class="bg-cyan-950/40 border border-cyan-800/40 p-3 rounded-2xl my-4 text-center shadow-inner">
+                    <span class="text-2xs text-cyan-400 font-bold block mb-1">🚨 當前焦點：請替下方藍色角色做出判斷</span>
+                    <span id="targetRunnerText" class="text-xs sm:text-sm text-white font-black">【玩家二壘跑者】</span>
+                </div>
+
+                <!-- Four Option Buttons (使用 100% 統一等高比例配置) -->
+                <div class="grid grid-cols-1 gap-2.5" id="optionsContainer"></div>
+            </div>
+
+            <!-- Coach Mascot Box -->
+            <div class="glass-panel rounded-3xl p-4 flex gap-4 items-center shadow-lg border border-slate-800" id="coachMascotBox">
+                <div class="relative flex-shrink-0">
+                    <div class="w-14 h-14 rounded-full bg-slate-900 border-2 border-blue-500 flex items-center justify-center text-3xl" id="coachAvatar">
+                        🧐
+                    </div>
+                    <span class="absolute -bottom-1 -right-1 bg-blue-600 text-2xs font-black text-white px-2 py-0.5 rounded-full">教練</span>
+                </div>
+                <div>
+                    <p class="text-2xs text-slate-400 font-black uppercase tracking-wider">教練即時反饋</p>
+                    <p id="coachFeedback" class="text-xs text-slate-200 mt-0.5 leading-relaxed font-black">
+                        「小球員們！注意看當前出局數，這會徹底改變你的起跑策略！」
+                    </p>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- 50 SCENARIOS AUTOMATIC LOGIC VALIDATOR MODAL -->
+    <div id="validatorModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-md hidden">
+        <div class="bg-slate-900 border-2 border-emerald-500 rounded-3xl max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col p-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-4">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-list-check text-emerald-400 text-2xl animate-pulse"></i>
+                    <div>
+                        <h3 id="validatorTitle" class="text-lg font-black text-white">50題走壘戰術組合 - 邏輯自動驗證器</h3>
+                        <p id="validatorIntro" class="text-xs text-slate-400">系統即時生成 50 組隨機矩陣狀況，並比對大聯盟/中職戰術邏輯，確保決策判定 100% 正確。</p>
+                    </div>
+                </div>
+                <button onclick="toggleValidatorModal(false)" class="text-slate-400 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="overflow-y-auto flex-grow rounded-2xl border border-slate-800 bg-slate-950/80 p-2 text-xs">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-slate-400 font-black">
+                            <th class="p-2.5">題號</th>
+                            <th class="p-2.5">出局數</th>
+                            <th class="p-2.5">在壘分佈</th>
+                            <th class="p-2.5">打擊類型</th>
+                            <th class="p-2.5">處理野手</th>
+                            <th class="p-2.5">焦點跑者</th>
+                            <th class="p-2.5 text-center">強迫進壘</th>
+                            <th class="p-2.5 text-center">正確答案</th>
+                            <th class="p-2.5 text-center">觸發位階</th>
+                            <th class="p-2.5 text-center">驗證</th>
+                        </tr>
+                    </thead>
+                    <tbody id="validatorTableBody" class="divide-y divide-slate-900 font-medium">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-950/60 p-4 rounded-2xl border border-slate-850">
+                <div class="text-left">
+                    <span id="validatorResultLabel" class="text-xs text-slate-400">50 題跑單驗證結果：</span>
+                    <span id="validatorStatusText" class="text-sm font-black text-emerald-400 block">🟢 正在進行邏輯校驗中...</span>
+                </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="run50ScenariosValidator()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-4 py-2.5 rounded-xl transition-all text-xs flex items-center gap-2">
+                        <i class="fa-solid fa-rotate"></i> <span id="validatorRerunText">重新模擬並再跑 50 題</span>
+                    </button>
+                    <button onclick="toggleValidatorModal(false)" class="bg-slate-800 hover:bg-slate-700 text-white font-black px-4 py-2.5 rounded-xl transition-all text-xs">
+                        關閉視窗
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GENERAL HANDBOOK MODAL -->
+    <div id="helpModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-4">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-book-bookmark text-amber-500 text-xl"></i>
+                    <h3 class="text-base sm:text-lg font-black text-white">總教練的「小球員跑壘判斷講義」</h3>
+                </div>
+                <button onclick="toggleHelpModal(false)" class="text-slate-400 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <div>
+                    <h4 class="font-black text-amber-400 text-xs sm:text-sm mb-2">🏆 跑壘判斷「四維規則位階」：</h4>
+                    <div id="ruleHierarchyContent" class="space-y-2 border-l-2 border-blue-500 pl-4 my-3 text-xs"></div>
+                </div>
+
+                <hr class="border-slate-800">
+                
+                <div>
+                    <h4 class="font-black text-amber-400 text-xs sm:text-sm mb-2">⚾ 跑壘四大決策核心含義：</h4>
+                    <ul id="decisionMeaningList" class="list-disc pl-5 space-y-2 text-xs"></ul>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <button onclick="toggleHelpModal(false)" class="bg-blue-600 hover:bg-blue-500 text-white font-black px-6 py-3 rounded-2xl transition-all w-full sm:w-auto text-sm sm:text-base">
+                    我記住了，下場挑戰！
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ANSWER EXPLANATION MODAL -->
+    <div id="answerModal" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
+        <div class="w-full max-w-2xl rounded-3xl bg-white border border-emerald-100 shadow-2xl overflow-hidden">
+            <div id="answerModalHeader" class="px-5 py-4 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between gap-3">
+                <div>
+                    <p id="answerModalEyebrow" class="text-xs font-black tracking-wider text-emerald-600">判定結果</p>
+                    <h3 id="answerModalTitle" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">答對了！</h3>
+                </div>
+                <span id="answerModalBadge" class="px-3 py-1 rounded-full text-xs font-black bg-emerald-600 text-white">SAFE</span>
+            </div>
+            <div class="p-5 space-y-4 text-slate-800">
+                <div class="grid sm:grid-cols-2 gap-3">
+                    <div class="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                        <p class="text-xs font-black text-slate-500 mb-1">你的選擇</p>
+                        <p id="answerModalYourChoice" class="text-sm font-black text-slate-900"></p>
+                    </div>
+                    <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-3">
+                        <p class="text-xs font-black text-emerald-600 mb-1">正確答案</p>
+                        <p id="answerModalCorrectChoice" class="text-sm font-black text-slate-900"></p>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl bg-white border border-slate-200 p-4">
+                    <h4 class="text-sm font-black text-slate-900 mb-2">為什麼這題這樣判斷？</h4>
+                    <p id="answerModalReason" class="text-sm leading-relaxed font-bold text-slate-700"></p>
+                </div>
+
+                <div id="answerModalMistakeBox" class="rounded-2xl bg-rose-50 border border-rose-100 p-4 hidden">
+                    <h4 class="text-sm font-black text-rose-700 mb-2">如果選錯，錯在哪裡？</h4>
+                    <p id="answerModalMistake" class="text-sm leading-relaxed font-bold text-rose-800"></p>
+                </div>
+
+                <div class="rounded-2xl bg-sky-50 border border-sky-100 p-4">
+                    <h4 class="text-sm font-black text-sky-700 mb-2">相關棒球規則</h4>
+                    <p id="answerModalRule" class="text-sm leading-relaxed font-bold text-slate-700"></p>
+                </div>
+            </div>
+            <div class="px-5 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row gap-2 sm:justify-end">
+                <button onclick="toggleAnswerModal(false)" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-black text-sm hover:bg-slate-100 transition-all">
+                    先留在本題
+                </button>
+                <button onclick="goNextQuestionFromModal()" class="px-5 py-3 rounded-2xl bg-blue-600 text-white font-black text-sm hover:bg-blue-500 transition-all">
+                    下一題 <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
+        <span>© 2026 棒球跑壘觀念訓練系統 - 專屬配合台灣少棒基層培訓</span>
+        <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
+    </footer>
+
+    <script>
+        /* CORE STATES */
+        let playerJersey = "99";
+        let playerName = "王小明";
+        let soundEnabled = true;
+        let toneInitialized = false;
+        let nightMode = false;
+
+        let hitSynth, successSynth, failSynth, cheerNoise;
+
+        function submitPlayerRegistry() {
+            const jerseyInput = document.getElementById('playerJersey').value;
+            const nameInput = document.getElementById('playerName').value;
+            
+            if (jerseyInput) playerJersey = jerseyInput;
+            if (nameInput) playerName = nameInput;
+
+            document.getElementById('headerPlayerDisplay').innerText = `#${playerJersey} ${playerName}`;
+            document.getElementById('registryModal').classList.add('hidden');
+            
+            initAudio();
+        }
+
+        function toggleLights() {
+            nightMode = !nightMode;
+            const lightsBtn = document.getElementById('lightsBtn');
+            const lightsIcon = document.getElementById('lightsIcon');
+            const lightsLabel = document.getElementById('lightsLabel');
+
+            if (nightMode) {
+                lightsBtn.className = "bg-amber-500 hover:bg-amber-400 text-slate-950 px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-black border border-amber-400 transition-all shadow-lg shadow-amber-500/20";
+                lightsIcon.className = "fa-solid fa-sun text-slate-950";
+                lightsLabel.innerText = "日間球場";
+            } else {
+                lightsBtn.className = "bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-black border border-slate-800 transition-all";
+                lightsIcon.className = "fa-solid fa-moon text-blue-400";
+                lightsLabel.innerText = "夜間開燈";
+            }
+            drawStadium();
+        }
+
+        function toggleHelpModal(show) {
+            const modal = document.getElementById('helpModal');
+            if (show) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function toggleValidatorModal(show) {
+            const modal = document.getElementById('validatorModal');
+            if (show) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        async function initAudio() {
+            if (toneInitialized) return;
+            try {
+                await Tone.start();
+                toneInitialized = true;
+                setupSynths();
+                const toast = document.getElementById('audioToast');
+                if (toast) toast.classList.add('hidden');
+            } catch (e) {
+                console.warn("Failed to start Tone.js audio context:", e);
+            }
+        }
+
+        function setupSynths() {
+            try {
+                hitSynth = new Tone.NoiseSynth({
+                    noise: { type: 'pink' },
+                    envelope: { attack: 0.002, decay: 0.12, sustain: 0 }
+                }).toDestination();
+                hitSynth.volume.value = -4;
+
+                successSynth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: 'sine' },
+                    envelope: { attack: 0.02, decay: 0.08, sustain: 0.2, release: 0.3 }
+                }).toDestination();
+                successSynth.volume.value = -12;
+
+                failSynth = new Tone.Synth({
+                    oscillator: { type: 'triangle' },
+                    envelope: { attack: 0.05, decay: 0.3, sustain: 0, release: 0.1 }
+                }).toDestination();
+                failSynth.volume.value = -8;
+
+                const bandpass = new Tone.Filter({
+                    type: "bandpass",
+                    frequency: 900,
+                    Q: 1.2
+                }).toDestination();
+
+                cheerNoise = new Tone.NoiseSynth({
+                    noise: { type: "white" },
+                    envelope: { attack: 0.4, decay: 1.2, sustain: 0.3, release: 0.8 }
+                }).connect(bandpass);
+                cheerNoise.volume.value = -14;
+            } catch (error) {
+                console.warn("Synth creation errors:", error);
+            }
+        }
+
+        function playHitSound() {
+            if (!soundEnabled || !toneInitialized || !hitSynth) return;
+            try { hitSynth.triggerAttackRelease("16n"); } catch (e) {}
+        }
+
+        function playSuccessSound() {
+            if (!soundEnabled || !toneInitialized || !successSynth) return;
+            try {
+                const now = Tone.now();
+                successSynth.triggerAttackRelease("C5", "16n", now);
+                successSynth.triggerAttackRelease("E5", "16n", now + 0.08);
+                successSynth.triggerAttackRelease("G5", "16n", now + 0.16);
+                successSynth.triggerAttackRelease("C6", "8n", now + 0.24);
+            } catch (e) {}
+        }
+
+        function playFailSound() {
+            if (!soundEnabled || !toneInitialized || !failSynth) return;
+            try {
+                const now = Tone.now();
+                failSynth.triggerAttackRelease("A2", "8n", now);
+                failSynth.triggerAttackRelease("G#2", "4n", now + 0.12);
+            } catch (e) {}
+        }
+
+        function playCheerSound() {
+            if (!soundEnabled || !toneInitialized || !cheerNoise) return;
+            try { cheerNoise.triggerAttackRelease("1.5s"); } catch (e) {}
+        }
+
+        window.addEventListener('click', initAudio);
+
+        /*
+         * BASERUNNING CONTENT CONFIG
+         * 之後要調整題目、規則、講義、選項文案，優先改這一區；下方遊戲程式只負責呈現與互動。
+         */
+        const BASERUNNING_CONTENT = {
+            questionCount: 10,
+            validationCount: 50,
+            answerKeyPool: ['A', 'A', 'A', 'B', 'B', 'C', 'C', 'D', 'D', 'D'],
+            baseNames: {
+                1: "一壘",
+                2: "二壘",
+                3: "三壘"
+            },
+            outOptions: [0, 1, 2],
+            runnerOptions: [
+                { id: "1", text: "一壘有人", array: [1] },
+                { id: "2", text: "二壘有人", array: [2] },
+                { id: "3", text: "三壘有人", array: [3] },
+                { id: "12", text: "一、二壘有人", array: [1, 2] },
+                { id: "13", text: "一、三壘有人", array: [1, 3] },
+                { id: "23", text: "二、三壘有人", array: [2, 3] },
+                { id: "123", text: "滿壘", array: [1, 2, 3] }
+            ],
+            hitTypes: [
+                { id: "grounder", text: "滾地球" },
+                { id: "line_drive", text: "平飛球" },
+                { id: "fly_ball", text: "高飛球" },
+                { id: "clean_hit", text: "安打" }
+            ],
+            hitVariants: [
+                { id: "grounder_infield", hitTypeId: "grounder", direction: "內野", depth: "地面", fielderGroup: "infield", isDeepFly: false },
+                { id: "line_drive_infield", hitTypeId: "line_drive", direction: "內野", depth: "低平", fielderGroup: "infield", isDeepFly: false },
+                { id: "fly_ball_infield_short", hitTypeId: "fly_ball", direction: "內野", depth: "短淺", fielderGroup: "infield", isDeepFly: false },
+                { id: "fly_ball_outfield_short", hitTypeId: "fly_ball", direction: "外野", depth: "短淺", fielderGroup: "outfield", isDeepFly: false },
+                { id: "fly_ball_outfield_deep", hitTypeId: "fly_ball", direction: "外野", depth: "深遠", fielderGroup: "outfield", isDeepFly: true },
+                { id: "clean_hit_outfield", hitTypeId: "clean_hit", direction: "外野", depth: "落地", fielderGroup: "outfield", isDeepFly: false }
+            ],
+            fielderGroups: {
+                infield: ["P", "1B", "2B", "3B", "SS"],
+                leftSideInfield: ["SS", "3B"],
+                outfield: ["LF", "CF", "RF"],
+                shortFly: ["1B", "2B", "3B", "SS", "LF", "CF", "RF"]
+            },
+            fielders: {
+                "P": { name: "投手", x: 200, y: 214 },
+                "C": { name: "捕手", x: 200, y: 356 },
+                "1B": { name: "一壘手", x: 306, y: 166 },
+                "2B": { name: "二壘手", x: 260, y: 108 },
+                "3B": { name: "三壘手", x: 94, y: 166 },
+                "SS": { name: "游擊手", x: 140, y: 108 },
+                "LF": { name: "左外野手", x: 72, y: 96 },
+                "CF": { name: "中外野手", x: 200, y: 42 },
+                "RF": { name: "右外野手", x: 328, y: 96 }
+            },
+            decisions: {
+                A: {
+                    title: "積極起跑",
+                    text: "毫不猶豫全力衝向下一壘包",
+                    teaching: "毫不猶豫全力推進。適用於安打確定、強迫進壘、或已經【2出局】的任何打擊！",
+                    miss: (ctx) => ctx.outs === 2
+                        ? "兩出局請選起跑，但目前非兩出局，盲目起跑會被雙殺！"
+                        : "此情境不適合立刻起跑。未確認球落地或並無強迫進壘壓力，跑了會送死！"
+                },
+                B: {
+                    title: "離壘觀望",
+                    text: "踏出 1/3 安全距離，盯著球落地",
+                    teaching: "移動離壘約 1/3，視落地或接殺再決定。常用於無/1死時的外野飛球。",
+                    miss: () => "觀望策略在此情境不對。這時球不可能接殺（安打/強迫進壘）或必須回踩壘包（平飛球），不需要觀望！"
+                },
+                C: {
+                    title: "踩壘待命",
+                    text: "腳踩壘包保持接觸，盯著球準備 Tag up 起跑",
+                    teaching: "腳必須接觸壘包待命，不能先離開一點點；等野手完成接殺瞬間，才可以合法起跑推進（高飛犧牲打 / Tag up）。",
+                    miss: () => "此情境不用踩壘等待。如果是不管怎樣都得出局的兩出局，或是大安打，你留在壘包上只會浪費極佳進攻局勢！"
+                },
+                D: {
+                    title: "留在原壘",
+                    text: "退回原壘包抱緊，完全不做冒險移動",
+                    teaching: "保持回防預備不動。適用於平飛球迅速回踩防雙殺、非強迫進壘的內野滾地球，或已宣告之「內野高飛球」。",
+                    miss: () => "此情境下絕對不能待著不動！你面臨了強迫進壘或這是可以得分/推進的黃金機會，原地不動等於等著被裁決出局。"
+                }
+            },
+            teachingLevels: [
+                {
+                    title: "第一位階：出局數（兩死必跑）",
+                    text: "只要兩出局，見球就跑！其餘任何戰術規則均直接無視（選 A）。"
+                },
+                {
+                    title: "第二位階：彈道避殺令（平飛/內野高飛）",
+                    text: "小於兩出局時，平飛球有雙殺危險必立刻回壘（選 D）；內野高飛擊球員出局，強迫狀態解除，站定原壘（選 D）。"
+                },
+                {
+                    title: "第三位階：強迫進壘權（壘包義務）",
+                    text: "滾地落地後，若後方塞車就是強迫進壘，滾地必衝下一壘（選 A）；不塞車則應安全「留在原壘」（選 D）。"
+                },
+                {
+                    title: "第四位階：戰術深度位（深度與效益）",
+                    text: "深遠飛球時，三壘跑者腳踩壘包保持接觸，等接殺完成瞬間 Tag up 搶分（選 C）；一、二壘則前移 1/3 安全「離壘觀望」等待落地或接殺（選 B）。"
+                }
+            ],
+            rulePrinciples: {
+                1: {
+                    title: "兩出局的跑壘原理",
+                    text: "兩出局時，只要這球被接殺或一壘封殺，半局就結束；跑者留在壘上也沒有保留價值。因此擊球後應立刻起跑，爭取一切可能的落地或失誤推進機會。"
+                },
+                2: {
+                    title: "飛球接殺與回壘義務",
+                    text: "當擊出的球在空中被野手接殺時，跑者必須先回到原本占有的壘包，或在野手接到球時仍接觸該壘包；若提前離壘且未能及時回踩，守備方可傳回原壘 appeal 使跑者出局。這就是平飛球要立刻回壘、內野高飛球要先站穩原壘的原因。"
+                },
+                3: {
+                    title: "強迫進壘與封殺規則",
+                    text: "當後方壘包有跑者推進、使你失去原本壘包權利時，就形成強迫進壘。滾地球落地後，守備方只要持球踩到你被迫前往的下一個壘包即可封殺你，不需要觸碰跑者本人；沒有被強迫時，盲目離壘反而會讓自己暴露在觸殺風險中。"
+                },
+                4: {
+                    title: "Tag up 的規則原理",
+                    text: "飛球被接殺時，跑者不能從提前離壘的位置直接推進；必須先接觸原壘包，等野手完成接殺後才可以離壘前進，這個動作稱為 Tag up。三壘跑者要把腳踩在壘包上保持接觸，不是離開一點點；等外野手接到球的瞬間才起跑衝本壘。一、二壘距離較長，通常先離壘觀望，兼顧落地推進與接殺回壘安全。"
+                }
+            },
+            ruleResults: {
+                twoOutsRun: {
+                    correct: 'A',
+                    level: 1,
+                    explanation: "太棒了！請深深記住棒球鐵則：『兩出局，見球就跑！』不論是高飛球、滾地球還是安打，被接殺也是直接換局，若是落地漏接你則可以多搶下一個壘包！"
+                },
+                lineDriveReturn: {
+                    correct: 'D',
+                    level: 2,
+                    explanation: "精準的反射！平飛球（Line Drive）是雙殺之王。在兩出局前，必須第一時間採取「留在原壘（迅速回踩）」，以防被野手直接接殺後，來不及回壘造成悲劇雙殺！"
+                },
+                infieldFlyStay: {
+                    correct: 'D',
+                    level: 2,
+                    explanation: "沒錯，觀念非常好！這符合「內野高飛球（Infield Fly）」宣告條件。主審宣告後擊球員已自動出局，強迫進壘狀態解除，跑者待在原壘包上是最安全、完全無風險的選擇！"
+                },
+                cleanHitRun: {
+                    correct: 'A',
+                    level: 3,
+                    explanation: "完全正確！球已經乾淨地穿出防守形成落地安打，此時沒有被空中接殺的威脅，全體跑者必須毫不遲疑「積極起跑」，搶占更多壘包！"
+                },
+                forcedGrounderRun: {
+                    correct: 'A',
+                    level: 3,
+                    explanation: "答對了！此情境下你是「強迫進壘」狀態（後方壘包均有跑者塞車）。只要擊出滾地球，不論落點好壞，你都必須全速「積極起跑」，猶豫一秒就會被輕鬆封殺！"
+                },
+                leftSideGrounderStay: {
+                    correct: 'D',
+                    level: 3,
+                    explanation: "觀念非常機智！滾地球打向左半邊的游擊手或三壘手正面，他們距離三壘非常近。身為二壘跑者的你此時絕對不能盲目起跑，保持「留在原壘」是唯一正確的選擇！"
+                },
+                unforcedGrounderStay: {
+                    correct: 'D',
+                    level: 3,
+                    explanation: "觀念清晰！這是「非強迫進壘」情境。內野滾地球如果盲目進壘，極容易在沒有強迫壓力的情境下，被野手直接傳球觸殺在下一個壘線上。此時「留在原壘」才是最安全的守備策略！"
+                },
+                deepFlyThirdTag: {
+                    correct: 'C',
+                    level: 4,
+                    explanation: "完美的判斷！三壘跑者在面對外野深遠高飛球時，最好的得分利器就是「踩壘待命（Tag up）」。腳要接觸三壘壘包，盯著外野手手套，接殺完成瞬間才合法起跑衝本壘！"
+                },
+                deepFlyHalfway: {
+                    correct: 'B',
+                    level: 4,
+                    explanation: "正確！一、二壘跑者在深遠高飛球情境下推進距離長、Tag up 不易，最佳決策是「離壘觀望（Halfway）」。若落地立刻進壘，若被接殺也能安全退回原壘。"
+                },
+                shortFlyHalfway: {
+                    correct: 'B',
+                    level: 4,
+                    explanation: "答對了！淺外野或內野邊緣飛球極容易被接殺。採用「離壘觀望（Halfway）」才是兼顧安全與進壘機會的黃金中庸之道！"
+                },
+                fallbackStay: {
+                    correct: 'D',
+                    level: 4,
+                    explanation: "安全留在原壘不動."
+                }
+            }
+        };
+
+        const outOptions = BASERUNNING_CONTENT.outOptions;
+        const runnerOptions = BASERUNNING_CONTENT.runnerOptions;
+        const hitTypes = BASERUNNING_CONTENT.hitTypes;
+        const fielders = BASERUNNING_CONTENT.fielders;
+        let scenarioMatrixCache = null;
+
+        let particles = [];
+        function createDust(x, y, count = 5) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 1.5,
+                    vy: (Math.random() - 0.5) * 1.5 - 0.5,
+                    radius: Math.random() * 3 + 1,
+                    alpha: 0.8,
+                    color: "#b45309",
+                    decay: 0.02
+                });
+            }
+        }
+
+        function createGrassSplash(x, y, count = 12) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 3,
+                    vy: (Math.random() - 0.5) * 3 - 1.5,
+                    radius: Math.random() * 2.5 + 1,
+                    alpha: 0.9,
+                    color: Math.random() > 0.3 ? "#22c55e" : "#f1f5f9",
+                    decay: 0.015
+                });
+            }
+        }
+
+        function updateAndDrawParticles(ctx, scale) {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= p.decay;
+
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x * scale, p.y * scale, p.radius * scale, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function getBaseName(base) {
+            return BASERUNNING_CONTENT.baseNames[base] || "";
+        }
+
+        function pickRandom(items) {
+            return items[Math.floor(Math.random() * items.length)];
+        }
+
+        function shuffleList(items) {
+            const list = [...items];
+            for (let i = list.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [list[i], list[j]] = [list[j], list[i]];
+            }
+            return list;
+        }
+
+        function getHitTypeById(hitTypeId) {
+            return hitTypes.find(hitType => hitType.id === hitTypeId);
+        }
+
+        function isPlayerForcedToAdvance(playerBase, runners) {
+            if (playerBase === 1) return true;
+            if (playerBase === 2) return runners.includes(1);
+            if (playerBase === 3) return runners.includes(1) && runners.includes(2);
+            return false;
+        }
+
+        function isInfieldFlyActive(hitType, isDeepFly, fielderKey, runners, outs) {
+            return hitType.id === "fly_ball"
+                && !isDeepFly
+                && BASERUNNING_CONTENT.fielderGroups.infield.includes(fielderKey)
+                && runners.includes(1)
+                && runners.includes(2)
+                && outs < 2;
+        }
+
+        function makeRuleResult(ruleKey) {
+            return {
+                ...BASERUNNING_CONTENT.ruleResults[ruleKey],
+                ruleKey: ruleKey
+            };
+        }
+
+        function buildDecisionOptions(resolvedRule, context) {
+            return Object.entries(BASERUNNING_CONTENT.decisions).map(([id, decision]) => ({
+                id: id,
+                text: `${id}. 「${decision.title}」：${decision.text}`,
+                explain: resolvedRule.correct === id ? resolvedRule.explanation : decision.miss(context)
+            }));
+        }
+
+        function getDecisionLabel(choiceId) {
+            const decision = BASERUNNING_CONTENT.decisions[choiceId];
+            return decision ? `${choiceId}. ${decision.title}` : choiceId;
+        }
+
+        function getRuleTeachingByLevel(level) {
+            return BASERUNNING_CONTENT.teachingLevels[level - 1] || null;
+        }
+
+        function getRulePrincipleByLevel(level) {
+            return BASERUNNING_CONTENT.rulePrinciples[level] || null;
+        }
+
+        function getRunTarget(correct, isPlayerForced) {
+            if (correct === 'A') return isPlayerForced ? "force_all" : "run_to_home";
+            if (correct === 'B') return "halfway_1to2";
+            if (correct === 'C') return "tag_up_3toH";
+            return "stay_on_bases";
+        }
+
+        function getAnswerPoolRatioText() {
+            return ['A', 'B', 'C', 'D']
+                .map(answer => BASERUNNING_CONTENT.answerKeyPool.filter(item => item === answer).length)
+                .join(':');
+        }
+
+        function buildShuffledAnswerPool() {
+            const pool = [...BASERUNNING_CONTENT.answerKeyPool];
+            while (pool.length < BASERUNNING_CONTENT.questionCount) {
+                pool.push(pickRandom(['A', 'B', 'C', 'D']));
+            }
+
+            for (let i = pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+
+            return pool.slice(0, BASERUNNING_CONTENT.questionCount);
+        }
+
+        function describeRunnerSituation(playerBase, teammates) {
+            const playerBaseName = getBaseName(playerBase);
+            if (teammates.length > 0) {
+                const teamBasesText = teammates.map(getBaseName).join("、");
+                return `${playerBaseName}有人，隊友在${teamBasesText}`;
+            }
+            return `${playerBaseName}有人，一、二壘無人`;
+        }
+
+        function buildAnnouncerDescription(context) {
+            const { hitType, fielder, playerBaseName, isDeepFly, isPlayerForced, isInfieldFly } = context;
+
+            if (hitType.id === "clean_hit") {
+                return `「打擊區傳來一聲清脆的擊球聲！打者揮棒咬中球心，球強勁地穿越內野防線，落入外野草地形成安打！${fielder.name}正全速趕往落點處理球！現在，身為【${playerBaseName}跑者】的你，該如何做出關鍵決策？」`;
+            }
+            if (hitType.id === "line_drive") {
+                return `「投手投出，打者猛力一拉！這是一記非常強勁的平飛球，低平且快速地直竄到${fielder.name}的守備範圍！手套早就就位了！現在，身為【${playerBaseName}跑者】的你，該做出何種決策？」`;
+            }
+            if (isInfieldFly) {
+                return `「揮棒打擊！這一球打得又高又短，在內野上空垂直升起！${fielder.name}已經在球下方張開雙手等待，裁判同時也高舉右手，宣告『Infield Fly 內野高飛球』！現在，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
+            }
+            if (hitType.id === "fly_ball" && isDeepFly) {
+                return `「這一棒拉得非常高、非常深遠！球高高地飛往外野深處，落點朝向${fielder.name}的防守範圍，外野手退到全壘打牆前準備接殺！現在，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
+            }
+            if (hitType.id === "fly_ball") {
+                return `「打擊出去！球棒切得比較薄，形成一個不深不淺的高飛球，球正飛往${fielder.name}的守備範圍，野手已經定位準備接球！現在，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
+            }
+            if (hitType.id === "grounder" && isPlayerForced) {
+                return `「一棒揮出！打成內野方向的強勁滾地球，球在地面快速彈跳，正滾向${fielder.name}的防守範圍！野手已經向前挺進準備接球傳壘！現在你面臨強迫進壘，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
+            }
+            if (hitType.id === "grounder") {
+                return `「出棒擊球！這是一顆內野滾地球，球沿著地面彈跳前進，正滾向${fielder.name}的守備位置！野手快速接球，準備傳向一壘抓出局數。現在一壘空空如也，身為【${playerBaseName}跑者】的你，應做出何種決策？」`;
+            }
+
+            return "球打出去後，請依據出局數、壘包狀態與球的落點做出跑壘判斷。";
+        }
+
+        function isScenarioLanguageSafe(description, hitTypeId) {
+            const forbiddenTermsByHitType = {
+                grounder: ["飛向", "飛往", "高高地飛", "上空垂直升起", "準備接殺"],
+                line_drive: ["滾向", "滾動", "彈跳前進", "高高地飛"],
+                fly_ball: ["滾向", "滾動", "彈跳前進", "沿著地面"],
+                clean_hit: ["準備接殺", "內野上空垂直升起"]
+            };
+            const forbiddenTerms = forbiddenTermsByHitType[hitTypeId] || [];
+            return !forbiddenTerms.some(term => description.includes(term));
+        }
+
+        function renderTeachingContent() {
+            const hierarchyContainer = document.getElementById('ruleHierarchyContent');
+            const decisionList = document.getElementById('decisionMeaningList');
+
+            hierarchyContainer.innerHTML = BASERUNNING_CONTENT.teachingLevels
+                .map(level => `<p><strong>${level.title}</strong> - ${level.text}</p>`)
+                .join('');
+
+            decisionList.innerHTML = Object.entries(BASERUNNING_CONTENT.decisions)
+                .map(([id, decision]) => `<li><strong class="text-white">${id}. 「${decision.title}」：</strong> ${decision.teaching}</li>`)
+                .join('');
+        }
+
+        function renderContentMetadata() {
+            const questionCount = BASERUNNING_CONTENT.questionCount;
+            const validationCount = BASERUNNING_CONTENT.validationCount;
+            const matrixCount = getScenarioMatrix().length;
+
+            document.getElementById('totalQuestionNum').innerText = questionCount;
+            document.getElementById('validatorButtonText').innerText = `🧪 ${validationCount}題邏輯驗證`;
+            document.getElementById('validatorTitle').innerText = `${validationCount}題走壘戰術組合 - 邏輯自動驗證器`;
+            document.getElementById('validatorIntro').innerText = `系統已展開 ${matrixCount} 組題型矩陣，並抽樣 ${validationCount} 題比對跑壘規則，確保決策判定穩定。`;
+            document.getElementById('validatorResultLabel').innerText = `${validationCount} 題跑單驗證結果：`;
+            document.getElementById('validatorRerunText').innerText = `重新模擬並再跑 ${validationCount} 題`;
+            document.getElementById('footerFeatureText').innerText = `系統功能：${matrixCount}組題型矩陣生成引擎 • ${validationCount}題邏輯自動校驗器`;
+        }
+
+        function toggleAnswerModal(show) {
+            const modal = document.getElementById('answerModal');
+            if (show) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function showAnswerExplanationModal(choiceId, selectedOpt, isCorrect) {
+            const currentQ = generatedQuestions[currentQuestionIdx];
+            const correctOpt = currentQ.options.find(o => o.id === currentQ.correct);
+            const ruleTeaching = getRuleTeachingByLevel(currentQ.level);
+            const rulePrinciple = getRulePrincipleByLevel(currentQ.level);
+            const modalHeader = document.getElementById('answerModalHeader');
+            const modalTitle = document.getElementById('answerModalTitle');
+            const modalBadge = document.getElementById('answerModalBadge');
+            const mistakeBox = document.getElementById('answerModalMistakeBox');
+
+            if (isCorrect) {
+                modalHeader.className = "px-5 py-4 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between gap-3";
+                modalTitle.innerText = "答對了，這球判斷漂亮！";
+                modalBadge.className = "px-3 py-1 rounded-full text-xs font-black bg-emerald-600 text-white";
+                modalBadge.innerText = "SAFE";
+                mistakeBox.classList.add('hidden');
+            } else {
+                modalHeader.className = "px-5 py-4 bg-rose-50 border-b border-rose-100 flex items-center justify-between gap-3";
+                modalTitle.innerText = "這題出局了，再看一次規則";
+                modalBadge.className = "px-3 py-1 rounded-full text-xs font-black bg-rose-600 text-white";
+                modalBadge.innerText = "OUT";
+                mistakeBox.classList.remove('hidden');
+            }
+
+            document.getElementById('answerModalEyebrow').innerText = `第 ${currentQ.level} 位階規則`;
+            document.getElementById('answerModalYourChoice').innerText = getDecisionLabel(choiceId);
+            document.getElementById('answerModalCorrectChoice').innerText = `${getDecisionLabel(currentQ.correct)}：${BASERUNNING_CONTENT.decisions[currentQ.correct].text}`;
+            document.getElementById('answerModalReason').innerText = correctOpt ? correctOpt.explain : selectedOpt.explain;
+            document.getElementById('answerModalMistake').innerText = selectedOpt.explain;
+            document.getElementById('answerModalRule').innerText = rulePrinciple
+                ? `${rulePrinciple.title}：${rulePrinciple.text}`
+                : ruleTeaching
+                    ? `${ruleTeaching.title}：${ruleTeaching.text}`
+                : "依照本題的出局數、跑者是否被強迫進壘、擊球型態與球的深淺位置判斷跑壘策略。";
+
+            toggleAnswerModal(true);
+        }
+
+        function goNextQuestionFromModal() {
+            toggleAnswerModal(false);
+            loadQuestion(currentQuestionIdx + 1);
+        }
+
+        /*
+         * BASERUNNING RULE SEQUENCE
+         * 規則位階與觸發條件集中在這裡，solveBaserunningRule 只依序套用，不再藏棒球規則。
+         */
+        const BASERUNNING_RULE_SEQUENCE = [
+            {
+                id: 'twoOutsRun',
+                label: '第一位階：兩出局必跑',
+                matches: (ctx) => ctx.outs === 2
+            },
+            {
+                id: 'lineDriveReturn',
+                label: '第二位階：平飛球避雙殺',
+                matches: (ctx) => ctx.hitType.id === "line_drive"
+            },
+            {
+                id: 'infieldFlyStay',
+                label: '第二位階：內野高飛球解除強迫',
+                matches: (ctx) => ctx.hasInfieldFly
+            },
+            {
+                id: 'cleanHitRun',
+                label: '第三位階：安打落地積極推進',
+                matches: (ctx) => ctx.hitType.id === "clean_hit"
+            },
+            {
+                id: 'forcedGrounderRun',
+                label: '第三位階：滾地球且被強迫進壘',
+                matches: (ctx) => ctx.hitType.id === "grounder" && ctx.isPlayerForced
+            },
+            {
+                id: 'leftSideGrounderStay',
+                label: '第三位階：二壘非強迫且左半邊滾地',
+                matches: (ctx) => ctx.hitType.id === "grounder"
+                    && ctx.playerBase === 2
+                    && BASERUNNING_CONTENT.fielderGroups.leftSideInfield.includes(ctx.fielderKey)
+            },
+            {
+                id: 'unforcedGrounderStay',
+                label: '第三位階：滾地球但非強迫進壘',
+                matches: (ctx) => ctx.hitType.id === "grounder"
+            },
+            {
+                id: 'deepFlyThirdTag',
+                label: '第四位階：三壘深遠飛球 Tag up',
+                matches: (ctx) => ctx.hitType.id === "fly_ball" && ctx.isDeepFly && ctx.playerBase === 3
+            },
+            {
+                id: 'deepFlyHalfway',
+                label: '第四位階：一二壘深遠飛球離壘觀望',
+                matches: (ctx) => ctx.hitType.id === "fly_ball" && ctx.isDeepFly
+            },
+            {
+                id: 'shortFlyHalfway',
+                label: '第四位階：短淺飛球離壘觀望',
+                matches: (ctx) => ctx.hitType.id === "fly_ball"
+            }
+        ];
+
+        /**
+         * Rule solver: applies the separated baserunning rule hierarchy from BASERUNNING_CONTENT.
+         */
+        function solveBaserunningRule(outs, runners, playerBase, hitType, fielderKey, isDeepFly) {
+            const ruleContext = {
+                outs: outs,
+                runners: runners,
+                playerBase: playerBase,
+                hitType: hitType,
+                fielderKey: fielderKey,
+                isDeepFly: isDeepFly,
+                isPlayerForced: isPlayerForcedToAdvance(playerBase, runners),
+                hasInfieldFly: isInfieldFlyActive(hitType, isDeepFly, fielderKey, runners, outs)
+            };
+            const matchedRule = BASERUNNING_RULE_SEQUENCE.find(rule => rule.matches(ruleContext));
+
+            return makeRuleResult(matchedRule ? matchedRule.id : 'fallbackStay');
+        }
+
+        function createScenarioFromMatrixEntry(entry, id) {
+            const hitType = getHitTypeById(entry.hitTypeId);
+            const fielder = fielders[entry.fielderKey];
+            if (!hitType || !fielder) return null;
+
+            const runners = [...entry.runners];
+            const playerBase = entry.playerBase;
+            const teammates = runners.filter(b => b !== playerBase);
+            const resolvedRule = solveBaserunningRule(entry.outs, runners, playerBase, hitType, entry.fielderKey, entry.isDeepFly);
+            const playerBaseName = getBaseName(playerBase);
+            const isPlayerForced = isPlayerForcedToAdvance(playerBase, runners);
+            const hasInfieldFly = isInfieldFlyActive(hitType, entry.isDeepFly, entry.fielderKey, runners, entry.outs);
+            const scenarioContext = {
+                outs: entry.outs,
+                runners: runners,
+                playerBase: playerBase,
+                playerBaseName: playerBaseName,
+                hitType: hitType,
+                fielder: fielder,
+                isDeepFly: entry.isDeepFly,
+                isPlayerForced: isPlayerForced,
+                isInfieldFly: hasInfieldFly
+            };
+            const announcerDesc = buildAnnouncerDescription(scenarioContext);
+
+            if (!isScenarioLanguageSafe(announcerDesc, hitType.id)) {
+                return null;
+            }
+
+            return {
+                id: id,
+                matrixId: entry.matrixId,
+                outs: entry.outs,
+                runners: runners,
+                playerBase: playerBase,
+                teammates: teammates,
+                isPlayerForced: isPlayerForced,
+                category: isPlayerForced ? "【強迫進壘情境】" : "【非強迫進壘 / 飛球情境】",
+                title: `${entry.outs}出局，${describeRunnerSituation(playerBase, teammates)}`,
+                desc: announcerDesc,
+                targetRunner: `玩家【${playerBaseName}跑者】`,
+                options: buildDecisionOptions(resolvedRule, scenarioContext),
+                correct: resolvedRule.correct,
+                level: resolvedRule.level,
+                ruleKey: resolvedRule.ruleKey,
+                batType: hitType.id,
+                hitDirection: entry.direction,
+                hitDepth: entry.depth,
+                fielderKey: entry.fielderKey,
+                runTarget: getRunTarget(resolvedRule.correct, isPlayerForced)
+            };
+        }
+
+        function buildScenarioMatrix() {
+            const matrix = [];
+
+            outOptions.forEach(outs => {
+                runnerOptions.forEach(runnerConfig => {
+                    runnerConfig.array.forEach(playerBase => {
+                        BASERUNNING_CONTENT.hitVariants.forEach(hitVariant => {
+                            const fielderKeys = BASERUNNING_CONTENT.fielderGroups[hitVariant.fielderGroup] || [];
+
+                            fielderKeys.forEach(fielderKey => {
+                                const matrixId = [
+                                    `O${outs}`,
+                                    `R${runnerConfig.id}`,
+                                    `P${playerBase}`,
+                                    hitVariant.id,
+                                    fielderKey
+                                ].join('_');
+
+                                const entry = {
+                                    matrixId: matrixId,
+                                    outs: outs,
+                                    runnerConfigId: runnerConfig.id,
+                                    runners: [...runnerConfig.array],
+                                    playerBase: playerBase,
+                                    hitTypeId: hitVariant.hitTypeId,
+                                    hitVariantId: hitVariant.id,
+                                    direction: hitVariant.direction,
+                                    depth: hitVariant.depth,
+                                    fielderKey: fielderKey,
+                                    isDeepFly: hitVariant.isDeepFly
+                                };
+                                const preview = createScenarioFromMatrixEntry(entry, matrix.length + 1);
+
+                                if (preview) {
+                                    matrix.push({
+                                        ...entry,
+                                        correct: preview.correct,
+                                        level: preview.level,
+                                        ruleKey: preview.ruleKey
+                                    });
+                                }
+                            });
+                        });
+                    });
+                });
+            });
+
+            return matrix;
+        }
+
+        function getScenarioMatrix() {
+            if (!scenarioMatrixCache) {
+                scenarioMatrixCache = buildScenarioMatrix();
+            }
+            return scenarioMatrixCache;
+        }
+
+        function getScenarioMatrixByAnswer(answerKey) {
+            return getScenarioMatrix().filter(entry => entry.correct === answerKey);
+        }
+
+        function generateScenarioWithTarget(targetCorrect, id, usedMatrixIds = new Set()) {
+            const candidates = shuffleList(getScenarioMatrixByAnswer(targetCorrect))
+                .filter(entry => !usedMatrixIds.has(entry.matrixId));
+            const fallbackCandidates = candidates.length > 0
+                ? candidates
+                : shuffleList(getScenarioMatrixByAnswer(targetCorrect));
+
+            for (const entry of fallbackCandidates) {
+                const scenario = createScenarioFromMatrixEntry(entry, id);
+                if (scenario) return scenario;
+            }
+
+            return null;
+        }
+
+        /* 50 SCENARIOS AUTOMATIC LOGIC VALIDATOR CORE */
+        function run50ScenariosValidator() {
+            toggleValidatorModal(true);
+            const tbody = document.getElementById('validatorTableBody');
+            tbody.innerHTML = `<tr><td colspan="10" class="p-4 text-center text-slate-400">正在 procedurally 生成 ${BASERUNNING_CONTENT.validationCount} 組隨機棒球矩陣題並跑單中...</td></tr>`;
+
+            const testPool = ['A', 'B', 'C', 'D'];
+            const scenariosCount = BASERUNNING_CONTENT.validationCount;
+
+            setTimeout(() => {
+                tbody.innerHTML = '';
+                let successCount = 0;
+                const usedMatrixIds = new Set();
+
+                for (let i = 1; i <= scenariosCount; i++) {
+                    const randomTarget = pickRandom(testPool);
+                    const sc = generateScenarioWithTarget(randomTarget, i, usedMatrixIds);
+
+                    if (sc) {
+                        usedMatrixIds.add(sc.matrixId);
+                        const playerBaseName = getBaseName(sc.playerBase);
+                        const teamBases = sc.teammates.map(getBaseName).join("+");
+                        const runnersText = teamBases ? `我(${playerBaseName}) + 隊(${teamBases})` : `我(${playerBaseName})`;
+                        
+                        let typeText = "";
+                        if (sc.batType === "clean_hit") typeText = `⚾ 安打 / ${sc.hitDirection}`;
+                        else if (sc.batType === "line_drive") typeText = `⚡ 平飛球 / ${sc.hitDirection}`;
+                        else if (sc.batType === "fly_ball") typeText = `☁️ 高飛球 / ${sc.hitDepth}${sc.hitDirection}`;
+                        else typeText = `💨 滾地球 / ${sc.hitDirection}`;
+
+                        const row = document.createElement('tr');
+                        row.className = "hover:bg-slate-900/40 transition-colors";
+                        row.innerHTML = `
+                            <td class="p-2.5 font-bold text-slate-400">${i}</td>
+                            <td class="p-2.5 font-black text-red-500">${sc.outs} 死</td>
+                            <td class="p-2.5 text-slate-300 font-bold">${runnersText}</td>
+                            <td class="p-2.5 font-bold">${typeText}</td>
+                            <td class="p-2.5 text-slate-400 font-mono">${sc.fielderKey} (${fielders[sc.fielderKey].name})</td>
+                            <td class="p-2.5 font-black text-cyan-400">${playerBaseName}</td>
+                            <td class="p-2.5 text-center">${sc.isPlayerForced ? '🔥 是' : '❌ 否'}</td>
+                            <td class="p-2.5 text-center"><span class="px-2 py-1 bg-blue-900/50 text-blue-300 rounded font-black border border-blue-700/60">${sc.correct}</span></td>
+                            <td class="p-2.5 text-center"><span class="text-amber-400">第 ${sc.level} 位階</span></td>
+                            <td class="p-2.5 text-center text-emerald-400 font-bold">✅ PASS</td>
+                        `;
+                        tbody.appendChild(row);
+                        successCount++;
+                    }
+                }
+
+                const statusText = document.getElementById('validatorStatusText');
+                statusText.innerHTML = `🟢 成功驗證 ${successCount} 題！目前題型矩陣池共有 ${getScenarioMatrix().length} 組可用組合，邏輯 100% 通過（PASS）。`;
+            }, 300);
+        }
+
+        let currentQuestionIdx = 0;
+        let score = 0;
+        let consecutiveStreak = 0;
+        let generatedQuestions = [];
+        let answered = false;
+
+        const canvas = document.getElementById('fieldCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const center = { x: 200, y: 214 }; 
+        const distance = 118;
+
+        const bases = {
+            home: { x: 200, y: 332 },
+            first: { x: 200 + distance, y: 332 - distance }, 
+            second: { x: 200, y: 332 - distance * 2 },      
+            third: { x: 200 - distance, y: 332 - distance }  
+        };
+
+        const foulLines = {
+            left: { x: 8, y: 142 },   
+            right: { x: 392, y: 142 }  
+        };
+
+        let ballAnim = {
+            active: false,
+            x: bases.home.x,
+            y: bases.home.y,
+            targetX: 200,
+            targetY: 100,
+            progress: 0,
+            arcHeight: 80,
+            type: "fly_ball",
+            bounceCount: 0,
+            trailColor: "rgba(255,255,255,0.35)"
+        };
+        let fieldRunners = []; 
+
+        function resizeCanvas() {
+            const size = canvas.parentElement.clientWidth;
+            canvas.width = size;
+            canvas.height = size;
+            drawStadium();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        function drawStadium() {
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+
+            const scale = w / 400;
+            const scX = (v) => v * scale;
+            const scY = (v) => v * scale;
+
+            const grassStart = nightMode ? "#064e3b" : "#15803d";
+            const grassEnd = nightMode ? "#022c22" : "#064e3b";
+
+            const bgGradient = ctx.createRadialGradient(scX(200), scY(210), scX(30), scX(200), scY(210), scX(250));
+            bgGradient.addColorStop(0, grassStart);
+            bgGradient.addColorStop(1, grassEnd);
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.fillStyle = "rgba(15, 23, 42, 0.35)";
+            ctx.beginPath();
+            ctx.moveTo(scX(bases.home.x), scY(bases.home.y));
+            ctx.lineTo(scX(foulLines.left.x), scY(foulLines.left.y));
+            ctx.quadraticCurveTo(scX(200), scY(-92), scX(foulLines.right.x), scY(foulLines.right.y));
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = "#eab308";
+            ctx.lineWidth = scX(4);
+            ctx.beginPath();
+            ctx.moveTo(scX(foulLines.left.x), scY(foulLines.left.y));
+            ctx.quadraticCurveTo(scX(200), scY(-82), scX(foulLines.right.x), scY(foulLines.right.y));
+            ctx.stroke();
+
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+            ctx.lineWidth = scX(2.5);
+            ctx.beginPath();
+            ctx.moveTo(scX(bases.home.x), scY(bases.home.y));
+            ctx.lineTo(scX(foulLines.left.x), scY(foulLines.left.y));
+            ctx.moveTo(scX(bases.home.x), scY(bases.home.y));
+            ctx.lineTo(scX(foulLines.right.x), scY(foulLines.right.y));
+            ctx.stroke();
+
+            ctx.fillStyle = nightMode ? "#9a3412" : "#c2410c"; 
+            ctx.beginPath();
+            ctx.moveTo(scX(bases.home.x), scY(bases.home.y + 12));
+            ctx.lineTo(scX(bases.first.x + 22), scY(bases.first.y));
+            ctx.lineTo(scX(bases.second.x), scY(bases.second.y - 22));
+            ctx.lineTo(scX(bases.third.x - 22), scY(bases.third.y));
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = nightMode ? "#0f766e" : "#16a34a";
+            ctx.beginPath();
+            ctx.moveTo(scX(200), scY(292));
+            ctx.lineTo(scX(278), scY(214));
+            ctx.lineTo(scX(200), scY(136));
+            ctx.lineTo(scX(122), scY(214));
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+            ctx.lineWidth = scX(1.5);
+            ctx.beginPath();
+            ctx.moveTo(scX(bases.home.x), scY(bases.home.y));
+            ctx.lineTo(scX(bases.first.x), scY(bases.first.y));
+            ctx.lineTo(scX(bases.second.x), scY(bases.second.y));
+            ctx.lineTo(scX(bases.third.x), scY(bases.third.y));
+            ctx.closePath();
+            ctx.stroke();
+
+            drawHomePlateArea(scale);
+
+            ctx.fillStyle = nightMode ? "#7c2d12" : "#9a3412";
+            ctx.beginPath();
+            ctx.arc(scX(center.x), scY(center.y), scX(15), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#e2e8f0";
+            ctx.fillRect(scX(center.x - 7), scY(center.y - 1.5), scX(14), scY(3)); 
+
+            drawBasePlate(bases.home, "home", scale);
+            drawBasePlate(bases.first, "1B", scale);
+            drawBasePlate(bases.second, "2B", scale);
+            drawBasePlate(bases.third, "3B", scale);
+
+            drawFielders(scale);
+
+            if (ballAnim.active) {
+                drawBallFlight(scale);
+            }
+
+            updateAndDrawParticles(ctx, scale);
+            drawRunners(scale);
+
+            if (nightMode) {
+                drawStadiumLights(ctx, w, h, scale);
+            }
+        }
+
+        function drawStadiumLights(ctx, w, h, scale) {
+            const lightPositions = [
+                { x: 30, y: 30 },
+                { x: w - 30, y: 30 },
+                { x: 20, y: h - 50 },
+                { x: w - 20, y: h - 50 }
+            ];
+
+            lightPositions.forEach(p => {
+                const grad = ctx.createRadialGradient(p.x, p.y, 2 * scale, p.x, p.y, 45 * scale);
+                grad.addColorStop(0, "rgba(253, 251, 237, 1)");
+                grad.addColorStop(0.2, "rgba(253, 251, 237, 0.4)");
+                grad.addColorStop(1, "rgba(253, 251, 237, 0)");
+                
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 45 * scale, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = "#475569";
+                ctx.lineWidth = 3 * scale;
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x, p.y + 15 * scale);
+                ctx.stroke();
+
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(p.x - 5 * scale, p.y - 3 * scale, 10 * scale, 6 * scale);
+            });
+        }
+
+        function drawHomePlateArea(scale) {
+            const sx = (v) => v * scale;
+            const sy = (v) => v * scale;
+            const home = bases.home;
+
+            ctx.save();
+            ctx.lineWidth = sx(1.35);
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
+            ctx.fillStyle = nightMode ? "#7c2d12" : "#c2410c";
+
+            const batterBoxW = 20;
+            const batterBoxH = 54;
+            const gapToPlate = 12;
+            const boxTop = home.y - 37;
+            const leftBoxX = home.x - gapToPlate - batterBoxW - 10;
+            const rightBoxX = home.x + gapToPlate + 10;
+
+            // 左右打擊區：只保留乾淨的長方形框線，不加文字與其他輔助區塊。
+            [leftBoxX, rightBoxX].forEach(x => {
+                ctx.fillRect(sx(x), sy(boxTop), sx(batterBoxW), sy(batterBoxH));
+                ctx.strokeRect(sx(x), sy(boxTop), sx(batterBoxW), sy(batterBoxH));
+            });
+
+            ctx.restore();
+        }
+
+        function drawBasePlate(base, type, scale) {
+            const size = 11 * scale;
+            ctx.save();
+            ctx.translate(base.x * scale, base.y * scale);
+            
+            const isOccupied = checkBaseOccupiedStatic(type);
+            ctx.fillStyle = isOccupied ? "#fbbf24" : "#ffffff";
+            ctx.shadowBlur = isOccupied ? 8 * scale : 0;
+            ctx.shadowColor = "#fbbf24";
+
+            if (type === "home") {
+                // Home plate proportions: wide top, short vertical sides, two longer diagonal edges.
+                const plateW = 28 * scale;
+                const plateSideH = 13.4 * scale;
+                const plateDiagDrop = 14.5 * scale;
+                const plateTop = -18 * scale;
+                const plateShoulder = plateTop + plateSideH;
+                const platePoint = plateShoulder + plateDiagDrop;
+                ctx.beginPath();
+                ctx.moveTo(-plateW / 2, plateTop);
+                ctx.lineTo(plateW / 2, plateTop);
+                ctx.lineTo(plateW / 2, plateShoulder);
+                ctx.lineTo(0, platePoint);
+                ctx.lineTo(-plateW / 2, plateShoulder);
+                ctx.closePath();
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = "#1f2937";
+                ctx.lineWidth = 1.4 * scale;
+                ctx.stroke();
+
+                ctx.strokeStyle = "rgba(31, 41, 55, 0.35)";
+                ctx.lineWidth = 0.8 * scale;
+                ctx.beginPath();
+                ctx.moveTo(-plateW / 2 + 3 * scale, plateTop + 3.5 * scale);
+                ctx.lineTo(plateW / 2 - 3 * scale, plateTop + 3.5 * scale);
+                ctx.stroke();
+            } else {
+                ctx.rotate(Math.PI / 4);
+                ctx.fillRect(-size / 2, -size / 2, size, size);
+                ctx.strokeStyle = "#475569";
+                ctx.lineWidth = 1 * scale;
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            const labels = {
+                home: { text: "本壘", ox: 0, oy: 56 },
+                "1B": { text: "一壘", ox: 28, oy: 4 },
+                "2B": { text: "二壘", ox: 0, oy: -20 },
+                "3B": { text: "三壘", ox: -28, oy: 4 }
+            };
+            const label = labels[type];
+            ctx.fillStyle = "#ffffff";
+            ctx.font = `900 ${11 * scale}px Noto Sans TC`;
+            ctx.textAlign = "center";
+            ctx.fillText(label.text, (base.x + label.ox) * scale, (base.y + label.oy) * scale);
+        }
+
+        function checkBaseOccupiedStatic(type) {
+            const currentQ = generatedQuestions[currentQuestionIdx];
+            if (!currentQ) return false;
+            if (type === "1B" && currentQ.runners.includes(1)) return true;
+            if (type === "2B" && currentQ.runners.includes(2)) return true;
+            if (type === "3B" && currentQ.runners.includes(3)) return true;
+            return false;
+        }
+
+        function drawFielders(scale) {
+            const currentQ = generatedQuestions[currentQuestionIdx];
+            const targetFielderKey = currentQ ? currentQ.fielderKey : null;
+
+            for (const [key, pos] of Object.entries(fielders)) {
+                const isHandling = (key === targetFielderKey);
+                
+                if (isHandling) {
+                    ctx.fillStyle = "rgba(234, 179, 8, 0.4)";
+                    ctx.beginPath();
+                    ctx.arc(pos.x * scale, pos.y * scale, 15 * scale, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.strokeStyle = "#eab308";
+                    ctx.lineWidth = 2 * scale;
+                    ctx.beginPath();
+                    ctx.arc(pos.x * scale, pos.y * scale, (15 + Math.sin(Date.now() / 150) * 3) * scale, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                ctx.fillStyle = isHandling ? "#eab308" : "rgba(30, 41, 59, 0.9)";
+                ctx.beginPath();
+                ctx.arc(pos.x * scale, pos.y * scale, 10 * scale, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = isHandling ? "#ffffff" : "rgba(255,255,255,0.3)";
+                ctx.lineWidth = 1.2 * scale;
+                ctx.stroke();
+
+                ctx.fillStyle = isHandling ? "#0f172a" : "#cbd5e1";
+                ctx.font = `900 ${9 * scale}px Inter`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(key, pos.x * scale, pos.y * scale);
+            }
+        }
+
+        function drawBallFlight(scale) {
+            const p = ballAnim.progress;
+            const startX = ballAnim.x * scale;
+            const startY = ballAnim.y * scale;
+            const endX = ballAnim.targetX * scale;
+            const endY = ballAnim.targetY * scale;
+            const isGrounder = ballAnim.type === "grounder";
+            const isFlySeries = !isGrounder;
+            let ballRadius = 5;
+            let shadowRadius = 3.5;
+
+            function getBallPathPoint(progress) {
+                const x = (ballAnim.x + (ballAnim.targetX - ballAnim.x) * progress) * scale;
+                const y = (ballAnim.y + (ballAnim.targetY - ballAnim.y) * progress) * scale;
+                let heightRatio = 0;
+
+                if (isGrounder) {
+                    heightRatio = Math.abs(Math.sin(progress * Math.PI * ballAnim.bounceCount)) * 0.1;
+                }
+
+                return { x, y, height: heightRatio * ballAnim.arcHeight * scale };
+            }
+
+            function getFlySeriesControlPoint() {
+                const arcRatioByType = {
+                    line_drive: 0.24,
+                    clean_hit: 0.42,
+                    fly_ball: 0.95
+                };
+                const arcRatio = arcRatioByType[ballAnim.type] || 0.7;
+                return {
+                    x: (ballAnim.x + ballAnim.targetX) / 2 * scale,
+                    y: ((ballAnim.y + ballAnim.targetY) / 2 - ballAnim.arcHeight * arcRatio) * scale
+                };
+            }
+
+            function getQuadraticPoint(progress, controlPoint) {
+                const oneMinusP = 1 - progress;
+                return {
+                    x: oneMinusP * oneMinusP * startX + 2 * oneMinusP * progress * controlPoint.x + progress * progress * endX,
+                    y: oneMinusP * oneMinusP * startY + 2 * oneMinusP * progress * controlPoint.y + progress * progress * endY
+                };
+            }
+
+            // Draw the full planned ball path first; the ball then travels along it.
+            ctx.save();
+            ctx.strokeStyle = ballAnim.trailColor;
+            ctx.lineWidth = Math.max(1.2, 2.4 * scale);
+            ctx.setLineDash(isGrounder ? [4 * scale, 5 * scale] : []);
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            if (isFlySeries) {
+                const controlPoint = getFlySeriesControlPoint();
+                ctx.quadraticCurveTo(controlPoint.x, controlPoint.y, endX, endY);
+            } else {
+                const segments = 28;
+                for (let i = 1; i <= segments; i++) {
+                    const point = getBallPathPoint(i / segments);
+                    ctx.lineTo(point.x, point.y - point.height);
+                }
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            if (isGrounder) {
+                ctx.fillStyle = "rgba(245, 158, 11, 0.38)";
+                for (let i = 1; i <= 5; i++) {
+                    const point = getBallPathPoint(i / 6);
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, 2.2 * scale, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            ctx.restore();
+
+            const currentPoint = isFlySeries
+                ? getQuadraticPoint(p, getFlySeriesControlPoint())
+                : getBallPathPoint(p);
+            const curX = currentPoint.x;
+            const curY = currentPoint.y;
+            const h = isFlySeries ? 0 : currentPoint.height;
+
+            if (isGrounder) {
+                ballRadius = 4.2;
+                shadowRadius = 4.4;
+            } else if (ballAnim.type === "line_drive") {
+                ballRadius = 4.6;
+                shadowRadius = 3.8;
+            } else if (ballAnim.type === "clean_hit") {
+                ballRadius = 4.8;
+                shadowRadius = 4;
+            } else {
+                ballRadius = 5.2;
+                shadowRadius = 3.5;
+            }
+
+            ctx.fillStyle = "rgba(15, 23, 42, 0.4)";
+            ctx.beginPath();
+            ctx.arc(curX, curY, shadowRadius * scale, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (isGrounder && p > 0.12 && p < 0.92) {
+                ctx.fillStyle = "rgba(180, 83, 9, 0.42)";
+                ctx.beginPath();
+                ctx.arc(curX - 4 * scale, curY + 1 * scale, 5 * scale, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(curX, curY - h, ballRadius * scale, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "rgba(220, 38, 38, 0.7)";
+            ctx.lineWidth = 1 * scale;
+            ctx.beginPath();
+            ctx.arc(curX, curY - h, (ballRadius - 1.4) * scale, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+        }
+
+        function drawRunners(scale) {
+            fieldRunners.forEach(runner => {
+                const rX = (runner.startX + (runner.targetX - runner.startX) * runner.animProgress) * scale;
+                const rY = (runner.startY + (runner.targetY - runner.startY) * runner.animProgress) * scale;
+
+                if (runner.isPlayer) {
+                    const glowRadius = (15 + Math.sin(Date.now() / 120) * 4) * scale;
+                    ctx.fillStyle = "rgba(14, 165, 233, 0.45)"; 
+                    ctx.beginPath();
+                    ctx.arc(rX, rY, glowRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = "rgba(239, 68, 68, 0.25)"; 
+                    ctx.beginPath();
+                    ctx.arc(rX, rY, 11 * scale, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = runner.isPlayer ? "#0ea5e9" : "#ef4444"; 
+                ctx.beginPath();
+                ctx.arc(rX, rY, 8.5 * scale, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = runner.isPlayer ? 2.5 * scale : 1.5 * scale;
+                ctx.stroke();
+
+                ctx.fillStyle = "#ffffff";
+                ctx.beginPath();
+                ctx.arc(rX, rY - 2 * scale, 4 * scale, Math.PI, 2 * Math.PI);
+                ctx.fill();
+
+                ctx.fillStyle = "#ffffff";
+                ctx.font = `900 ${9 * scale}px Noto Sans TC`;
+                ctx.textAlign = "center";
+                ctx.fillText(runner.isPlayer ? "我" : "隊", rX, rY + 3 * scale);
+
+                if (runner.taggedOut) {
+                    ctx.fillStyle = "#ef4444";
+                    ctx.font = `900 ${12 * scale}px Inter`;
+                    ctx.fillText("❌ OUT", rX, rY - 16 * scale);
+                }
+            });
+        }
+
+        function setupRunnersForScenario(q) {
+            fieldRunners = [];
+            
+            let pPos = { x: 0, y: 0 };
+            if (q.playerBase === 1) pPos = { x: bases.first.x - 14, y: bases.first.y - 14 };
+            else if (q.playerBase === 2) pPos = { x: bases.second.x - 14, y: bases.second.y + 14 };
+            else if (q.playerBase === 3) pPos = { x: bases.third.x + 14, y: bases.third.y + 14 };
+
+            fieldRunners.push({
+                base: q.playerBase,
+                isPlayer: true,
+                startX: pPos.x,
+                startY: pPos.y,
+                x: pPos.x,
+                y: pPos.y,
+                targetX: pPos.x,
+                targetY: pPos.y,
+                animProgress: 0,
+                taggedOut: false
+            });
+
+            q.teammates.forEach(base => {
+                let tPos = { x: 0, y: 0 };
+                if (base === 1) tPos = { x: bases.first.x - 14, y: bases.first.y - 14 };
+                else if (base === 2) tPos = { x: bases.second.x - 14, y: bases.second.y + 14 };
+                else if (base === 3) tPos = { x: bases.third.x + 14, y: bases.third.y + 14 };
+
+                fieldRunners.push({
+                    base: base,
+                    isPlayer: false,
+                    startX: tPos.x,
+                    startY: tPos.y,
+                    x: tPos.x,
+                    y: tPos.y,
+                    targetX: tPos.x,
+                    targetY: tPos.y,
+                    animProgress: 0,
+                    taggedOut: false
+                });
+            });
+        }
+
+        function animateRunners(action, isCorrect) {
+            const currentQ = generatedQuestions[currentQuestionIdx];
+            fieldRunners.forEach(runner => {
+                runner.startX = runner.x;
+                runner.startY = runner.y;
+                runner.animProgress = 0;
+
+                if (isCorrect) {
+                    if (currentQ.runTarget === "force_all") {
+                        if (runner.base === 1) { runner.targetX = bases.second.x; runner.targetY = bases.second.y; }
+                        if (runner.base === 2) { runner.targetX = bases.third.x; runner.targetY = bases.third.y; }
+                        if (runner.base === 3) { runner.targetX = bases.home.x; runner.targetY = bases.home.y; }
+                    } else if (currentQ.runTarget === "run_to_home" && runner.base === 3) {
+                        runner.targetX = bases.home.x; runner.targetY = bases.home.y;
+                    } else if (currentQ.runTarget === "halfway_1to2" && runner.base === 1) {
+                        runner.targetX = bases.first.x - 58; runner.targetY = bases.first.y - 58;
+                    } else if (currentQ.runTarget === "tag_up_3toH" && runner.base === 3) {
+                        runner.targetX = bases.home.x; runner.targetY = bases.home.y;
+                    }
+                } else {
+                    runner.taggedOut = true;
+                    if (runner.base === 1) {
+                        runner.targetX = bases.first.x - 38; runner.targetY = bases.first.y - 38;
+                    } else if (runner.base === 3) {
+                        runner.targetX = bases.third.x + 38; runner.targetY = bases.third.y + 38;
+                    } else if (runner.base === 2) {
+                        runner.targetX = bases.second.x - 38; runner.targetY = bases.second.y + 38;
+                    }
+                }
+            });
+
+            let start = null;
+            const duration = 1500; 
+
+            function step(timestamp) {
+                if (!start) start = timestamp;
+                const elapsed = timestamp - start;
+                const progress = Math.min(elapsed / duration, 1);
+
+                fieldRunners.forEach(runner => {
+                    runner.animProgress = progress;
+                    runner.x = runner.startX + (runner.targetX - runner.startX) * progress;
+                    runner.y = runner.startY + (runner.targetY - runner.startY) * progress;
+
+                    if (progress < 0.9 && Math.random() > 0.4) {
+                        createDust(runner.x, runner.y, 2);
+                    }
+                });
+
+                drawStadium();
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                }
+            }
+            requestAnimationFrame(step);
+        }
+
+        function generateGameScenarios() {
+            generatedQuestions = [];
+            const answerKeypool = buildShuffledAnswerPool();
+            const usedMatrixIds = new Set();
+
+            for (let i = 0; i < BASERUNNING_CONTENT.questionCount; i++) {
+                const targetKey = answerKeypool[i];
+                const scenario = generateScenarioWithTarget(targetKey, i + 1, usedMatrixIds);
+                if (scenario) {
+                    usedMatrixIds.add(scenario.matrixId);
+                    generatedQuestions.push(scenario);
+                }
+            }
+            
+            const bar = document.getElementById('progressBar');
+            bar.innerHTML = '';
+            for (let i = 0; i < BASERUNNING_CONTENT.questionCount; i++) {
+                const dot = document.createElement('span');
+                dot.id = `dot-${i}`;
+                dot.className = 'w-3 h-3 rounded-full bg-slate-800 border border-slate-700 block';
+                bar.appendChild(dot);
+            }
+        }
+
+        function loadQuestion(idx) {
+            if (idx >= BASERUNNING_CONTENT.questionCount) {
+                endGame();
+                return;
+            }
+
+            answered = false;
+            currentQuestionIdx = idx;
+            const currentQ = generatedQuestions[idx];
+
+            setupRunnersForScenario(currentQ);
+            drawStadium();
+
+            document.querySelectorAll('#progressBar span').forEach((dot, dIdx) => {
+                if (dIdx === idx) {
+                    dot.className = 'w-3.5 h-3.5 rounded-full bg-cyan-500 animate-pulse block shadow-lg shadow-cyan-500/50';
+                } else if (dIdx < idx) {
+                    dot.className = 'w-3 h-3 rounded-full bg-emerald-500 block';
+                } else {
+                    dot.className = 'w-3 h-3 rounded-full bg-slate-800 border border-slate-700 block';
+                }
+            });
+
+            document.getElementById('questionNum').innerText = idx + 1;
+            document.getElementById('situationTitle').innerText = `【 ${currentQ.title.split('，')[0]}，${currentQ.title.split('，')[1] || '無人在壘'} 】`;
+            document.getElementById('situationDesc').innerText = currentQ.desc;
+            
+            const playerBaseName = getBaseName(currentQ.playerBase);
+            document.getElementById('playerRoleBadge').innerText = `扮演角色：${playerBaseName}跑者`;
+
+            const coachAvatar = document.getElementById('coachAvatar');
+            coachAvatar.innerText = "🧐";
+            coachAvatar.className = "w-14 h-14 rounded-full bg-slate-900 border-2 border-blue-500 flex items-center justify-center text-3xl";
+            
+            if (consecutiveStreak >= 3) {
+                coachAvatar.className = "w-14 h-14 rounded-full bg-slate-900 border-2 border-amber-400 flex items-center justify-center text-3xl shadow-lg shadow-amber-500/50 animate-pulse";
+            }
+
+            document.getElementById('coachFeedback').className = "text-xs text-slate-200 mt-1 leading-relaxed font-black";
+            document.getElementById('coachFeedback').innerText = "「注意看球場上亮起藍光與放射光圈的跑壘點，那就是你在本局的防守決策分身！」";
+
+            const outDots = document.getElementById('outDots').children;
+            outDots[0].className = currentQ.outs >= 1 ? "w-4 h-4 rounded-full bg-red-600 border border-red-500 shadow-lg shadow-red-500/30" : "w-4 h-4 rounded-full bg-slate-800 border border-slate-700";
+            outDots[1].className = currentQ.outs >= 2 ? "w-4 h-4 rounded-full bg-red-600 border border-red-500 shadow-lg shadow-red-500/30" : "w-4 h-4 rounded-full bg-slate-800 border border-slate-700";
+
+            let baseString = "";
+            if (currentQ.runners.includes(1) && currentQ.runners.includes(2) && currentQ.runners.includes(3)) {
+                baseString = "滿壘";
+            } else {
+                let parts = [];
+                if (currentQ.runners.includes(1)) parts.push(getBaseName(1));
+                if (currentQ.runners.includes(2)) parts.push(getBaseName(2));
+                if (currentQ.runners.includes(3)) parts.push(getBaseName(3));
+                baseString = parts.length > 0 ? parts.join("、") + "有人" : "無人在壘";
+            }
+            document.getElementById('baseStatusText').innerText = `${currentQ.outs}出局 - ${baseString}`;
+
+            triggerBallFlight(currentQ.fielderKey, currentQ.batType);
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            
+            currentQ.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full text-left p-4 rounded-2xl border border-slate-800 bg-slate-900/60 hover:bg-slate-800/80 hover:border-slate-700 transition-all active:scale-95 relative overflow-hidden group min-h-[4.5rem] flex items-center';
+                btn.onclick = () => selectChoice(opt.id);
+                btn.innerHTML = `
+                    <div class="flex items-start">
+                        <span class="text-sm font-black text-slate-500 group-hover:text-amber-400 mr-2.5 mt-0.5">${opt.id}.</span>
+                        <span class="text-sm sm:text-base font-black text-slate-200 leading-snug">${opt.text.replace(/^[A-D]\.\s*「?|」?:?\s*/g, '')}</span>
+                    </div>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function triggerBallFlight(fielderKey, batType, isLoopRestart = false) {
+            playHitSound();
+
+            ballAnim.active = true;
+            ballAnim.progress = 0;
+            ballAnim.x = bases.home.x;
+            ballAnim.y = bases.home.y;
+            ballAnim.type = batType;
+
+            if (!isLoopRestart) {
+                const hitTypeLabels = {
+                    grounder: "滾地球！",
+                    line_drive: "平飛球！",
+                    fly_ball: "高飛球！",
+                    clean_hit: "落地安打！"
+                };
+                document.getElementById('hitTypeBadge').innerText = hitTypeLabels[batType] || "打擊出去！";
+                document.getElementById('hitTypeBadge').className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-amber-500 text-slate-950 animate-pulse tracking-wider";
+            }
+
+            const fielderPos = fielders[fielderKey];
+            ballAnim.targetX = fielderPos.x;
+            ballAnim.targetY = fielderPos.y;
+
+            if (batType === "fly_ball") {
+                ballAnim.arcHeight = 130;
+                ballAnim.bounceCount = 0;
+                ballAnim.trailColor = "rgba(255, 255, 255, 0.48)";
+            } else if (batType === "clean_hit") {
+                ballAnim.arcHeight = 58;
+                ballAnim.bounceCount = 1;
+                ballAnim.trailColor = "rgba(250, 204, 21, 0.45)";
+            } else if (batType === "line_drive") {
+                ballAnim.arcHeight = 34;
+                ballAnim.bounceCount = 0;
+                ballAnim.trailColor = "rgba(248, 250, 252, 0.6)";
+            } else { 
+                ballAnim.arcHeight = 24;
+                ballAnim.bounceCount = 7;
+                ballAnim.trailColor = "rgba(245, 158, 11, 0.45)";
+            }
+
+            if (window.ballInterval) clearInterval(window.ballInterval);
+            if (window.ballTimeout) clearTimeout(window.ballTimeout);
+            
+            const fps = 60;
+            const duration = batType === "grounder" ? 1.25 : (batType === "fly_ball" ? 1.8 : 1.35); 
+            const totalSteps = fps * duration;
+            let step = 0;
+
+            window.ballInterval = setInterval(() => {
+                step++;
+                ballAnim.progress = step / totalSteps;
+                drawStadium();
+
+                if (step >= totalSteps) {
+                    clearInterval(window.ballInterval);
+                    createGrassSplash(ballAnim.targetX, ballAnim.targetY, 15);
+
+                    if (!answered) {
+                        window.ballTimeout = setTimeout(() => {
+                            if (!answered) {
+                                triggerBallFlight(fielderKey, batType, true);
+                            }
+                        }, 600); 
+                    } else {
+                        ballAnim.active = false;
+                        drawStadium();
+                    }
+                }
+            }, 1000 / fps);
+        }
+
+        function renderLoop() {
+            drawStadium();
+            requestAnimationFrame(renderLoop);
+        }
+
+        function selectChoice(choiceId) {
+            if (answered) return;
+            answered = true;
+
+            if (window.ballInterval) clearInterval(window.ballInterval);
+            if (window.ballTimeout) clearTimeout(window.ballTimeout);
+            ballAnim.active = false;
+
+            const currentQ = generatedQuestions[currentQuestionIdx];
+            const optionBtns = document.querySelectorAll('.option-btn');
+            const coachAvatar = document.getElementById('coachAvatar');
+            const coachFeedback = document.getElementById('coachFeedback');
+
+            let isCorrect = choiceId === currentQ.correct;
+
+            optionBtns.forEach(btn => {
+                const isSelected = btn.querySelector('span:first-child').innerText.startsWith(choiceId);
+                const isCorrectOption = btn.querySelector('span:first-child').innerText.startsWith(currentQ.correct);
+
+                if (isSelected) {
+                    if (isCorrect) {
+                        btn.className = 'option-btn w-full text-left p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-950/40 shadow-lg shadow-emerald-500/10 transition-all min-h-[4.5rem] flex items-center';
+                    } else {
+                        btn.className = 'option-btn w-full text-left p-4 rounded-2xl border-2 border-red-500 bg-red-950/40 shadow-lg shadow-red-500/10 transition-all min-h-[4.5rem] flex items-center';
+                    }
+                } else if (isCorrectOption) {
+                    btn.className = 'option-btn w-full text-left p-4 rounded-2xl border border-emerald-600 bg-slate-900/80 opacity-90 min-h-[4.5rem] flex items-center';
+                } else {
+                    btn.className = 'option-btn w-full text-left p-4 rounded-2xl border border-slate-950 bg-slate-950/50 opacity-30 min-h-[4.5rem] flex items-center';
+                }
+                btn.onclick = null;
+            });
+
+            const selectedOpt = currentQ.options.find(o => o.id === choiceId);
+
+            if (isCorrect) {
+                playSuccessSound();
+                playCheerSound();
+                score += 10 + (consecutiveStreak * 2);
+                consecutiveStreak++;
+                document.getElementById('scoreText').innerText = String(score).padStart(3, '0');
+                
+                const streakText = document.getElementById('streakText');
+                streakText.innerText = `🔥 ${consecutiveStreak}`;
+                if (consecutiveStreak >= 3) {
+                    streakText.className = "text-xl sm:text-2xl font-black text-orange-400 fire-text";
+                } else {
+                    streakText.className = "text-xl sm:text-2xl font-black text-emerald-400";
+                }
+
+                coachAvatar.innerText = "🤩";
+                coachAvatar.className = "w-14 h-14 rounded-full bg-slate-900 border-2 border-emerald-500 flex items-center justify-center text-3xl animate-bounce";
+                
+                coachFeedback.className = "text-sm sm:text-base text-emerald-400 mt-1 leading-relaxed font-black";
+                coachFeedback.innerText = `「 很好！ ${selectedOpt.explain} 」`;
+                
+                document.getElementById('hitTypeBadge').innerText = "SAFE! 🟢";
+                document.getElementById('hitTypeBadge').className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-emerald-500 text-slate-950 tracking-wider";
+            } else {
+                playFailSound();
+                consecutiveStreak = 0;
+                
+                const streakText = document.getElementById('streakText');
+                streakText.innerText = `🔥 ${consecutiveStreak}`;
+                streakText.className = "text-xl sm:text-2xl font-black text-slate-500";
+
+                coachAvatar.innerText = "😭";
+                coachAvatar.className = "w-14 h-14 rounded-full bg-slate-900 border-2 border-red-500 flex items-center justify-center text-3xl animate-wiggle";
+                
+                coachFeedback.className = "text-sm sm:text-base text-red-400 mt-1 leading-relaxed font-black";
+                coachFeedback.innerText = `「 出局！ ${selectedOpt.explain} 」`;
+
+                document.getElementById('hitTypeBadge').innerText = "OUT! 🔴";
+                document.getElementById('hitTypeBadge').className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-red-600 text-white tracking-wider";
+            }
+
+            animateRunners(choiceId, isCorrect);
+            insertNextButton();
+            setTimeout(() => showAnswerExplanationModal(choiceId, selectedOpt, isCorrect), 450);
+        }
+
+        function insertNextButton() {
+            const container = document.getElementById('optionsContainer');
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'mt-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-500/20 transition-all active:scale-95 flex justify-center items-center gap-2 text-sm sm:text-base h-[4.5rem]';
+            nextBtn.innerHTML = `下一題 <i class="fa-solid fa-arrow-right"></i>`;
+            nextBtn.onclick = () => loadQuestion(currentQuestionIdx + 1);
+            container.appendChild(nextBtn);
+        }
+
+        function getHonorTitle(finalScore) {
+            if (finalScore >= 130) return { title: "🏆 壘包上的黃色閃電 🏆", desc: "天啊！你的走壘直覺堪比鈴木一朗，完全無懈可擊！" };
+            if (finalScore >= 100) return { title: "🔥 紅土上的狂飆跑者 🔥", desc: "觀念極佳！能夠在極短時間內看穿強迫進壘與回壘威脅！" };
+            if (finalScore >= 70) return { title: "👟 扎實的戰術執行官 👟", desc: "中規中矩，基礎規則非常扎實，在少棒比賽中絕對是教練最放心的棋子！" };
+            return { title: "😭 教練在後面很火 😭", desc: "跑壘觀念還不及格喔！快去點擊右上角「跑壘戰術講義」面壁苦讀，再挑戰一次！" };
+        }
+
+        function endGame() {
+            const honor = getHonorTitle(score);
+
+            document.getElementById('situationTitle').innerText = '訓練完成！🏆';
+            document.getElementById('playerRoleBadge').innerText = 'GAME SET!';
+            document.getElementById('situationDesc').innerHTML = `
+                恭喜背號 <span class="text-amber-400 font-black">#${playerJersey} ${playerName}</span> 完成了 ${BASERUNNING_CONTENT.questionCount} 題實戰跑壘決策訓練！<br>
+                在今日的球場推演中，你最終獲得了 <span class="text-emerald-400 font-black">${score} 分</span>！<br>
+                <div class="mt-4 bg-slate-950/60 p-4 rounded-2xl border border-slate-850 text-center">
+                    <span class="text-xs text-slate-400 block mb-1">🏅 榮獲跑壘稱號勳章</span>
+                    <span class="text-lg font-black text-amber-400 block">${honor.title}</span>
+                    <span class="text-xs text-slate-300 mt-1 block">${honor.desc}</span>
+                </div>
+            `;
+            
+            const coachAvatar = document.getElementById('coachAvatar');
+            coachAvatar.innerText = '🏆';
+            coachAvatar.className = 'w-14 h-14 rounded-full bg-slate-900 border-2 border-amber-400 flex items-center justify-center text-3xl animate-bounce';
+            
+            const coachFeedback = document.getElementById('coachFeedback');
+            coachFeedback.className = 'text-sm sm:text-base text-amber-300 mt-1 leading-relaxed font-black';
+            coachFeedback.innerText = `「太精彩了！這次題庫採用了 ${getAnswerPoolRatioText()} 的完美配比，你已經受過最全方位的跑壘訓練了。再挑戰一次，每次生成都是不同情境喔！」`;
+            
+            document.getElementById('hitTypeBadge').innerText = 'GAME SET!';
+            document.getElementById('hitTypeBadge').className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-amber-500 text-slate-950 tracking-wider';
+            
+            document.getElementById('optionsContainer').innerHTML = `
+                <button onclick="restartGame()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-4 rounded-2xl shadow-lg shadow-amber-600/20 transition-all active:scale-95 flex justify-center items-center gap-2 text-sm sm:text-base h-[4.5rem]">
+                    生成全新 ${BASERUNNING_CONTENT.questionCount} 題隨機考驗 <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            `;
+            drawStadium();
+        }
+
+        function restartGame() {
+            currentQuestionIdx = 0;
+            score = 0;
+            consecutiveStreak = 0;
+            answered = false;
+            document.getElementById('scoreText').innerText = "000";
+            document.getElementById('streakText').innerText = "🔥 0";
+            document.getElementById('streakText').className = "text-xl sm:text-2xl font-black text-slate-500";
+            generateGameScenarios();
+            loadQuestion(0);
+        }
+
+        window.onload = function() {
+            renderContentMetadata();
+            renderTeachingContent();
+            resizeCanvas();
+            generateGameScenarios();
+            loadQuestion(0);
+            renderLoop();
+        };
+    </script>
+</body>
+</html>
