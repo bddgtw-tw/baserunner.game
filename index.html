@@ -4675,5 +4675,361 @@
   }
 })();
 </script>
+<script>
+(() => {
+  const metaId = "forced-question-bank-meta";
+  const registryKey = "baseball-question-visible-registry-v1";
+  const tagRules = [
+    ["強迫進壘", /強迫進壘|強迫|force|封殺|滿壘|一壘有人|一二壘有人|一二三壘有人/i],
+    ["觀察", /觀察|判斷|看球|球落地|接殺|落點|狀況|情境|怎麼辦|應該|該怎麼/i],
+    ["跑壘", /跑者|跑壘|進壘|回壘|離壘|佔壘|壘包|起跑|runner|base/i],
+    ["封殺", /封殺|force/i],
+    ["觸殺", /觸殺|tag/i],
+    ["接殺", /接殺|飛球被接|fly out|caught/i],
+    ["高飛球", /高飛|飛球|fly/i],
+    ["滾地球", /滾地|ground/i],
+    ["平飛球", /平飛|line drive/i],
+    ["界內外", /界內|界外|fair|foul/i],
+    ["出局數", /出局數|幾出局|兩出局|一出局|0出局|1出局|2出局|outs?/i],
+    ["滿壘", /滿壘|bases loaded/i],
+    ["一壘有人", /一壘有人|跑者在一壘|一壘有跑者|runner on first/i],
+    ["二壘有人", /二壘有人|跑者在二壘|二壘有跑者|runner on second/i],
+    ["三壘有人", /三壘有人|跑者在三壘|三壘有跑者|runner on third/i],
+    ["盜壘", /盜壘|偷壘|steal/i],
+    ["犧牲觸擊", /觸擊|短打|犧牲打|bunt/i],
+    ["不死三振", /不死三振|第三好球|dropped third/i],
+    ["內野高飛不適用", /內野高飛|必死球|infield fly/i]
+  ];
+
+  let sourceBank = [];
+  let sourceScanStarted = false;
+
+  const normalize = (value) => String(value || "")
+    .replace(/\\n|\\r|\\t/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const decodeJsString = (value) => {
+    try {
+      return Function(`"use strict";return (${JSON.stringify(value)});`)();
+    } catch (_) {
+      return value.replace(/\\(["'`\\nrt])/g, "$1");
+    }
+  };
+
+  const inferTags = (text) => {
+    const tags = tagRules.filter(([, pattern]) => pattern.test(text)).map(([tag]) => tag);
+    return tags.length ? [...new Set(tags)] : ["待標籤"];
+  };
+
+  const isVisible = (element) => {
+    if (!element || element.id === metaId || element.closest(`#${metaId}`)) return false;
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    return rect.width > 80 && rect.height > 24 && style.display !== "none" && style.visibility !== "hidden" && Number(style.opacity) !== 0;
+  };
+
+  const findQuestionBox = () => {
+    const selectors = [
+      "[data-question]",
+      "#question",
+      "#question-box",
+      ".question",
+      ".question-box",
+      ".quiz-question",
+      ".prompt",
+      ".scenario",
+      "[id*=question]",
+      "[class*=question]",
+      "[id*=prompt]",
+      "[class*=prompt]",
+      "[id*=scenario]",
+      "[class*=scenario]"
+    ];
+
+    for (const selector of selectors) {
+      try {
+        const found = Array.from(document.querySelectorAll(selector))
+          .filter((element) => element !== document.body && isVisible(element));
+        if (found.length) return found[0];
+      } catch (_) {}
+    }
+
+    const candidates = Array.from(document.body.querySelectorAll("main, section, article, div, p"))
+      .filter((element) => {
+        if (!isVisible(element)) return false;
+        const text = normalize(element.innerText);
+        if (text.length < 18 || text.length > 900) return false;
+        if (/題庫第|待標籤|複製題庫|下載題庫/.test(text)) return false;
+        return /跑者|出局|壘|球|打者|守備|接殺|封殺|觸殺|情境|應該|怎麼/.test(text);
+      });
+
+    return candidates.sort((a, b) => {
+      const ar = a.getBoundingClientRect();
+      const br = b.getBoundingClientRect();
+      const areaA = ar.width * ar.height;
+      const areaB = br.width * br.height;
+      return areaA - areaB;
+    })[0] || null;
+  };
+
+  const getQuestionText = () => {
+    const box = findQuestionBox();
+    if (box) return normalize(box.innerText);
+    return normalize(document.body ? document.body.innerText.replace(/題庫第\s+\??\s+題/g, "") : "");
+  };
+
+  const readRegistry = () => {
+    try {
+      return JSON.parse(localStorage.getItem(registryKey) || "[]");
+    } catch (_) {
+      return [];
+    }
+  };
+
+  const writeRegistry = (items) => {
+    try {
+      localStorage.setItem(registryKey, JSON.stringify(items.slice(0, 300)));
+    } catch (_) {}
+  };
+
+  const fallbackIndexForText = (text) => {
+    const key = normalize(text).slice(0, 140);
+    if (!key) return "?";
+    const items = readRegistry();
+    let index = items.indexOf(key);
+    if (index === -1) {
+      items.push(key);
+      writeRegistry(items);
+      index = items.length - 1;
+    }
+    return index + 1;
+  };
+
+  const scoreQuestion = (question, visibleText) => {
+    const prompt = normalize(question.prompt);
+    const answer = normalize(question.answer);
+    const choices = Array.isArray(question.choices) ? question.choices.map(normalize) : [];
+    const sources = [prompt, answer, ...choices].filter(Boolean);
+    let score = 0;
+
+    for (const source of sources) {
+      if (source.length >= 10 && visibleText.includes(source)) score += Math.min(source.length, 160);
+      const shortSource = source.slice(0, 30);
+      if (shortSource.length >= 8 && visibleText.includes(shortSource)) score += 32;
+    }
+
+    return score;
+  };
+
+  const getCurrentMeta = () => {
+    const questionText = getQuestionText();
+    let best = null;
+    let bestScore = 0;
+
+    for (const question of sourceBank) {
+      const score = scoreQuestion(question, questionText);
+      if (score > bestScore) {
+        best = question;
+        bestScore = score;
+      }
+    }
+
+    if (best && bestScore > 0) {
+      return {
+        index: best.bankIndex,
+        total: sourceBank.length || "?",
+        tags: inferTags(`${best.prompt} ${best.answer} ${(best.choices || []).join(" ")} ${questionText}`)
+      };
+    }
+
+    return {
+      index: fallbackIndexForText(questionText),
+      total: sourceBank.length || "?",
+      tags: inferTags(questionText)
+    };
+  };
+
+  const ensureMeta = () => {
+    let meta = document.getElementById(metaId);
+    if (meta) return meta;
+    meta = document.createElement("div");
+    meta.id = metaId;
+    meta.style.cssText = [
+      "display:flex",
+      "align-items:center",
+      "gap:6px",
+      "flex-wrap:wrap",
+      "margin:8px 0 10px",
+      "font:12px/1.25 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
+      "color:#334155",
+      "clear:both"
+    ].join(";");
+    return meta;
+  };
+
+  const chip = (text, strong = false) => {
+    const bg = strong ? "#111827" : "rgba(255,255,255,.96)";
+    const color = strong ? "#fff" : "#334155";
+    return `<span style="display:inline-flex;align-items:center;border:1px solid rgba(15,23,42,.16);background:${bg};color:${color};border-radius:999px;padding:4px 8px;white-space:nowrap;box-shadow:0 4px 12px rgba(15,23,42,.08);">${text}</span>`;
+  };
+
+  const renderMeta = () => {
+    const meta = ensureMeta();
+    const data = getCurrentMeta();
+    const tags = data.tags.slice(0, 5);
+    meta.innerHTML = [
+      chip(`題庫第 ${data.index} / ${data.total} 題`, true),
+      ...tags.map((tag) => chip(`#${tag}`))
+    ].join("");
+
+    const box = findQuestionBox();
+    if (box && box.parentNode) {
+      if (meta.parentNode !== box.parentNode || meta.previousElementSibling !== box) {
+        box.insertAdjacentElement("afterend", meta);
+      }
+      meta.style.position = "";
+      meta.style.left = "";
+      meta.style.top = "";
+      meta.style.right = "";
+      meta.style.zIndex = "";
+      meta.style.background = "";
+      meta.style.padding = "";
+      meta.style.borderRadius = "";
+      return;
+    }
+
+    if (!meta.parentNode) document.body.appendChild(meta);
+    meta.style.position = "fixed";
+    meta.style.left = "12px";
+    meta.style.top = "12px";
+    meta.style.right = "12px";
+    meta.style.zIndex = "2147483647";
+    meta.style.background = "rgba(255,255,255,.94)";
+    meta.style.padding = "6px";
+    meta.style.borderRadius = "999px";
+  };
+
+  const objectLooksQuestionLike = (item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return false;
+    const keys = Object.keys(item).join(" ").toLowerCase();
+    const hasPrompt = /(question|prompt|scenario|title|text|題目|問題|情境)/.test(keys);
+    const hasAnswer = /(answer|correct|solution|答案|正解)/.test(keys);
+    const hasChoices = /(options|choices|answers|選項)/.test(keys) || Object.values(item).some(Array.isArray);
+    return hasPrompt && (hasAnswer || hasChoices);
+  };
+
+  const pickObjectText = (item, patterns) => {
+    for (const [key, value] of Object.entries(item)) {
+      if (patterns.some((pattern) => pattern.test(key)) && value != null && typeof value !== "object") return normalize(value);
+    }
+    return "";
+  };
+
+  const pickObjectArray = (item, patterns) => {
+    for (const [key, value] of Object.entries(item)) {
+      if (patterns.some((pattern) => pattern.test(key)) && Array.isArray(value)) return value.map(normalize);
+    }
+    return [];
+  };
+
+  const scanWindowBank = () => {
+    let best = [];
+    const seen = new Set();
+    const visit = (value, depth = 0) => {
+      if (!value || typeof value !== "object" || depth > 4 || seen.has(value)) return;
+      seen.add(value);
+      if (Array.isArray(value)) {
+        const questions = value.filter(objectLooksQuestionLike);
+        if (questions.length > best.length) best = questions;
+        value.forEach((item) => visit(item, depth + 1));
+        return;
+      }
+      Object.values(value).forEach((item) => visit(item, depth + 1));
+    };
+
+    Object.keys(window).forEach((key) => {
+      try {
+        visit(window[key]);
+      } catch (_) {}
+    });
+
+    return best.map((item, index) => ({
+      bankIndex: index + 1,
+      prompt: pickObjectText(item, [/question/i, /prompt/i, /scenario/i, /title/i, /text/i, /題目/, /問題/, /情境/]),
+      answer: pickObjectText(item, [/answer/i, /correct/i, /solution/i, /答案/, /正解/]),
+      choices: pickObjectArray(item, [/options/i, /choices/i, /answers/i, /選項/])
+    })).filter((question) => question.prompt);
+  };
+
+  const extractQuestionsFromSource = (source) => {
+    if (!source || source.includes(metaId)) return [];
+    const results = [];
+    const objectPattern = /\{[^{}]{0,4000}(?:question|prompt|scenario|題目|問題|情境)[^{}]{0,4000}\}/gi;
+    const objects = source.match(objectPattern) || [];
+
+    for (const objectText of objects) {
+      const promptMatch = objectText.match(/(?:question|prompt|scenario|title|text|題目|問題|情境)\s*:\s*(['"`])([\s\S]*?)\1/i);
+      if (!promptMatch) continue;
+      const answerMatch = objectText.match(/(?:answer|correctAnswer|correct|solution|答案|正解)\s*:\s*(['"`])([\s\S]*?)\1/i);
+      const choicesMatch = objectText.match(/(?:options|choices|answers|選項)\s*:\s*\[([\s\S]{0,1600}?)\]/i);
+      const choices = [];
+      if (choicesMatch) {
+        const stringPattern = /(['"`])([\s\S]*?)\1/g;
+        let match;
+        while ((match = stringPattern.exec(choicesMatch[1]))) choices.push(normalize(decodeJsString(match[2])));
+      }
+
+      results.push({
+        bankIndex: results.length + 1,
+        prompt: normalize(decodeJsString(promptMatch[2])),
+        answer: answerMatch ? normalize(decodeJsString(answerMatch[2])) : "",
+        choices
+      });
+    }
+
+    return results;
+  };
+
+  const scanSourceBank = async () => {
+    if (sourceScanStarted) return;
+    sourceScanStarted = true;
+    const found = [];
+    const scripts = Array.from(document.scripts);
+
+    for (const script of scripts) {
+      if (script.textContent) found.push(...extractQuestionsFromSource(script.textContent));
+      if (script.src) {
+        try {
+          const response = await fetch(script.src);
+          if (response.ok) found.push(...extractQuestionsFromSource(await response.text()));
+        } catch (_) {}
+      }
+    }
+
+    const windowBank = scanWindowBank();
+    const best = windowBank.length >= found.length ? windowBank : found;
+    if (best.length) {
+      sourceBank = best.map((question, index) => ({ ...question, bankIndex: index + 1 }));
+      renderMeta();
+    }
+  };
+
+  const start = () => {
+    renderMeta();
+    scanSourceBank();
+    setInterval(() => {
+      if (!sourceBank.length) sourceBank = scanWindowBank();
+      renderMeta();
+    }, 350);
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
+  }
+})();
+</script>
 </body>
 </html>
