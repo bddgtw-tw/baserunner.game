@@ -4442,5 +4442,238 @@
   }
 })();
 </script>
+<script>
+(() => {
+  const metaId = "question-live-meta";
+  const tagRules = [
+    ["強迫進壘", /強迫進壘|強迫|force|封殺|滿壘|一壘有人|一二壘有人|一二三壘有人/i],
+    ["觀察", /觀察|判斷|看球|球落地|接殺|落點|狀況|情境|怎麼辦|應該/i],
+    ["跑壘", /跑者|跑壘|進壘|回壘|離壘|佔壘|壘包|起跑|runner|base/i],
+    ["封殺", /封殺|force/i],
+    ["觸殺", /觸殺|tag/i],
+    ["接殺", /接殺|飛球被接|fly out|caught/i],
+    ["高飛球", /高飛|飛球|fly/i],
+    ["滾地球", /滾地|ground/i],
+    ["平飛球", /平飛|line drive/i],
+    ["界內外", /界內|界外|fair|foul/i],
+    ["出局數", /出局數|幾出局|兩出局|一出局|0出局|1出局|2出局|outs?/i],
+    ["滿壘", /滿壘|bases loaded/i],
+    ["一壘有人", /一壘有人|跑者在一壘|一壘有跑者|runner on first/i],
+    ["二壘有人", /二壘有人|跑者在二壘|二壘有跑者|runner on second/i],
+    ["三壘有人", /三壘有人|跑者在三壘|三壘有跑者|runner on third/i],
+    ["盜壘", /盜壘|偷壘|steal/i],
+    ["犧牲觸擊", /觸擊|短打|犧牲打|bunt/i],
+    ["不死三振", /不死三振|第三好球|dropped third/i],
+    ["內野高飛不適用", /內野高飛|必死球|infield fly/i]
+  ];
+
+  const tagPriority = tagRules.map(([tag]) => tag);
+
+  const normalizeText = (value) => String(value || "").replace(/\s+/g, " ").trim();
+
+  const isQuestionLike = (item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return false;
+    const keys = Object.keys(item).join(" ").toLowerCase();
+    const hasPrompt = /(question|prompt|scenario|title|text|題目|問題|情境)/.test(keys);
+    const hasAnswer = /(answer|correct|solution|答案|正解)/.test(keys);
+    const hasChoices = /(options|choices|answers|選項)/.test(keys) || Object.values(item).some(Array.isArray);
+    return hasPrompt && (hasAnswer || hasChoices);
+  };
+
+  const pickText = (item, patterns) => {
+    for (const [key, value] of Object.entries(item)) {
+      if (patterns.some((pattern) => pattern.test(key)) && value != null && typeof value !== "object") {
+        return normalizeText(value);
+      }
+    }
+    return "";
+  };
+
+  const pickArray = (item, patterns) => {
+    for (const [key, value] of Object.entries(item)) {
+      if (patterns.some((pattern) => pattern.test(key)) && Array.isArray(value)) return value;
+    }
+    return [];
+  };
+
+  const inferTags = (item) => {
+    const text = JSON.stringify(item);
+    const tags = tagRules.filter(([, pattern]) => pattern.test(text)).map(([tag]) => tag);
+    return [...new Set(tags)].sort((a, b) => tagPriority.indexOf(a) - tagPriority.indexOf(b));
+  };
+
+  const normalizeQuestion = (item, index) => ({
+    bankIndex: index + 1,
+    prompt: pickText(item, [/question/i, /prompt/i, /scenario/i, /title/i, /text/i, /題目/, /問題/, /情境/]),
+    answer: pickText(item, [/answer/i, /correct/i, /solution/i, /答案/, /正解/]),
+    choices: pickArray(item, [/options/i, /choices/i, /answers/i, /選項/]).map((choice) => (
+      typeof choice === "object" ? normalizeText(JSON.stringify(choice)) : normalizeText(choice)
+    )),
+    tags: inferTags(item)
+  });
+
+  const collectQuestionBank = () => {
+    let bestItems = [];
+    const seen = new Set();
+    const visit = (value, depth = 0) => {
+      if (!value || typeof value !== "object" || depth > 4 || seen.has(value)) return;
+      seen.add(value);
+      if (Array.isArray(value)) {
+        const questionItems = value.filter(isQuestionLike);
+        if (questionItems.length > bestItems.length) bestItems = questionItems;
+        value.forEach((item) => visit(item, depth + 1));
+        return;
+      }
+      Object.values(value).forEach((item) => visit(item, depth + 1));
+    };
+
+    Object.keys(window).forEach((key) => {
+      try {
+        visit(window[key]);
+      } catch (_) {}
+    });
+
+    return bestItems.map(normalizeQuestion);
+  };
+
+  const scoreQuestion = (question, visibleText) => {
+    const sources = [question.prompt, question.answer, ...question.choices].filter(Boolean);
+    let score = 0;
+    for (const source of sources) {
+      const text = normalizeText(source);
+      if (text.length >= 12 && visibleText.includes(text)) score += Math.min(text.length, 140);
+      const shortText = text.slice(0, 28);
+      if (shortText.length >= 8 && visibleText.includes(shortText)) score += 24;
+    }
+    return score;
+  };
+
+  const getCurrentQuestion = () => {
+    const bank = collectQuestionBank();
+    const visibleText = normalizeText(document.body ? document.body.innerText : "");
+    let best = null;
+    let bestScore = 0;
+
+    for (const question of bank) {
+      const score = scoreQuestion(question, visibleText);
+      if (score > bestScore) {
+        best = question;
+        bestScore = score;
+      }
+    }
+
+    return bestScore > 0 ? best : null;
+  };
+
+  const isVisible = (element) => {
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    return rect.width > 80 && rect.height > 28 && style.display !== "none" && style.visibility !== "hidden" && Number(style.opacity) !== 0;
+  };
+
+  const findQuestionBox = (question) => {
+    const promptKey = normalizeText(question && question.prompt).slice(0, 28);
+    if (promptKey.length >= 8) {
+      const matches = Array.from(document.body.querySelectorAll("main, section, article, div, p"))
+        .filter((element) => isVisible(element) && normalizeText(element.innerText).includes(promptKey));
+      if (matches.length) {
+        return matches.sort((a, b) => {
+          const ar = a.getBoundingClientRect();
+          const br = b.getBoundingClientRect();
+          return (ar.width * ar.height) - (br.width * br.height);
+        })[0];
+      }
+    }
+
+    const selectors = [
+      "[data-question]",
+      "#question",
+      "#question-box",
+      ".question",
+      ".question-box",
+      ".quiz-question",
+      ".prompt",
+      ".scenario",
+      "[id*='question' i]",
+      "[class*='question' i]",
+      "[id*='prompt' i]",
+      "[class*='prompt' i]"
+    ];
+    return selectors
+      .flatMap((selector) => Array.from(document.querySelectorAll(selector)))
+      .filter((element) => element !== document.body && isVisible(element))[0] || null;
+  };
+
+  const ensureMeta = () => {
+    let meta = document.getElementById(metaId);
+    if (meta) return meta;
+    meta = document.createElement("div");
+    meta.id = metaId;
+    meta.style.cssText = [
+      "display:flex",
+      "align-items:center",
+      "gap:6px",
+      "flex-wrap:wrap",
+      "margin:8px 0 10px",
+      "font:12px/1.25 system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      "color:#334155"
+    ].join(";");
+    return meta;
+  };
+
+  const chip = (text, strong = false) => (
+    `<span style="display:inline-flex;align-items:center;border:1px solid rgba(15,23,42,.12);background:${strong ? "#111827" : "rgba(255,255,255,.92)"};color:${strong ? "#ffffff" : "#334155"};border-radius:999px;padding:4px 8px;white-space:nowrap;">${text}</span>`
+  );
+
+  const renderQuestionMeta = () => {
+    const question = getCurrentQuestion();
+    const meta = ensureMeta();
+
+    if (!question) {
+      meta.style.display = "none";
+      return;
+    }
+
+    const tags = question.tags.length ? question.tags.slice(0, 4) : ["待標籤"];
+    meta.innerHTML = [
+      chip(`題庫第 ${question.bankIndex} 題`, true),
+      ...tags.map((tag) => chip(`#${tag}`))
+    ].join("");
+    meta.style.display = "flex";
+
+    const box = findQuestionBox(question);
+    if (box && box.parentNode && meta.previousElementSibling !== box) {
+      box.insertAdjacentElement("afterend", meta);
+      meta.style.position = "";
+      meta.style.left = "";
+      meta.style.top = "";
+      meta.style.zIndex = "";
+    } else if (!box && !meta.parentNode) {
+      document.body.appendChild(meta);
+    }
+
+    if (!box) {
+      meta.style.position = "fixed";
+      meta.style.left = "16px";
+      meta.style.top = "16px";
+      meta.style.zIndex = "9999";
+      meta.style.background = "rgba(255,255,255,.92)";
+      meta.style.borderRadius = "999px";
+      meta.style.padding = "4px";
+    }
+  };
+
+  const startQuestionMeta = () => {
+    renderQuestionMeta();
+    setInterval(renderQuestionMeta, 400);
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", startQuestionMeta);
+  } else {
+    startQuestionMeta();
+  }
+})();
+</script>
 </body>
 </html>
