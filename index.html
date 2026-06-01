@@ -8,13 +8,13 @@
     <meta http-equiv="Expires" content="0">
     <title>你是跑壘王!!! - 少棒跑壘判斷互動遊戲</title>
     <!-- Tailwind CSS for high fidelity responsive layout -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts for professional typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <!-- Tone.js for real-time sound synthesis -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     
     <style>
         body {
@@ -51,6 +51,12 @@
         }
         .fire-text {
             animation: fire-glow 1s ease-in-out infinite;
+        }
+        #youth-rule-panel,
+        #question-tag-strip,
+        #question-live-meta,
+        #forced-question-bank-meta {
+            display: none !important;
         }
         html {
             height: 100%;
@@ -2119,7 +2125,7 @@
                 },
                 {
                     title: "第二判斷：球會不會被接殺？",
-                    text: "平飛球與內野高飛球要先回到或站穩原壘，因此選「守住壘包」。外野飛球若需要保留進退彈性，通常選「離壘觀察」。"
+                    text: "平飛球與內野短高飛球容易被接殺，要先回到或站穩原壘，因此選「守住壘包」。外野飛球若需要保留進退彈性，通常選「離壘觀察」。"
                 },
                 {
                     title: "第三判斷：我是不是被強迫進壘？",
@@ -2137,7 +2143,7 @@
                 },
                 2: {
                     title: "飛球接殺與回壘義務",
-                    text: "當擊出的球在空中被野手接殺時，跑者必須先回到原本占有的壘包，或在野手接到球時仍接觸該壘包；若提前離壘且未能及時回踩，守備方可傳回原壘 appeal 使跑者出局。這就是平飛球要立刻回壘、內野高飛球要先站穩原壘的原因。"
+                    text: "U10 小球員版沒有內野高飛必死球。高飛球不會因為落在內野附近就直接判打者出局；只有球被野手接殺時才是飛球出局。跑者要先保護原壘，等球被接殺或落地後再判斷回壘、Tag up、封殺或觸殺。"
                 },
                 3: {
                     title: "強迫進壘與封殺規則",
@@ -2159,10 +2165,10 @@
                     level: 2,
                     explanation: "平飛球最容易被直接接殺後形成雙殺。正確動作是先回到或踩住原本壘包，確保自己不被傳回原壘出局。"
                 },
-                infieldFlyStay: {
+                infieldShortFlyHold: {
                     correct: 'C',
                     level: 2,
-                    explanation: "內野高飛球成立時，打者自動出局，原本的強迫進壘壓力解除。跑者最穩定的動作是踩住原壘，不要亂衝。"
+                    explanation: "U10 小球員版沒有內野高飛必死球。內野短高飛球要先踩住原壘看結果：球被接殺就保護回壘，球落地後再依強迫進壘、封殺或觸殺判斷。"
                 },
                 cleanHitRun: {
                     correct: 'A',
@@ -2297,13 +2303,10 @@
             return false;
         }
 
-        function isInfieldFlyActive(hitType, isDeepFly, fielderKey, runners, outs) {
+        function isYouthInfieldShortFly(hitType, isDeepFly, fielderKey) {
             return hitType.id === "fly_ball"
                 && !isDeepFly
-                && BASERUNNING_CONTENT.fielderGroups.infield.includes(fielderKey)
-                && runners.includes(1)
-                && runners.includes(2)
-                && outs < 2;
+                && BASERUNNING_CONTENT.fielderGroups.infield.includes(fielderKey);
         }
 
         function makeRuleResult(ruleKey) {
@@ -2448,8 +2451,8 @@
                 return `兩出局，球落地就往【${nextBaseName}】推進。`;
             }
 
-            if (context.isInfieldFly) {
-                return `若宣告內野高飛，打者自動出局、強迫進壘解除；如果球被接殺，先踩原壘；如果球落地，也別誤衝。`;
+            if (context.isYouthInfieldShortFly) {
+                return `${describeForcedIfBallLands(context)}；U10 沒有內野高飛必死球，先踩住原壘看接殺或落地結果。`;
             }
 
             if (context.hitType.id === "clean_hit") {
@@ -2474,7 +2477,7 @@
         }
 
         function describeHitForInstructor(context) {
-            const { hitType, fielder, isDeepFly, isInfieldFly } = context;
+            const { hitType, fielder, isDeepFly, isYouthInfieldShortFly } = context;
 
             if (hitType.id === "clean_hit") {
                 return `打者擊出【外野落地安打】。`;
@@ -2482,7 +2485,7 @@
             if (hitType.id === "line_drive") {
                 return `打者擊出【${fielder.name}方向強勁平飛球】。`;
             }
-            if (isInfieldFly) {
+            if (isYouthInfieldShortFly) {
                 return `打者擊出【內野短高飛球】。`;
             }
             if (hitType.id === "fly_ball" && isDeepFly) {
@@ -2499,10 +2502,10 @@
         }
 
         function describeScenarioTitle(context) {
-            const { hitType, fielder, isDeepFly, isPlayerForced, isInfieldFly } = context;
+            const { hitType, fielder, isDeepFly, isPlayerForced, isYouthInfieldShortFly } = context;
             if (hitType.id === "clean_hit") return `外野落地安打`;
             if (hitType.id === "line_drive") return `${fielder.name}方向平飛球`;
-            if (isInfieldFly) return `內野高飛球`;
+            if (isYouthInfieldShortFly) return `內野短高飛球`;
             if (hitType.id === "fly_ball" && isDeepFly) return `深遠高飛球`;
             if (hitType.id === "fly_ball") return `短淺高飛球`;
             if (hitType.id === "grounder" && isPlayerForced) return `強迫進壘滾地球`;
@@ -2638,9 +2641,9 @@
                 matches: (ctx) => ctx.hitType.id === "line_drive"
             },
             {
-                id: 'infieldFlyStay',
-                label: '第二位階：內野高飛球解除強迫',
-                matches: (ctx) => ctx.hasInfieldFly
+                id: 'infieldShortFlyHold',
+                label: '第二位階：U10 內野短高飛先守壘',
+                matches: (ctx) => ctx.isYouthInfieldShortFly && ctx.outs < 2
             },
             {
                 id: 'cleanHitRun',
@@ -2698,7 +2701,7 @@
                 fielderKey: fielderKey,
                 isDeepFly: isDeepFly,
                 isPlayerForced: isPlayerForcedToAdvance(playerBase, runners),
-                hasInfieldFly: isInfieldFlyActive(hitType, isDeepFly, fielderKey, runners, outs)
+                isYouthInfieldShortFly: isYouthInfieldShortFly(hitType, isDeepFly, fielderKey)
             };
             const matchedRule = BASERUNNING_RULE_SEQUENCE.find(rule => rule.matches(ruleContext));
 
@@ -2716,7 +2719,7 @@
             const resolvedRule = solveBaserunningRule(entry.outs, runners, playerBase, hitType, entry.fielderKey, entry.isDeepFly);
             const playerBaseName = getBaseName(playerBase);
             const isPlayerForced = isPlayerForcedToAdvance(playerBase, runners);
-            const hasInfieldFly = isInfieldFlyActive(hitType, entry.isDeepFly, entry.fielderKey, runners, entry.outs);
+            const isInfieldShortFly = isYouthInfieldShortFly(hitType, entry.isDeepFly, entry.fielderKey);
             const scenarioContext = {
                 outs: entry.outs,
                 runners: runners,
@@ -2727,7 +2730,7 @@
                 fielder: fielder,
                 isDeepFly: entry.isDeepFly,
                 isPlayerForced: isPlayerForced,
-                isInfieldFly: hasInfieldFly,
+                isYouthInfieldShortFly: isInfieldShortFly,
                 fielderKey: entry.fielderKey
             };
             const announcerDesc = buildAnnouncerDescription(scenarioContext);
@@ -2803,9 +2806,9 @@
                 return { ok: false, reason: "平飛球題缺少客觀擊球型態" };
             }
 
-            if (scenario.ruleKey === "infieldFlyStay") {
+            if (scenario.ruleKey === "infieldShortFlyHold") {
                 if (!scenario.desc.includes("內野短高飛球")) {
-                    return { ok: false, reason: "內野高飛題缺少客觀擊球型態" };
+                    return { ok: false, reason: "內野短高飛題缺少客觀擊球型態" };
                 }
             }
 
@@ -3478,7 +3481,7 @@
         }
 
         function shouldShowBatterRunner(q, choiceId, isCorrect) {
-            if (q.ruleKey === "infieldFlyStay") return false;
+            if (q.ruleKey === "infieldShortFlyHold") return false;
             if (q.batType === "line_drive") return false;
             if (q.batType === "fly_ball" && q.outs < 2) return false;
             if (q.batType === "grounder" || q.batType === "clean_hit") return true;
@@ -3791,9 +3794,6 @@
 
             // 放在選項最上方，手機版不用往下滑才找得到。
             container.prepend(nextBtn);
-            setTimeout(() => {
-                try { nextBtn.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
-            }, 120);
             return nextBtn;
         }
 
@@ -3976,1060 +3976,56 @@
             loadQuestion(0);
         }
 
-        window.onload = function() {
+        function setupSoundToggle() {
+            const soundBtn = document.getElementById('soundBtn');
+            const soundIcon = document.getElementById('soundIcon');
+            const soundLabel = document.getElementById('soundLabel');
+            if (!soundBtn || soundBtn.dataset.bound === 'true') return;
+            soundBtn.dataset.bound = 'true';
+
+            soundBtn.addEventListener('click', function(event) {
+                event.stopPropagation();
+                soundEnabled = !soundEnabled;
+                if (soundIcon) {
+                    soundIcon.className = soundEnabled
+                        ? "fa-solid fa-volume-high text-amber-500"
+                        : "fa-solid fa-volume-xmark text-slate-500";
+                }
+                if (soundLabel) soundLabel.innerText = soundEnabled ? "音效：開" : "音效：關";
+                soundBtn.className = soundEnabled
+                    ? "bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-3 py-2 rounded-xl flex items-center gap-2 text-xs font-bold border border-slate-800 transition-all"
+                    : "bg-slate-950 hover:bg-slate-900 text-slate-500 hover:text-slate-300 px-3 py-2 rounded-xl flex items-center gap-2 text-xs font-bold border border-slate-900 transition-all";
+                if (soundEnabled) initAudio();
+            });
+        }
+
+        let gameInitialized = false;
+        function removeHelperOverlays() {
+            ['youth-rule-panel', 'question-tag-strip', 'question-live-meta', 'forced-question-bank-meta']
+                .forEach(id => document.getElementById(id)?.remove());
+        }
+
+        function initializeGame() {
+            removeHelperOverlays();
+            if (gameInitialized) return;
+            gameInitialized = true;
             renderContentMetadata();
             renderTeachingContent();
             resizeCanvas();
             generateGameScenarios();
             loadQuestion(0);
             updateHeaderPlayerRecordHint();
+            setupSoundToggle();
             renderLoop();
-        };
+        }
+
+        initializeGame();
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeGame, { once: true });
+        } else {
+            initializeGame();
+        }
+        window.addEventListener('load', initializeGame, { once: true });
     </script>
-<script>
-(() => {
-  const youthRuleLabels = [
-    ["內野高飛必死球規則", "小球員版高飛球規則"],
-    ["內野高飛必死球", "高飛球"],
-    ["必死球", "一般飛球"],
-    ["Infield Fly", "Youth Fly Ball"],
-    ["infield fly", "youth fly ball"]
-  ];
-
-  const walkTextNodes = (root) => {
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    const nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-    return nodes;
-  };
-
-  const mentionsInfieldFly = (value) => /內野高飛|必死球|infield fly/i.test(value);
-
-  const rewriteText = (value) => {
-    const shouldRewriteOutcome = mentionsInfieldFly(value);
-    let next = value;
-    for (const [from, to] of youthRuleLabels) {
-      next = next.split(from).join(to);
-    }
-    if (shouldRewriteOutcome) {
-      next = next
-        .replace(/打者(?:自動)?出局/g, "打者不自動出局")
-        .replace(/跑者可(以)?冒險推進/g, "跑者依接殺或落地結果判斷是否推進")
-        .replace(/裁判(?:宣告|喊出)高飛必死球/g, "裁判提醒球員看球落點與接殺結果");
-    }
-    return next;
-  };
-
-  const rewriteVisibleText = () => {
-    for (const node of walkTextNodes(document.body)) {
-      const next = rewriteText(node.nodeValue);
-      if (next !== node.nodeValue) node.nodeValue = next;
-    }
-  };
-
-  const youthRulePanel = () => {
-    if (document.getElementById("youth-rule-panel")) return;
-    const panel = document.createElement("aside");
-    panel.id = "youth-rule-panel";
-    panel.setAttribute("aria-label", "小球員版規則");
-    panel.style.cssText = [
-      "position:fixed",
-      "right:16px",
-      "bottom:16px",
-      "z-index:9999",
-      "max-width:min(360px, calc(100vw - 32px))",
-      "background:#ffffff",
-      "color:#1f2937",
-      "border:1px solid rgba(31,41,55,.16)",
-      "box-shadow:0 14px 36px rgba(15,23,42,.18)",
-      "border-radius:10px",
-      "padding:14px 16px",
-      "font:14px/1.45 system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-    ].join(";");
-    panel.innerHTML = `
-      <strong style="display:block;margin-bottom:6px;font-size:15px;">小球員版：沒有內野高飛必死球</strong>
-      <div>高飛球不會自動讓打者出局。球被接殺才是出局；球落地後，依一般封殺、觸殺和跑壘規則繼續判斷。</div>
-      <div id="question-count-readout" style="margin-top:8px;font-weight:700;"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
-        <button id="copy-question-bank" type="button" style="border:1px solid rgba(31,41,55,.18);background:#f8fafc;color:#111827;border-radius:8px;padding:7px 10px;cursor:pointer;font:inherit;">複製題庫 JSON</button>
-        <button id="download-question-bank" type="button" style="border:1px solid rgba(31,41,55,.18);background:#111827;color:#ffffff;border-radius:8px;padding:7px 10px;cursor:pointer;font:inherit;">下載題庫 JSON</button>
-      </div>
-      <div id="question-bank-status" style="margin-top:6px;color:#475569;font-size:12px;"></div>
-    `;
-    document.body.appendChild(panel);
-  };
-
-  const looksLikeQuestion = (item) => {
-    if (!item || typeof item !== "object" || Array.isArray(item)) return false;
-    const keys = Object.keys(item).map((key) => key.toLowerCase());
-    const joined = keys.join(" ");
-    const hasPrompt = /(question|prompt|scenario|title|text|題目|問題|情境)/.test(joined);
-    const hasAnswer = /(answer|correct|solution|答案|正解)/.test(joined);
-    const hasChoices = /(options|choices|answers|選項)/.test(joined) || Object.values(item).some(Array.isArray);
-    return hasPrompt && (hasAnswer || hasChoices);
-  };
-
-  const detectQuestionCount = () => {
-    return collectSerializedQuestions().questions.length;
-  };
-
-  const pickFirst = (item, patterns) => {
-    for (const [key, value] of Object.entries(item)) {
-      if (patterns.some((pattern) => pattern.test(key)) && value != null && typeof value !== "object") {
-        return String(value);
-      }
-    }
-    return "";
-  };
-
-  const pickArray = (item, patterns) => {
-    for (const [key, value] of Object.entries(item)) {
-      if (patterns.some((pattern) => pattern.test(key)) && Array.isArray(value)) return value;
-    }
-    return [];
-  };
-
-  const inferTags = (item) => {
-    const text = JSON.stringify(item);
-    const rules = [
-      ["跑壘", /跑者|跑壘|進壘|回壘|離壘|佔壘|壘包|起跑|runner|base/i],
-      ["強迫進壘", /強迫進壘|強迫|force|封殺|滿壘|一壘有人|一二壘有人|一二三壘有人/i],
-      ["觀察", /觀察|判斷|看球|球落地|接殺|落點|狀況|情境|怎麼辦|應該/i],
-      ["封殺", /封殺|force/i],
-      ["觸殺", /觸殺|tag/i],
-      ["接殺", /接殺|飛球被接|fly out|caught/i],
-      ["高飛球", /高飛|飛球|fly/i],
-      ["滾地球", /滾地|ground/i],
-      ["平飛球", /平飛|line drive/i],
-      ["界內外", /界內|界外|fair|foul/i],
-      ["出局數", /出局數|幾出局|兩出局|一出局|0出局|1出局|2出局|outs?/i],
-      ["滿壘", /滿壘|bases loaded/i],
-      ["一壘有人", /一壘有人|跑者在一壘|一壘有跑者|runner on first/i],
-      ["二壘有人", /二壘有人|跑者在二壘|二壘有跑者|runner on second/i],
-      ["三壘有人", /三壘有人|跑者在三壘|三壘有跑者|runner on third/i],
-      ["盜壘", /盜壘|偷壘|steal/i],
-      ["犧牲觸擊", /觸擊|短打|犧牲打|bunt/i],
-      ["不死三振", /不死三振|第三好球|dropped third/i],
-      ["內野高飛不適用", /內野高飛|必死球|infield fly/i],
-      ["小球員版", /小球員|不自動出局|不會自動|youth/i]
-    ];
-    const tags = rules.filter(([, pattern]) => pattern.test(text)).map(([tag]) => tag);
-    return [...new Set(tags)];
-  };
-
-  const normalizeQuestion = (item, index) => {
-    const prompt = pickFirst(item, [/question/i, /prompt/i, /scenario/i, /title/i, /text/i, /題目/, /問題/, /情境/]);
-    const answer = pickFirst(item, [/answer/i, /correct/i, /solution/i, /答案/, /正解/]);
-    const explanation = pickFirst(item, [/explanation/i, /reason/i, /解析/, /說明/]);
-    const choices = pickArray(item, [/options/i, /choices/i, /answers/i, /選項/]).map((choice) => {
-      if (choice == null) return "";
-      if (typeof choice === "object") return JSON.parse(JSON.stringify(choice));
-      return String(choice);
-    });
-
-    return {
-      id: `q-${String(index + 1).padStart(3, "0")}`,
-      prompt,
-      choices,
-      answer,
-      explanation,
-      tags: sortVisibleQuestionTags(inferTags(item)),
-      raw: JSON.parse(JSON.stringify(item))
-    };
-  };
-
-  const visibleQuestionTagPriority = [
-    "強迫進壘",
-    "觀察",
-    "跑壘",
-    "封殺",
-    "觸殺",
-    "接殺",
-    "高飛球",
-    "滾地球",
-    "平飛球",
-    "界內外",
-    "出局數",
-    "滿壘",
-    "一壘有人",
-    "二壘有人",
-    "三壘有人",
-    "盜壘",
-    "犧牲觸擊",
-    "不死三振",
-    "內野高飛不適用",
-    "小球員版"
-  ];
-
-  const sortVisibleQuestionTags = (tags) => {
-    return [...new Set(tags)].sort((a, b) => {
-      const ai = visibleQuestionTagPriority.indexOf(a);
-      const bi = visibleQuestionTagPriority.indexOf(b);
-      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-    });
-  };
-
-  const collectSerializedQuestions = () => {
-    let bestItems = [];
-    const seen = new Set();
-    const visit = (value, depth = 0) => {
-      if (!value || typeof value !== "object" || depth > 3 || seen.has(value)) return;
-      seen.add(value);
-      if (Array.isArray(value)) {
-        const questionLikeItems = value.filter(looksLikeQuestion);
-        if (questionLikeItems.length > bestItems.length) bestItems = questionLikeItems;
-        value.forEach((item) => visit(item, depth + 1));
-        return;
-      }
-      Object.values(value).forEach((item) => visit(item, depth + 1));
-    };
-    Object.keys(window).forEach((key) => {
-      try {
-        visit(window[key]);
-      } catch (_) {}
-    });
-
-    return {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      ruleSet: "youth_no_infield_fly",
-      schema: {
-        id: "stable question id in this export",
-        prompt: "question text or scenario",
-        choices: "answer choices if the game provides them",
-        answer: "correct answer if detectable",
-        explanation: "explanation if detectable",
-        tags: "auto-generated baseball rule tags",
-        raw: "original question object preserved for future migration"
-      },
-      questions: bestItems.map(normalizeQuestion)
-    };
-  };
-
-  const getQuestionBankJson = () => JSON.stringify(collectSerializedQuestions(), null, 2);
-
-  const getVisibleQuestionText = () => document.body ? document.body.innerText.replace(/\s+/g, " ") : "";
-
-  const scoreQuestionAgainstScreen = (question, visibleText) => {
-    const choices = Array.isArray(question.choices) ? question.choices : [];
-    const sources = [
-      question.prompt,
-      question.answer,
-      ...choices.map((choice) => typeof choice === "string" ? choice : JSON.stringify(choice))
-    ].filter(Boolean);
-    let score = 0;
-    for (const source of sources) {
-      const cleaned = String(source).replace(/\s+/g, " ").trim();
-      if (!cleaned) continue;
-      if (cleaned.length >= 12 && visibleText.includes(cleaned)) score += Math.min(cleaned.length, 120);
-      const shortKey = cleaned.slice(0, 24);
-      if (shortKey.length >= 8 && visibleText.includes(shortKey)) score += 24;
-    }
-    return score;
-  };
-
-  const getCurrentQuestionTags = () => {
-    const bank = collectSerializedQuestions();
-    const visibleText = getVisibleQuestionText();
-    let bestQuestion = null;
-    let bestScore = 0;
-
-    for (const question of bank.questions) {
-      const score = scoreQuestionAgainstScreen(question, visibleText);
-      if (score > bestScore) {
-        bestScore = score;
-        bestQuestion = question;
-      }
-    }
-
-    return bestQuestion && bestScore > 0 ? bestQuestion.tags : [];
-  };
-
-  const isVisibleQuestionElement = (element) => {
-    const rect = element.getBoundingClientRect();
-    const style = getComputedStyle(element);
-    return rect.width > 80 && rect.height > 28 && style.display !== "none" && style.visibility !== "hidden" && Number(style.opacity) !== 0;
-  };
-
-  const findQuestionAnchor = () => {
-    const selectors = [
-      "[data-question]",
-      "[data-role*='question' i]",
-      "#question",
-      "#question-box",
-      ".question",
-      ".question-box",
-      ".quiz-question",
-      ".prompt",
-      ".scenario",
-      "[id*='question' i]",
-      "[class*='question' i]",
-      "[id*='prompt' i]",
-      "[class*='prompt' i]",
-      "[id*='scenario' i]",
-      "[class*='scenario' i]"
-    ];
-    const candidates = selectors
-      .flatMap((selector) => Array.from(document.querySelectorAll(selector)))
-      .filter((element) => element !== document.body && isVisibleQuestionElement(element));
-
-    if (candidates.length) {
-      return candidates.sort((a, b) => {
-        const ar = a.getBoundingClientRect();
-        const br = b.getBoundingClientRect();
-        return (br.width * br.height) - (ar.width * ar.height);
-      })[0];
-    }
-
-    const textCandidates = Array.from(document.body.querySelectorAll("main, section, article, div, p"))
-      .filter((element) => {
-        if (!isVisibleQuestionElement(element)) return false;
-        const text = element.innerText || "";
-        return text.length >= 20 && text.length <= 900 && /跑者|出局|壘|球|打者|守備|題|情境/.test(text);
-      });
-
-    return textCandidates.sort((a, b) => {
-      const ar = a.getBoundingClientRect();
-      const br = b.getBoundingClientRect();
-      const aScore = Math.abs(ar.top - 120) + Math.abs(ar.left - 80);
-      const bScore = Math.abs(br.top - 120) + Math.abs(br.left - 80);
-      return aScore - bScore;
-    })[0] || null;
-  };
-
-  const ensureQuestionTagStrip = () => {
-    let strip = document.getElementById("question-tag-strip");
-    if (strip) return strip;
-    strip = document.createElement("div");
-    strip.id = "question-tag-strip";
-    strip.setAttribute("aria-label", "題目標籤");
-    strip.style.cssText = [
-      "position:fixed",
-      "z-index:9998",
-      "display:none",
-      "gap:6px",
-      "flex-wrap:wrap",
-      "max-width:min(520px, calc(100vw - 32px))",
-      "pointer-events:none",
-      "font:12px/1.2 system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-    ].join(";");
-    document.body.appendChild(strip);
-    return strip;
-  };
-
-  const renderVisibleQuestionTags = () => {
-    const strip = ensureQuestionTagStrip();
-    const tags = sortVisibleQuestionTags(getCurrentQuestionTags()).slice(0, 4);
-    if (!tags.length) {
-      strip.style.display = "none";
-      return;
-    }
-
-    strip.innerHTML = tags.map((tag) => (
-      `<span style="display:inline-flex;align-items:center;border:1px solid rgba(15,23,42,.12);background:rgba(255,255,255,.92);color:#334155;border-radius:999px;padding:4px 8px;box-shadow:0 6px 16px rgba(15,23,42,.10);white-space:nowrap;">#${tag}</span>`
-    )).join("");
-
-    const anchor = findQuestionAnchor();
-    strip.style.transform = "";
-    if (anchor) {
-      const rect = anchor.getBoundingClientRect();
-      strip.style.top = `${Math.max(10, rect.top - 30)}px`;
-      strip.style.left = `${Math.min(Math.max(12, rect.left), window.innerWidth - 180)}px`;
-      strip.style.right = "auto";
-    } else {
-      strip.style.top = "12px";
-      strip.style.left = "50%";
-      strip.style.right = "auto";
-      strip.style.transform = "translateX(-50%)";
-    }
-
-    strip.style.display = "flex";
-  };
-
-  const setQuestionBankStatus = (message) => {
-    const status = document.getElementById("question-bank-status");
-    if (status) status.textContent = message;
-  };
-
-  const wireQuestionBankButtons = () => {
-    const copyButton = document.getElementById("copy-question-bank");
-    const downloadButton = document.getElementById("download-question-bank");
-
-    if (copyButton && !copyButton.dataset.bound) {
-      copyButton.dataset.bound = "true";
-      copyButton.addEventListener("click", async () => {
-        const json = getQuestionBankJson();
-        try {
-          await navigator.clipboard.writeText(json);
-          setQuestionBankStatus("已複製題庫 JSON。");
-        } catch (_) {
-          setQuestionBankStatus("瀏覽器不允許直接複製，請改用下載。");
-        }
-      });
-    }
-
-    if (downloadButton && !downloadButton.dataset.bound) {
-      downloadButton.dataset.bound = "true";
-      downloadButton.addEventListener("click", () => {
-        const blob = new Blob([getQuestionBankJson()], { type: "application/json;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "baseball-question-bank.json";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-        setQuestionBankStatus("已下載題庫 JSON。");
-      });
-    }
-  };
-
-  const updateQuestionCountReadout = () => {
-    const readout = document.getElementById("question-count-readout");
-    if (!readout) return;
-    const count = detectQuestionCount();
-    readout.textContent = count > 0 ? `目前題庫：${count} 題` : "目前題庫：偵測中";
-  };
-
-  const patchGameState = () => {
-    for (const key of Object.keys(window)) {
-      const value = window[key];
-      if (!value || typeof value !== "object") continue;
-
-      const patchItem = (item) => {
-        if (!item || typeof item !== "object") return;
-        const originalItemText = JSON.stringify(item);
-        for (const prop of Object.keys(item)) {
-          if (typeof item[prop] === "string") item[prop] = rewriteText(item[prop]);
-        }
-        if (mentionsInfieldFly(originalItemText)) {
-          if ("isOut" in item) item.isOut = false;
-          if ("batterOut" in item) item.batterOut = false;
-          if ("automaticOut" in item) item.automaticOut = false;
-          if ("answer" in item && typeof item.answer === "string") {
-            item.answer = item.answer.replace(/出局/g, "不自動出局");
-          }
-          if ("correctAnswer" in item && typeof item.correctAnswer === "string") {
-            item.correctAnswer = item.correctAnswer.replace(/出局/g, "不自動出局");
-          }
-        }
-      };
-
-      if (Array.isArray(value)) value.forEach(patchItem);
-      else patchItem(value);
-    }
-  };
-
-  const applyYouthRules = () => {
-    patchGameState();
-    rewriteVisibleText();
-    updateQuestionCountReadout();
-    wireQuestionBankButtons();
-    renderVisibleQuestionTags();
-  };
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
-      applyYouthRules();
-      youthRulePanel();
-      setInterval(applyYouthRules, 400);
-    });
-  } else {
-    applyYouthRules();
-    youthRulePanel();
-    setInterval(applyYouthRules, 400);
-  }
-})();
-</script>
-<script>
-(() => {
-  const metaId = "question-live-meta";
-  const tagRules = [
-    ["強迫進壘", /強迫進壘|強迫|force|封殺|滿壘|一壘有人|一二壘有人|一二三壘有人/i],
-    ["觀察", /觀察|判斷|看球|球落地|接殺|落點|狀況|情境|怎麼辦|應該/i],
-    ["跑壘", /跑者|跑壘|進壘|回壘|離壘|佔壘|壘包|起跑|runner|base/i],
-    ["封殺", /封殺|force/i],
-    ["觸殺", /觸殺|tag/i],
-    ["接殺", /接殺|飛球被接|fly out|caught/i],
-    ["高飛球", /高飛|飛球|fly/i],
-    ["滾地球", /滾地|ground/i],
-    ["平飛球", /平飛|line drive/i],
-    ["界內外", /界內|界外|fair|foul/i],
-    ["出局數", /出局數|幾出局|兩出局|一出局|0出局|1出局|2出局|outs?/i],
-    ["滿壘", /滿壘|bases loaded/i],
-    ["一壘有人", /一壘有人|跑者在一壘|一壘有跑者|runner on first/i],
-    ["二壘有人", /二壘有人|跑者在二壘|二壘有跑者|runner on second/i],
-    ["三壘有人", /三壘有人|跑者在三壘|三壘有跑者|runner on third/i],
-    ["盜壘", /盜壘|偷壘|steal/i],
-    ["犧牲觸擊", /觸擊|短打|犧牲打|bunt/i],
-    ["不死三振", /不死三振|第三好球|dropped third/i],
-    ["內野高飛不適用", /內野高飛|必死球|infield fly/i]
-  ];
-
-  const tagPriority = tagRules.map(([tag]) => tag);
-
-  const normalizeText = (value) => String(value || "").replace(/\s+/g, " ").trim();
-
-  const isQuestionLike = (item) => {
-    if (!item || typeof item !== "object" || Array.isArray(item)) return false;
-    const keys = Object.keys(item).join(" ").toLowerCase();
-    const hasPrompt = /(question|prompt|scenario|title|text|題目|問題|情境)/.test(keys);
-    const hasAnswer = /(answer|correct|solution|答案|正解)/.test(keys);
-    const hasChoices = /(options|choices|answers|選項)/.test(keys) || Object.values(item).some(Array.isArray);
-    return hasPrompt && (hasAnswer || hasChoices);
-  };
-
-  const pickText = (item, patterns) => {
-    for (const [key, value] of Object.entries(item)) {
-      if (patterns.some((pattern) => pattern.test(key)) && value != null && typeof value !== "object") {
-        return normalizeText(value);
-      }
-    }
-    return "";
-  };
-
-  const pickArray = (item, patterns) => {
-    for (const [key, value] of Object.entries(item)) {
-      if (patterns.some((pattern) => pattern.test(key)) && Array.isArray(value)) return value;
-    }
-    return [];
-  };
-
-  const inferTags = (item) => {
-    const text = JSON.stringify(item);
-    const tags = tagRules.filter(([, pattern]) => pattern.test(text)).map(([tag]) => tag);
-    return [...new Set(tags)].sort((a, b) => tagPriority.indexOf(a) - tagPriority.indexOf(b));
-  };
-
-  const normalizeQuestion = (item, index) => ({
-    bankIndex: index + 1,
-    prompt: pickText(item, [/question/i, /prompt/i, /scenario/i, /title/i, /text/i, /題目/, /問題/, /情境/]),
-    answer: pickText(item, [/answer/i, /correct/i, /solution/i, /答案/, /正解/]),
-    choices: pickArray(item, [/options/i, /choices/i, /answers/i, /選項/]).map((choice) => (
-      typeof choice === "object" ? normalizeText(JSON.stringify(choice)) : normalizeText(choice)
-    )),
-    tags: inferTags(item)
-  });
-
-  const collectQuestionBank = () => {
-    let bestItems = [];
-    const seen = new Set();
-    const visit = (value, depth = 0) => {
-      if (!value || typeof value !== "object" || depth > 4 || seen.has(value)) return;
-      seen.add(value);
-      if (Array.isArray(value)) {
-        const questionItems = value.filter(isQuestionLike);
-        if (questionItems.length > bestItems.length) bestItems = questionItems;
-        value.forEach((item) => visit(item, depth + 1));
-        return;
-      }
-      Object.values(value).forEach((item) => visit(item, depth + 1));
-    };
-
-    Object.keys(window).forEach((key) => {
-      try {
-        visit(window[key]);
-      } catch (_) {}
-    });
-
-    return bestItems.map(normalizeQuestion);
-  };
-
-  const scoreQuestion = (question, visibleText) => {
-    const sources = [question.prompt, question.answer, ...question.choices].filter(Boolean);
-    let score = 0;
-    for (const source of sources) {
-      const text = normalizeText(source);
-      if (text.length >= 12 && visibleText.includes(text)) score += Math.min(text.length, 140);
-      const shortText = text.slice(0, 28);
-      if (shortText.length >= 8 && visibleText.includes(shortText)) score += 24;
-    }
-    return score;
-  };
-
-  const getCurrentQuestion = () => {
-    const bank = collectQuestionBank();
-    const visibleText = normalizeText(document.body ? document.body.innerText : "");
-    let best = null;
-    let bestScore = 0;
-
-    for (const question of bank) {
-      const score = scoreQuestion(question, visibleText);
-      if (score > bestScore) {
-        best = question;
-        bestScore = score;
-      }
-    }
-
-    return bestScore > 0 ? best : null;
-  };
-
-  const isVisible = (element) => {
-    const rect = element.getBoundingClientRect();
-    const style = getComputedStyle(element);
-    return rect.width > 80 && rect.height > 28 && style.display !== "none" && style.visibility !== "hidden" && Number(style.opacity) !== 0;
-  };
-
-  const findQuestionBox = (question) => {
-    const promptKey = normalizeText(question && question.prompt).slice(0, 28);
-    if (promptKey.length >= 8) {
-      const matches = Array.from(document.body.querySelectorAll("main, section, article, div, p"))
-        .filter((element) => isVisible(element) && normalizeText(element.innerText).includes(promptKey));
-      if (matches.length) {
-        return matches.sort((a, b) => {
-          const ar = a.getBoundingClientRect();
-          const br = b.getBoundingClientRect();
-          return (ar.width * ar.height) - (br.width * br.height);
-        })[0];
-      }
-    }
-
-    const selectors = [
-      "[data-question]",
-      "#question",
-      "#question-box",
-      ".question",
-      ".question-box",
-      ".quiz-question",
-      ".prompt",
-      ".scenario",
-      "[id*='question' i]",
-      "[class*='question' i]",
-      "[id*='prompt' i]",
-      "[class*='prompt' i]"
-    ];
-    return selectors
-      .flatMap((selector) => Array.from(document.querySelectorAll(selector)))
-      .filter((element) => element !== document.body && isVisible(element))[0] || null;
-  };
-
-  const ensureMeta = () => {
-    let meta = document.getElementById(metaId);
-    if (meta) return meta;
-    meta = document.createElement("div");
-    meta.id = metaId;
-    meta.style.cssText = [
-      "display:flex",
-      "align-items:center",
-      "gap:6px",
-      "flex-wrap:wrap",
-      "margin:8px 0 10px",
-      "font:12px/1.25 system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      "color:#334155"
-    ].join(";");
-    return meta;
-  };
-
-  const chip = (text, strong = false) => (
-    `<span style="display:inline-flex;align-items:center;border:1px solid rgba(15,23,42,.12);background:${strong ? "#111827" : "rgba(255,255,255,.92)"};color:${strong ? "#ffffff" : "#334155"};border-radius:999px;padding:4px 8px;white-space:nowrap;">${text}</span>`
-  );
-
-  const renderQuestionMeta = () => {
-    const question = getCurrentQuestion();
-    const meta = ensureMeta();
-
-    if (!question) {
-      meta.style.display = "none";
-      return;
-    }
-
-    const tags = question.tags.length ? question.tags.slice(0, 4) : ["待標籤"];
-    meta.innerHTML = [
-      chip(`題庫第 ${question.bankIndex} 題`, true),
-      ...tags.map((tag) => chip(`#${tag}`))
-    ].join("");
-    meta.style.display = "flex";
-
-    const box = findQuestionBox(question);
-    if (box && box.parentNode && meta.previousElementSibling !== box) {
-      box.insertAdjacentElement("afterend", meta);
-      meta.style.position = "";
-      meta.style.left = "";
-      meta.style.top = "";
-      meta.style.zIndex = "";
-    } else if (!box && !meta.parentNode) {
-      document.body.appendChild(meta);
-    }
-
-    if (!box) {
-      meta.style.position = "fixed";
-      meta.style.left = "16px";
-      meta.style.top = "16px";
-      meta.style.zIndex = "9999";
-      meta.style.background = "rgba(255,255,255,.92)";
-      meta.style.borderRadius = "999px";
-      meta.style.padding = "4px";
-    }
-  };
-
-  const startQuestionMeta = () => {
-    renderQuestionMeta();
-    setInterval(renderQuestionMeta, 400);
-  };
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", startQuestionMeta);
-  } else {
-    startQuestionMeta();
-  }
-})();
-</script>
-<script>
-(() => {
-  const metaId = "forced-question-bank-meta";
-  const registryKey = "baseball-question-visible-registry-v1";
-  const tagRules = [
-    ["強迫進壘", /強迫進壘|強迫|force|封殺|滿壘|一壘有人|一二壘有人|一二三壘有人/i],
-    ["觀察", /觀察|判斷|看球|球落地|接殺|落點|狀況|情境|怎麼辦|應該|該怎麼/i],
-    ["跑壘", /跑者|跑壘|進壘|回壘|離壘|佔壘|壘包|起跑|runner|base/i],
-    ["封殺", /封殺|force/i],
-    ["觸殺", /觸殺|tag/i],
-    ["接殺", /接殺|飛球被接|fly out|caught/i],
-    ["高飛球", /高飛|飛球|fly/i],
-    ["滾地球", /滾地|ground/i],
-    ["平飛球", /平飛|line drive/i],
-    ["界內外", /界內|界外|fair|foul/i],
-    ["出局數", /出局數|幾出局|兩出局|一出局|0出局|1出局|2出局|outs?/i],
-    ["滿壘", /滿壘|bases loaded/i],
-    ["一壘有人", /一壘有人|跑者在一壘|一壘有跑者|runner on first/i],
-    ["二壘有人", /二壘有人|跑者在二壘|二壘有跑者|runner on second/i],
-    ["三壘有人", /三壘有人|跑者在三壘|三壘有跑者|runner on third/i],
-    ["盜壘", /盜壘|偷壘|steal/i],
-    ["犧牲觸擊", /觸擊|短打|犧牲打|bunt/i],
-    ["不死三振", /不死三振|第三好球|dropped third/i],
-    ["內野高飛不適用", /內野高飛|必死球|infield fly/i]
-  ];
-
-  let sourceBank = [];
-  let sourceScanStarted = false;
-
-  const normalize = (value) => String(value || "")
-    .replace(/\\n|\\r|\\t/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  const decodeJsString = (value) => {
-    try {
-      return Function(`"use strict";return (${JSON.stringify(value)});`)();
-    } catch (_) {
-      return value.replace(/\\(["'`\\nrt])/g, "$1");
-    }
-  };
-
-  const inferTags = (text) => {
-    const tags = tagRules.filter(([, pattern]) => pattern.test(text)).map(([tag]) => tag);
-    return tags.length ? [...new Set(tags)] : ["待標籤"];
-  };
-
-  const isVisible = (element) => {
-    if (!element || element.id === metaId || element.closest(`#${metaId}`)) return false;
-    const rect = element.getBoundingClientRect();
-    const style = getComputedStyle(element);
-    return rect.width > 80 && rect.height > 24 && style.display !== "none" && style.visibility !== "hidden" && Number(style.opacity) !== 0;
-  };
-
-  const findQuestionBox = () => {
-    const selectors = [
-      "[data-question]",
-      "#question",
-      "#question-box",
-      ".question",
-      ".question-box",
-      ".quiz-question",
-      ".prompt",
-      ".scenario",
-      "[id*=question]",
-      "[class*=question]",
-      "[id*=prompt]",
-      "[class*=prompt]",
-      "[id*=scenario]",
-      "[class*=scenario]"
-    ];
-
-    for (const selector of selectors) {
-      try {
-        const found = Array.from(document.querySelectorAll(selector))
-          .filter((element) => element !== document.body && isVisible(element));
-        if (found.length) return found[0];
-      } catch (_) {}
-    }
-
-    const candidates = Array.from(document.body.querySelectorAll("main, section, article, div, p"))
-      .filter((element) => {
-        if (!isVisible(element)) return false;
-        const text = normalize(element.innerText);
-        if (text.length < 18 || text.length > 900) return false;
-        if (/題庫第|待標籤|複製題庫|下載題庫/.test(text)) return false;
-        return /跑者|出局|壘|球|打者|守備|接殺|封殺|觸殺|情境|應該|怎麼/.test(text);
-      });
-
-    return candidates.sort((a, b) => {
-      const ar = a.getBoundingClientRect();
-      const br = b.getBoundingClientRect();
-      const areaA = ar.width * ar.height;
-      const areaB = br.width * br.height;
-      return areaA - areaB;
-    })[0] || null;
-  };
-
-  const getQuestionText = () => {
-    const box = findQuestionBox();
-    if (box) return normalize(box.innerText);
-    return normalize(document.body ? document.body.innerText.replace(/題庫第\s+\??\s+題/g, "") : "");
-  };
-
-  const readRegistry = () => {
-    try {
-      return JSON.parse(localStorage.getItem(registryKey) || "[]");
-    } catch (_) {
-      return [];
-    }
-  };
-
-  const writeRegistry = (items) => {
-    try {
-      localStorage.setItem(registryKey, JSON.stringify(items.slice(0, 300)));
-    } catch (_) {}
-  };
-
-  const fallbackIndexForText = (text) => {
-    const key = normalize(text).slice(0, 140);
-    if (!key) return "?";
-    const items = readRegistry();
-    let index = items.indexOf(key);
-    if (index === -1) {
-      items.push(key);
-      writeRegistry(items);
-      index = items.length - 1;
-    }
-    return index + 1;
-  };
-
-  const scoreQuestion = (question, visibleText) => {
-    const prompt = normalize(question.prompt);
-    const answer = normalize(question.answer);
-    const choices = Array.isArray(question.choices) ? question.choices.map(normalize) : [];
-    const sources = [prompt, answer, ...choices].filter(Boolean);
-    let score = 0;
-
-    for (const source of sources) {
-      if (source.length >= 10 && visibleText.includes(source)) score += Math.min(source.length, 160);
-      const shortSource = source.slice(0, 30);
-      if (shortSource.length >= 8 && visibleText.includes(shortSource)) score += 32;
-    }
-
-    return score;
-  };
-
-  const getCurrentMeta = () => {
-    const questionText = getQuestionText();
-    let best = null;
-    let bestScore = 0;
-
-    for (const question of sourceBank) {
-      const score = scoreQuestion(question, questionText);
-      if (score > bestScore) {
-        best = question;
-        bestScore = score;
-      }
-    }
-
-    if (best && bestScore > 0) {
-      return {
-        index: best.bankIndex,
-        total: sourceBank.length || "?",
-        tags: inferTags(`${best.prompt} ${best.answer} ${(best.choices || []).join(" ")} ${questionText}`)
-      };
-    }
-
-    return {
-      index: fallbackIndexForText(questionText),
-      total: sourceBank.length || "?",
-      tags: inferTags(questionText)
-    };
-  };
-
-  const ensureMeta = () => {
-    let meta = document.getElementById(metaId);
-    if (meta) return meta;
-    meta = document.createElement("div");
-    meta.id = metaId;
-    meta.style.cssText = [
-      "display:flex",
-      "align-items:center",
-      "gap:6px",
-      "flex-wrap:wrap",
-      "margin:8px 0 10px",
-      "font:12px/1.25 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
-      "color:#334155",
-      "clear:both"
-    ].join(";");
-    return meta;
-  };
-
-  const chip = (text, strong = false) => {
-    const bg = strong ? "#111827" : "rgba(255,255,255,.96)";
-    const color = strong ? "#fff" : "#334155";
-    return `<span style="display:inline-flex;align-items:center;border:1px solid rgba(15,23,42,.16);background:${bg};color:${color};border-radius:999px;padding:4px 8px;white-space:nowrap;box-shadow:0 4px 12px rgba(15,23,42,.08);">${text}</span>`;
-  };
-
-  const renderMeta = () => {
-    const meta = ensureMeta();
-    const data = getCurrentMeta();
-    const tags = data.tags.slice(0, 5);
-    meta.innerHTML = [
-      chip(`題庫第 ${data.index} / ${data.total} 題`, true),
-      ...tags.map((tag) => chip(`#${tag}`))
-    ].join("");
-
-    const box = findQuestionBox();
-    if (box && box.parentNode) {
-      if (meta.parentNode !== box.parentNode || meta.previousElementSibling !== box) {
-        box.insertAdjacentElement("afterend", meta);
-      }
-      meta.style.position = "";
-      meta.style.left = "";
-      meta.style.top = "";
-      meta.style.right = "";
-      meta.style.zIndex = "";
-      meta.style.background = "";
-      meta.style.padding = "";
-      meta.style.borderRadius = "";
-      return;
-    }
-
-    if (!meta.parentNode) document.body.appendChild(meta);
-    meta.style.position = "fixed";
-    meta.style.left = "12px";
-    meta.style.top = "12px";
-    meta.style.right = "12px";
-    meta.style.zIndex = "2147483647";
-    meta.style.background = "rgba(255,255,255,.94)";
-    meta.style.padding = "6px";
-    meta.style.borderRadius = "999px";
-  };
-
-  const objectLooksQuestionLike = (item) => {
-    if (!item || typeof item !== "object" || Array.isArray(item)) return false;
-    const keys = Object.keys(item).join(" ").toLowerCase();
-    const hasPrompt = /(question|prompt|scenario|title|text|題目|問題|情境)/.test(keys);
-    const hasAnswer = /(answer|correct|solution|答案|正解)/.test(keys);
-    const hasChoices = /(options|choices|answers|選項)/.test(keys) || Object.values(item).some(Array.isArray);
-    return hasPrompt && (hasAnswer || hasChoices);
-  };
-
-  const pickObjectText = (item, patterns) => {
-    for (const [key, value] of Object.entries(item)) {
-      if (patterns.some((pattern) => pattern.test(key)) && value != null && typeof value !== "object") return normalize(value);
-    }
-    return "";
-  };
-
-  const pickObjectArray = (item, patterns) => {
-    for (const [key, value] of Object.entries(item)) {
-      if (patterns.some((pattern) => pattern.test(key)) && Array.isArray(value)) return value.map(normalize);
-    }
-    return [];
-  };
-
-  const scanWindowBank = () => {
-    let best = [];
-    const seen = new Set();
-    const visit = (value, depth = 0) => {
-      if (!value || typeof value !== "object" || depth > 4 || seen.has(value)) return;
-      seen.add(value);
-      if (Array.isArray(value)) {
-        const questions = value.filter(objectLooksQuestionLike);
-        if (questions.length > best.length) best = questions;
-        value.forEach((item) => visit(item, depth + 1));
-        return;
-      }
-      Object.values(value).forEach((item) => visit(item, depth + 1));
-    };
-
-    Object.keys(window).forEach((key) => {
-      try {
-        visit(window[key]);
-      } catch (_) {}
-    });
-
-    return best.map((item, index) => ({
-      bankIndex: index + 1,
-      prompt: pickObjectText(item, [/question/i, /prompt/i, /scenario/i, /title/i, /text/i, /題目/, /問題/, /情境/]),
-      answer: pickObjectText(item, [/answer/i, /correct/i, /solution/i, /答案/, /正解/]),
-      choices: pickObjectArray(item, [/options/i, /choices/i, /answers/i, /選項/])
-    })).filter((question) => question.prompt);
-  };
-
-  const extractQuestionsFromSource = (source) => {
-    if (!source || source.includes(metaId)) return [];
-    const results = [];
-    const objectPattern = /\{[^{}]{0,4000}(?:question|prompt|scenario|題目|問題|情境)[^{}]{0,4000}\}/gi;
-    const objects = source.match(objectPattern) || [];
-
-    for (const objectText of objects) {
-      const promptMatch = objectText.match(/(?:question|prompt|scenario|title|text|題目|問題|情境)\s*:\s*(['"`])([\s\S]*?)\1/i);
-      if (!promptMatch) continue;
-      const answerMatch = objectText.match(/(?:answer|correctAnswer|correct|solution|答案|正解)\s*:\s*(['"`])([\s\S]*?)\1/i);
-      const choicesMatch = objectText.match(/(?:options|choices|answers|選項)\s*:\s*\[([\s\S]{0,1600}?)\]/i);
-      const choices = [];
-      if (choicesMatch) {
-        const stringPattern = /(['"`])([\s\S]*?)\1/g;
-        let match;
-        while ((match = stringPattern.exec(choicesMatch[1]))) choices.push(normalize(decodeJsString(match[2])));
-      }
-
-      results.push({
-        bankIndex: results.length + 1,
-        prompt: normalize(decodeJsString(promptMatch[2])),
-        answer: answerMatch ? normalize(decodeJsString(answerMatch[2])) : "",
-        choices
-      });
-    }
-
-    return results;
-  };
-
-  const scanSourceBank = async () => {
-    if (sourceScanStarted) return;
-    sourceScanStarted = true;
-    const found = [];
-    const scripts = Array.from(document.scripts);
-
-    for (const script of scripts) {
-      if (script.textContent) found.push(...extractQuestionsFromSource(script.textContent));
-      if (script.src) {
-        try {
-          const response = await fetch(script.src);
-          if (response.ok) found.push(...extractQuestionsFromSource(await response.text()));
-        } catch (_) {}
-      }
-    }
-
-    const windowBank = scanWindowBank();
-    const best = windowBank.length >= found.length ? windowBank : found;
-    if (best.length) {
-      sourceBank = best.map((question, index) => ({ ...question, bankIndex: index + 1 }));
-      renderMeta();
-    }
-  };
-
-  const start = () => {
-    renderMeta();
-    scanSourceBank();
-    setInterval(() => {
-      if (!sourceBank.length) sourceBank = scanWindowBank();
-      renderMeta();
-    }, 350);
-  };
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", start);
-  } else {
-    start();
-  }
-})();
-</script>
 </body>
 </html>
