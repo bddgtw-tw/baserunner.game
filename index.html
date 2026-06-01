@@ -1357,7 +1357,7 @@
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
                         <span>你是跑壘王!!!</span> 
                         <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">少棒跑壘判斷</span>
-                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20260601-02</span>
+                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20260601-04</span>
                     </h1>
                     <p class="text-xs text-slate-400 font-medium">跑壘指導員互動出題版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
@@ -1706,12 +1706,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20260601-02</span>
+        <span id="footerVersionText">版本：v20260601-04</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20260601-02";
+        const APP_VERSION = "v20260601-04";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -1816,6 +1816,53 @@
             }).join("｜");
         }
 
+        function escapeHtml(value) {
+            return String(value ?? "").replace(/[&<>"']/g, char => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[char]));
+        }
+
+        function normalizeQuestionDetails(details) {
+            return Array.isArray(details) ? details.slice(0, 50) : [];
+        }
+
+        function countSituationCards(record) {
+            if (!record) return 0;
+            const history = Array.isArray(record.history) ? record.history : [];
+            return history.reduce((sum, game) => sum + normalizeQuestionDetails(game.questionDetails).length, 0);
+        }
+
+        function formatQuestionDetails(details) {
+            const items = normalizeQuestionDetails(details);
+            if (!items.length) {
+                return `<p class="mt-3 text-xs text-slate-400">最近一局尚未保存題目明細；完成新版遊戲後會開始列出每題紀錄。</p>`;
+            }
+
+            return `
+                <div class="mt-3 rounded-2xl border border-slate-800 bg-slate-950/50 p-3">
+                    <p class="mb-2 text-xs font-black text-slate-300">最近一局題目明細</p>
+                    <ol class="space-y-2 text-xs leading-relaxed text-slate-300">
+                        ${items.map(item => `
+                            <li class="rounded-xl border border-slate-800 bg-slate-900/60 p-2.5">
+                                <div class="mb-1 flex flex-wrap items-center gap-2">
+                                    <span class="font-black text-amber-400">第 ${escapeHtml(item.number)} 題</span>
+                                    <span class="${item.isCorrect ? "text-emerald-400" : "text-red-400"} font-black">${item.isCorrect ? "答對" : "答錯"}</span>
+                                    <span class="text-slate-400">正確：${escapeHtml(item.correctLabel)}</span>
+                                    <span class="text-slate-400">選擇：${escapeHtml(item.selectedLabel)}</span>
+                                </div>
+                                <div class="font-bold text-slate-100">${escapeHtml(item.title || "")}</div>
+                                <div>${escapeHtml(item.situation || "")}</div>
+                            </li>
+                        `).join("")}
+                    </ol>
+                </div>
+            `;
+        }
+
         function getPlayerRecordSummary(record) {
             if (!record) return "尚未完成任何一局。";
             const avgScore = record.gamesPlayed ? Math.round(record.totalScore / record.gamesPlayed) : 0;
@@ -1838,7 +1885,7 @@
         function saveCurrentGameRecord() {
             const key = getPlayerRecordKey();
             const now = new Date().toISOString();
-            const totalQuestions = BASERUNNING_CONTENT.questionCount;
+            const totalQuestions = getActiveQuestionCount();
             const gameAccuracy = totalQuestions ? Math.round((currentCorrectCount / totalQuestions) * 100) : 0;
             const records = loadScoreRecords();
             let record = records.find(item => item.key === key);
@@ -1861,6 +1908,7 @@
                     lastPlayedAt: now,
                     choiceStats: createChoiceStats(),
                     lastChoiceStats: createChoiceStats(),
+                    lastQuestionDetails: [],
                     history: []
                 };
                 records.push(record);
@@ -1881,6 +1929,7 @@
             record.lastPlayedAt = now;
             record.choiceStats = mergeChoiceStats(record.choiceStats, currentChoiceStats);
             record.lastChoiceStats = normalizeChoiceStats(currentChoiceStats);
+            record.lastQuestionDetails = normalizeQuestionDetails(currentQuestionDetails);
             record.history = Array.isArray(record.history) ? record.history : [];
             record.history.unshift({
                 playedAt: now,
@@ -1890,7 +1939,9 @@
                 questionCount: totalQuestions,
                 accuracy: gameAccuracy,
                 maxStreak: maxStreakThisGame,
-                choiceStats: normalizeChoiceStats(currentChoiceStats)
+                choiceStats: normalizeChoiceStats(currentChoiceStats),
+                questionDetails: normalizeQuestionDetails(currentQuestionDetails),
+                mode: getCurrentModeLabel()
             });
             record.history = record.history.slice(0, 20);
 
@@ -1912,7 +1963,7 @@
 
             const currentRecord = findCurrentPlayerRecord();
             currentBox.innerHTML = currentRecord
-                ? `<span class="text-amber-400 font-black">#${currentRecord.jersey} ${currentRecord.name}</span>｜${getPlayerRecordSummary(currentRecord)}｜最近一次 ${currentRecord.lastScore} 分（${currentRecord.lastCorrect}/${currentRecord.lastQuestions} 題）<div class="mt-2 text-xs text-slate-300">最近分類：${formatChoiceStats(currentRecord.lastChoiceStats)}<br>累積分類：${formatChoiceStats(currentRecord.choiceStats)}</div>`
+                ? `<span class="text-amber-400 font-black">#${currentRecord.jersey} ${currentRecord.name}</span>｜${getPlayerRecordSummary(currentRecord)}｜最近一次 ${currentRecord.lastScore} 分（${currentRecord.lastCorrect}/${currentRecord.lastQuestions} 題）<div class="mt-2 text-xs text-slate-300">情境卡收藏：${countSituationCards(currentRecord)} 張<br>最近分類：${formatChoiceStats(currentRecord.lastChoiceStats)}<br>累積分類：${formatChoiceStats(currentRecord.choiceStats)}</div>${formatQuestionDetails(currentRecord.lastQuestionDetails)}`
                 : `<span class="text-amber-400 font-black">#${playerJersey} ${playerName}</span> 目前尚未完成任何一局，完成後會自動記錄。`;
 
             if (!records.length) {
@@ -2938,8 +2989,16 @@
             return scenarioMatrixCache;
         }
 
+        function getScenarioMatrixForMode(mode = selectedTrainingMode) {
+            const matrix = getScenarioMatrix();
+            if (mode === "beginner") return matrix.filter(entry => entry.level <= 2);
+            if (mode === "advanced") return matrix.filter(entry => entry.level <= 3);
+            if (mode === "challenge") return matrix.filter(entry => entry.level >= 4);
+            return matrix;
+        }
+
         function getScenarioMatrixByAnswer(answerKey) {
-            return getScenarioMatrix().filter(entry => entry.correct === answerKey);
+            return getScenarioMatrixForMode().filter(entry => entry.correct === answerKey);
         }
 
         function generateScenarioWithTarget(targetCorrect, id, usedMatrixIds = new Set()) {
@@ -3019,6 +3078,11 @@
         let currentCorrectCount = 0;
         let currentWrongCount = 0;
         let currentChoiceStats = createChoiceStats();
+        let currentQuestionDetails = [];
+        let selectedTrainingMode = localStorage.getItem("runnerKingTrainingMode.v1") || "all";
+        let reviewModeActive = false;
+        let activeGameLabel = "";
+        let lastSelectedChoiceId = null;
         let maxStreakThisGame = 0;
         let gameResultSaved = false;
         let generatedQuestions = [];
@@ -3041,6 +3105,132 @@
             left: { x: 8, y: 142 },   
             right: { x: 392, y: 142 }  
         };
+
+        const TRAINING_MODES = {
+            all: { label: "綜合賽", hint: "864 組題型混合抽題" },
+            beginner: { label: "新手關", hint: "先練兩出局、平飛球與基本起跑" },
+            advanced: { label: "進階關", hint: "加入強迫進壘、滾地球與短飛球判斷" },
+            challenge: { label: "挑戰關", hint: "專練高飛球、Tag up 與守原壘" }
+        };
+
+        function getActiveQuestionCount() {
+            return generatedQuestions.length || BASERUNNING_CONTENT.questionCount;
+        }
+
+        function getCurrentModeLabel() {
+            return reviewModeActive ? "錯題重練" : (TRAINING_MODES[selectedTrainingMode]?.label || TRAINING_MODES.all.label);
+        }
+
+        function safeCloneGameData(value) {
+            try {
+                return JSON.parse(JSON.stringify(value));
+            } catch (_) {
+                return null;
+            }
+        }
+
+        function resetCurrentGameStats() {
+            currentQuestionIdx = 0;
+            score = 0;
+            consecutiveStreak = 0;
+            currentCorrectCount = 0;
+            currentWrongCount = 0;
+            currentChoiceStats = createChoiceStats();
+            currentQuestionDetails = [];
+            maxStreakThisGame = 0;
+            gameResultSaved = false;
+            answered = false;
+            lastSelectedChoiceId = null;
+            document.getElementById('scoreText').innerText = "000";
+            document.getElementById('streakText').innerText = "🔥 0";
+            document.getElementById('streakText').className = "text-xl sm:text-2xl font-black text-slate-500";
+        }
+
+        function renderProgressDots(count = getActiveQuestionCount()) {
+            const bar = document.getElementById('progressBar');
+            if (!bar) return;
+            bar.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const dot = document.createElement('span');
+                dot.id = `dot-${i}`;
+                dot.className = 'w-3 h-3 rounded-full bg-slate-800 border border-slate-700 block';
+                bar.appendChild(dot);
+            }
+            const total = document.getElementById('totalQuestionNum');
+            if (total) total.innerText = count;
+        }
+
+        function ensureTrainingControls() {
+            if (document.getElementById('trainingModeBox')) return;
+            const scorePanel = document.getElementById('scorePanel');
+            if (!scorePanel) return;
+
+            const box = document.createElement('div');
+            box.id = 'trainingModeBox';
+            box.className = 'flex flex-col sm:flex-row sm:items-center gap-2 text-xs font-black text-slate-300';
+            box.innerHTML = `
+                <label class="flex items-center gap-2">
+                    <span class="text-slate-400">關卡</span>
+                    <select id="trainingModeSelect" class="bg-slate-950 border border-slate-800 rounded-xl px-2 py-1.5 text-slate-100 font-black focus:outline-none focus:border-cyan-500">
+                        ${Object.entries(TRAINING_MODES).map(([key, mode]) => `<option value="${key}">${mode.label}</option>`).join('')}
+                    </select>
+                </label>
+                <button id="wrongReviewBtn" type="button" class="bg-rose-900/70 hover:bg-rose-800 text-rose-100 border border-rose-700 px-3 py-1.5 rounded-xl transition-all">錯題重練</button>
+            `;
+            scorePanel.insertBefore(box, scorePanel.children[1] || null);
+
+            const select = document.getElementById('trainingModeSelect');
+            select.value = selectedTrainingMode;
+            select.addEventListener('change', () => {
+                selectedTrainingMode = select.value;
+                localStorage.setItem("runnerKingTrainingMode.v1", selectedTrainingMode);
+                restartGame();
+            });
+
+            document.getElementById('wrongReviewBtn').addEventListener('click', startWrongQuestionReview);
+        }
+
+        function collectWrongQuestionDetails(record) {
+            const wrong = [];
+            const pushWrong = (details) => {
+                normalizeQuestionDetails(details).forEach(item => {
+                    if (!item.isCorrect && item.scenario) wrong.push(item);
+                });
+            };
+
+            if (record) {
+                pushWrong(record.lastQuestionDetails);
+                (Array.isArray(record.history) ? record.history : []).forEach(game => pushWrong(game.questionDetails));
+            }
+
+            const seen = new Set();
+            return wrong.filter(item => {
+                const key = item.matrixId || `${item.title}__${item.situation}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+        }
+
+        function startWrongQuestionReview() {
+            const record = findCurrentPlayerRecord();
+            const wrongDetails = collectWrongQuestionDetails(record);
+            if (!wrongDetails.length) {
+                alert("目前還沒有可重練的錯題；完成一局並答錯題目後，這裡會自動整理。");
+                return;
+            }
+
+            reviewModeActive = true;
+            activeGameLabel = "錯題重練";
+            resetCurrentGameStats();
+            generatedQuestions = shuffleList(wrongDetails)
+                .slice(0, BASERUNNING_CONTENT.questionCount)
+                .map((item, index) => ({ ...safeCloneGameData(item.scenario), id: index + 1 }))
+                .filter(Boolean);
+            renderProgressDots(generatedQuestions.length);
+            toggleScoreboardModal(false);
+            loadQuestion(0);
+        }
 
         let ballAnim = {
             active: false,
@@ -3655,6 +3845,8 @@
         }
 
         function generateGameScenarios() {
+            reviewModeActive = false;
+            activeGameLabel = getCurrentModeLabel();
             generatedQuestions = [];
             const answerKeypool = buildShuffledAnswerPool();
             const usedMatrixIds = new Set();
@@ -3668,23 +3860,17 @@
                 }
             }
             
-            const bar = document.getElementById('progressBar');
-            bar.innerHTML = '';
-            for (let i = 0; i < BASERUNNING_CONTENT.questionCount; i++) {
-                const dot = document.createElement('span');
-                dot.id = `dot-${i}`;
-                dot.className = 'w-3 h-3 rounded-full bg-slate-800 border border-slate-700 block';
-                bar.appendChild(dot);
-            }
+            renderProgressDots(generatedQuestions.length);
         }
 
         function loadQuestion(idx) {
-            if (idx >= BASERUNNING_CONTENT.questionCount) {
+            if (idx >= getActiveQuestionCount()) {
                 endGame();
                 return;
             }
 
             answered = false;
+            lastSelectedChoiceId = null;
             currentQuestionIdx = idx;
             const currentQ = generatedQuestions[idx];
             if (!currentQ) {
@@ -3849,6 +4035,42 @@
             return nextBtn;
         }
 
+        function getDemoWrongChoice(currentQ) {
+            if (lastSelectedChoiceId && lastSelectedChoiceId !== currentQ.correct) return lastSelectedChoiceId;
+            const wrong = (currentQ.options || []).find(option => option.id !== currentQ.correct);
+            return wrong ? wrong.id : "A";
+        }
+
+        function replayRunnerPath(mode) {
+            const currentQ = generatedQuestions[currentQuestionIdx];
+            if (!currentQ) return;
+            setupRunnersForScenario(currentQ);
+            currentVisualOccupiedBases = [...currentQ.runners];
+            drawStadium();
+            if (mode === "correct") {
+                animateRunners(currentQ.correct, true);
+            } else {
+                animateRunners(getDemoWrongChoice(currentQ), false);
+            }
+        }
+
+        function ensureReplayButtonsVisible() {
+            const container = document.getElementById('optionsContainer');
+            if (!container || document.getElementById('runnerReplayControls')) return;
+            const replayBox = document.createElement('div');
+            replayBox.id = 'runnerReplayControls';
+            replayBox.className = 'full-row-action grid grid-cols-2 gap-2 w-full';
+            replayBox.innerHTML = `
+                <button type="button" onclick="replayRunnerPath('correct')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-2xl shadow-lg shadow-emerald-600/20 transition-all active:scale-95 flex justify-center items-center gap-2 text-xs sm:text-sm">
+                    正確跑法 <i class="fa-solid fa-route"></i>
+                </button>
+                <button type="button" onclick="replayRunnerPath('wrong')" class="w-full bg-rose-700 hover:bg-rose-600 text-white font-black py-3 rounded-2xl shadow-lg shadow-rose-700/20 transition-all active:scale-95 flex justify-center items-center gap-2 text-xs sm:text-sm">
+                    錯誤跑法 <i class="fa-solid fa-triangle-exclamation"></i>
+                </button>
+            `;
+            container.prepend(replayBox);
+        }
+
         window.addEventListener('error', function(event) {
             // 任何瀏覽器相容性或動畫錯誤，都不要卡住下一題流程。
             if (answered) ensureNextButtonVisible();
@@ -3858,6 +4080,7 @@
         function selectChoice(choiceId) {
             if (answered) return;
             answered = true;
+            lastSelectedChoiceId = choiceId;
 
             if (window.ballInterval) clearInterval(window.ballInterval);
             if (window.ballTimeout) clearTimeout(window.ballTimeout);
@@ -3895,6 +4118,21 @@
             });
 
             const selectedOpt = currentQ.options.find(o => o.id === choiceId);
+            const correctOpt = currentQ.options.find(o => o.id === currentQ.correct);
+            currentQuestionDetails.push({
+                number: currentQuestionIdx + 1,
+                title: currentQ.title,
+                situation: currentQ.desc,
+                facts: currentQ.baseFactsText || describeBaseFactsForDisplay(currentQ),
+                correctCategory: currentQ.correct,
+                correctLabel: `${CHOICE_STAT_LABELS[currentQ.correct] || currentQ.correct} / ${correctOpt ? correctOpt.text : currentQ.correct}`,
+                selectedCategory: choiceId,
+                selectedLabel: `${CHOICE_STAT_LABELS[choiceId] || choiceId} / ${selectedOpt ? selectedOpt.text : choiceId}`,
+                isCorrect,
+                ruleKey: currentQ.ruleKey,
+                matrixId: currentQ.matrixId,
+                scenario: safeCloneGameData(currentQ)
+            });
 
             if (isCorrect) {
                 playSuccessSound();
@@ -3943,6 +4181,7 @@
             // 先把「下一題」顯示出來，再跑動畫與解釋彈窗。
             // 這樣即使 LINE 內建瀏覽器或舊版 Safari 對動畫/彈窗支援不穩，也不會卡住。
             ensureNextButtonVisible();
+            ensureReplayButtonsVisible();
 
             try {
                 animateRunners(choiceId, isCorrect);
@@ -3977,14 +4216,14 @@
                 savedRecord = saveCurrentGameRecord();
                 gameResultSaved = true;
             }
-            const totalQuestions = BASERUNNING_CONTENT.questionCount;
+            const totalQuestions = getActiveQuestionCount();
             const accuracyText = totalQuestions ? `${Math.round((currentCorrectCount / totalQuestions) * 100)}%` : '0%';
             const recordSummary = savedRecord ? getPlayerRecordSummary(savedRecord) : '本局已完成。';
 
             document.getElementById('situationTitle').innerText = '訓練完成！🏆';
             document.getElementById('playerRoleBadge').innerText = 'GAME SET!';
             document.getElementById('situationDesc').innerHTML = `
-                恭喜背號 <span class="text-amber-400 font-black">#${playerJersey} ${playerName}</span> 完成了 ${BASERUNNING_CONTENT.questionCount} 題實戰跑壘決策訓練！<br>
+                恭喜背號 <span class="text-amber-400 font-black">#${playerJersey} ${playerName}</span> 完成了 ${totalQuestions} 題${getCurrentModeLabel()}跑壘決策訓練！<br>
                 在今日的球場推演中，你最終獲得了 <span class="text-emerald-400 font-black">${score} 分</span>！<br>
                 本局答對 <span class="text-emerald-400 font-black">${currentCorrectCount} / ${totalQuestions}</span> 題，答對率 <span class="text-amber-400 font-black">${accuracyText}</span>，最高連勝 <span class="text-cyan-400 font-black">${maxStreakThisGame}</span> 題。<br>
                 <span class="text-xs text-slate-300">個人成績：${recordSummary}</span>
@@ -4018,18 +4257,7 @@
         }
 
         function restartGame() {
-            currentQuestionIdx = 0;
-            score = 0;
-            consecutiveStreak = 0;
-            currentCorrectCount = 0;
-            currentWrongCount = 0;
-            currentChoiceStats = createChoiceStats();
-            maxStreakThisGame = 0;
-            gameResultSaved = false;
-            answered = false;
-            document.getElementById('scoreText').innerText = "000";
-            document.getElementById('streakText').innerText = "🔥 0";
-            document.getElementById('streakText').className = "text-xl sm:text-2xl font-black text-slate-500";
+            resetCurrentGameStats();
             generateGameScenarios();
             loadQuestion(0);
         }
@@ -4067,6 +4295,7 @@
             removeHelperOverlays();
             if (gameInitialized) return;
             gameInitialized = true;
+            ensureTrainingControls();
             renderContentMetadata();
             renderTeachingContent();
             resizeCanvas();
