@@ -1357,7 +1357,7 @@
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
                         <span>你是跑壘王!!!</span> 
                         <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">少棒跑壘判斷</span>
-                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20260601-01</span>
+                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20260601-02</span>
                     </h1>
                     <p class="text-xs text-slate-400 font-medium">跑壘指導員互動出題版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
@@ -1606,7 +1606,7 @@
 
     <!-- SCOREBOARD MODAL -->
     <div id="scoreboardModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md hidden">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col p-6 shadow-2xl">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-6xl w-full max-h-[85vh] overflow-hidden flex flex-col p-6 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-4">
                 <div class="flex items-center gap-2.5">
                     <i class="fa-solid fa-ranking-star text-amber-500 text-2xl"></i>
@@ -1625,7 +1625,7 @@
             </div>
 
             <div class="overflow-y-auto flex-grow rounded-2xl border border-slate-800 bg-slate-950/80">
-                <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                <table class="w-full min-w-[980px] text-left border-collapse text-xs sm:text-sm">
                     <thead>
                         <tr class="border-b border-slate-800 text-slate-400 font-black">
                             <th class="p-2.5">排名</th>
@@ -1635,6 +1635,7 @@
                             <th class="p-2.5 text-center">平均分</th>
                             <th class="p-2.5 text-center">平均答對率</th>
                             <th class="p-2.5 text-center">最佳連勝</th>
+                            <th class="p-2.5">分類答對率</th>
                             <th class="p-2.5">最近一次</th>
                         </tr>
                     </thead>
@@ -1705,12 +1706,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20260601-01</span>
+        <span id="footerVersionText">版本：v20260601-02</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20260601-01";
+        const APP_VERSION = "v20260601-02";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -1771,6 +1772,50 @@
             });
         }
 
+        const CHOICE_STAT_KEYS = ['A', 'B', 'C'];
+        const CHOICE_STAT_LABELS = {
+            A: "直接跑",
+            B: "觀察",
+            C: "守原壘"
+        };
+
+        function createChoiceStats() {
+            return CHOICE_STAT_KEYS.reduce((stats, key) => {
+                stats[key] = { total: 0, correct: 0 };
+                return stats;
+            }, {});
+        }
+
+        function normalizeChoiceStats(stats) {
+            const normalized = createChoiceStats();
+            if (!stats || typeof stats !== "object") return normalized;
+            CHOICE_STAT_KEYS.forEach(key => {
+                const source = stats[key] || {};
+                normalized[key].total = Number(source.total || 0);
+                normalized[key].correct = Number(source.correct || 0);
+            });
+            return normalized;
+        }
+
+        function mergeChoiceStats(targetStats, sourceStats) {
+            const target = normalizeChoiceStats(targetStats);
+            const source = normalizeChoiceStats(sourceStats);
+            CHOICE_STAT_KEYS.forEach(key => {
+                target[key].total += source[key].total;
+                target[key].correct += source[key].correct;
+            });
+            return target;
+        }
+
+        function formatChoiceStats(stats) {
+            const normalized = normalizeChoiceStats(stats);
+            return CHOICE_STAT_KEYS.map(key => {
+                const item = normalized[key];
+                const rate = item.total ? Math.round((item.correct / item.total) * 100) : null;
+                return `${CHOICE_STAT_LABELS[key]} ${item.correct}/${item.total}${rate === null ? "" : ` (${rate}%)`}`;
+            }).join("｜");
+        }
+
         function getPlayerRecordSummary(record) {
             if (!record) return "尚未完成任何一局。";
             const avgScore = record.gamesPlayed ? Math.round(record.totalScore / record.gamesPlayed) : 0;
@@ -1814,6 +1859,8 @@
                     lastCorrect: 0,
                     lastQuestions: totalQuestions,
                     lastPlayedAt: now,
+                    choiceStats: createChoiceStats(),
+                    lastChoiceStats: createChoiceStats(),
                     history: []
                 };
                 records.push(record);
@@ -1832,6 +1879,8 @@
             record.lastCorrect = currentCorrectCount;
             record.lastQuestions = totalQuestions;
             record.lastPlayedAt = now;
+            record.choiceStats = mergeChoiceStats(record.choiceStats, currentChoiceStats);
+            record.lastChoiceStats = normalizeChoiceStats(currentChoiceStats);
             record.history = Array.isArray(record.history) ? record.history : [];
             record.history.unshift({
                 playedAt: now,
@@ -1840,7 +1889,8 @@
                 wrong: currentWrongCount,
                 questionCount: totalQuestions,
                 accuracy: gameAccuracy,
-                maxStreak: maxStreakThisGame
+                maxStreak: maxStreakThisGame,
+                choiceStats: normalizeChoiceStats(currentChoiceStats)
             });
             record.history = record.history.slice(0, 20);
 
@@ -1862,13 +1912,13 @@
 
             const currentRecord = findCurrentPlayerRecord();
             currentBox.innerHTML = currentRecord
-                ? `<span class="text-amber-400 font-black">#${currentRecord.jersey} ${currentRecord.name}</span>｜${getPlayerRecordSummary(currentRecord)}｜最近一次 ${currentRecord.lastScore} 分（${currentRecord.lastCorrect}/${currentRecord.lastQuestions} 題）`
+                ? `<span class="text-amber-400 font-black">#${currentRecord.jersey} ${currentRecord.name}</span>｜${getPlayerRecordSummary(currentRecord)}｜最近一次 ${currentRecord.lastScore} 分（${currentRecord.lastCorrect}/${currentRecord.lastQuestions} 題）<div class="mt-2 text-xs text-slate-300">最近分類：${formatChoiceStats(currentRecord.lastChoiceStats)}<br>累積分類：${formatChoiceStats(currentRecord.choiceStats)}</div>`
                 : `<span class="text-amber-400 font-black">#${playerJersey} ${playerName}</span> 目前尚未完成任何一局，完成後會自動記錄。`;
 
             if (!records.length) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" class="p-6 text-center text-slate-400 font-black">目前沒有成績紀錄。完成一局後，這裡會自動出現排行榜。</td>
+                        <td colspan="9" class="p-6 text-center text-slate-400 font-black">目前沒有成績紀錄。完成一局後，這裡會自動出現排行榜。</td>
                     </tr>
                 `;
                 return;
@@ -1887,6 +1937,7 @@
                         <td class="p-2.5 text-center">${avgScore}</td>
                         <td class="p-2.5 text-center">${avgAccuracy}%</td>
                         <td class="p-2.5 text-center">${record.bestStreak || 0}</td>
+                        <td class="p-2.5 text-xs leading-relaxed text-slate-300">${formatChoiceStats(record.choiceStats)}</td>
                         <td class="p-2.5 text-slate-400">${formatPlayedAt(record.lastPlayedAt)}</td>
                     </tr>
                 `;
@@ -2967,6 +3018,7 @@
         let consecutiveStreak = 0;
         let currentCorrectCount = 0;
         let currentWrongCount = 0;
+        let currentChoiceStats = createChoiceStats();
         let maxStreakThisGame = 0;
         let gameResultSaved = false;
         let generatedQuestions = [];
@@ -3817,6 +3869,11 @@
             const coachFeedback = document.getElementById('coachFeedback');
 
             let isCorrect = choiceId === currentQ.correct;
+            const correctCategory = currentQ.correct;
+            if (currentChoiceStats[correctCategory]) {
+                currentChoiceStats[correctCategory].total += 1;
+                if (isCorrect) currentChoiceStats[correctCategory].correct += 1;
+            }
 
             optionBtns.forEach(btn => {
                 const btnChoiceId = btn.dataset.choiceId;
@@ -3966,6 +4023,7 @@
             consecutiveStreak = 0;
             currentCorrectCount = 0;
             currentWrongCount = 0;
+            currentChoiceStats = createChoiceStats();
             maxStreakThisGame = 0;
             gameResultSaved = false;
             answered = false;
