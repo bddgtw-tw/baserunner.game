@@ -1319,6 +1319,70 @@
                 border-radius: 0.95rem !important;
             }
         }
+
+
+        /* DEMO REPLAY BUTTONS ON FIELD: bottom-left and bottom-right of the game field */
+        #runnerReplayControls {
+            position: absolute !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: clamp(0.7rem, 2.5vw, 1.1rem) !important;
+            z-index: 30 !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: flex-end !important;
+            gap: 0.75rem !important;
+            padding: 0 clamp(0.8rem, 3vw, 1.4rem) !important;
+            pointer-events: none !important;
+        }
+        #runnerReplayControls .runner-replay-button {
+            pointer-events: auto !important;
+            width: min(43%, 13rem) !important;
+            min-height: clamp(2.55rem, 5.5vw, 3.25rem) !important;
+            border-radius: 1rem !important;
+            border: 2px solid rgba(255, 255, 255, 0.56) !important;
+            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.26) !important;
+            color: #ffffff !important;
+            font-weight: 900 !important;
+            font-size: clamp(0.78rem, 1.75vw, 0.95rem) !important;
+            line-height: 1.1 !important;
+            display: inline-flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            gap: 0.45rem !important;
+            padding: 0.55rem 0.75rem !important;
+            transition: transform 0.15s ease, filter 0.15s ease !important;
+            white-space: nowrap !important;
+        }
+        #runnerReplayControls .runner-replay-button:hover {
+            transform: translateY(-1px) !important;
+            filter: brightness(1.08) !important;
+        }
+        #runnerReplayControls .runner-replay-button:active {
+            transform: scale(0.97) !important;
+        }
+        #runnerReplayControls .runner-replay-correct {
+            background: linear-gradient(135deg, #059669, #10b981) !important;
+        }
+        #runnerReplayControls .runner-replay-wrong {
+            background: linear-gradient(135deg, #be123c, #e11d48) !important;
+        }
+        @media (max-width: 640px) {
+            #runnerReplayControls {
+                bottom: 0.65rem !important;
+                padding: 0 0.65rem !important;
+                gap: 0.5rem !important;
+            }
+            #runnerReplayControls .runner-replay-button {
+                width: 46% !important;
+                min-height: 2.45rem !important;
+                border-radius: 0.85rem !important;
+                padding: 0.45rem 0.5rem !important;
+                font-size: 0.72rem !important;
+                gap: 0.3rem !important;
+            }
+        }
+
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden pb-4">
@@ -1357,7 +1421,7 @@
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
                         <span>你是跑壘王!!!</span> 
                         <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">少棒跑壘判斷</span>
-                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20260601-04</span>
+                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20260604-11</span>
                     </h1>
                     <p class="text-xs text-slate-400 font-medium">跑壘指導員互動出題版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
@@ -1706,12 +1770,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20260601-04</span>
+        <span id="footerVersionText">版本：v20260604-11</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20260601-04";
+        const APP_VERSION = "v20260604-11";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -3238,6 +3302,7 @@
             y: bases.home.y,
             targetX: 200,
             targetY: 100,
+            fielderKey: null,
             progress: 0,
             arcHeight: 80,
             type: "fly_ball",
@@ -3245,7 +3310,10 @@
             trailColor: "rgba(255,255,255,0.35)"
         };
         let fieldRunners = [];
-        let currentVisualOccupiedBases = []; 
+        let currentVisualOccupiedBases = [];
+        let runnerLinkMessage = ""; 
+        let runnerReplayAnimationFrame = null;
+        let runnerReplayAnimationToken = 0;
 
         function resizeCanvas() {
             const size = canvas.parentElement.clientWidth;
@@ -3347,6 +3415,8 @@
             }
 
             updateAndDrawParticles(ctx, scale);
+            drawRunnerMovementGuides(scale);
+            drawRunnerLinkage(scale);
             drawRunners(scale);
 
             if (nightMode) {
@@ -3457,17 +3527,7 @@
             }
             ctx.restore();
 
-            const labels = {
-                home: { text: "本壘", ox: 0, oy: 56 },
-                "1B": { text: "一壘", ox: 28, oy: 4 },
-                "2B": { text: "二壘", ox: 0, oy: -20 },
-                "3B": { text: "三壘", ox: -28, oy: 4 }
-            };
-            const label = labels[type];
-            ctx.fillStyle = "#ffffff";
-            ctx.font = `900 ${11 * scale}px Noto Sans TC`;
-            ctx.textAlign = "center";
-            ctx.fillText(label.text, (base.x + label.ox) * scale, (base.y + label.oy) * scale);
+            // 壘包本身已足夠辨識；不在壘包旁邊顯示「本壘／一壘／二壘／三壘」文字，讓球場畫面更乾淨。
         }
 
         function checkBaseOccupiedStatic(type) {
@@ -3546,8 +3606,11 @@
                     fly_ball: 0.95
                 };
                 const arcRatio = arcRatioByType[ballAnim.type] || 0.7;
+                const isStraightCenterFly = ballAnim.type === "fly_ball" && ballAnim.fielderKey === "CF";
+                const centerFieldCurveOffset = isStraightCenterFly ? 24 : 0;
                 return {
-                    x: (ballAnim.x + ballAnim.targetX) / 2 * scale,
+                    // 正中外野飛球原本 x 軸完全重疊，視覺上會像直線；給一點點側向控制點，讓球路有柔和弧線。
+                    x: ((ballAnim.x + ballAnim.targetX) / 2 + centerFieldCurveOffset) * scale,
                     y: ((ballAnim.y + ballAnim.targetY) / 2 - ballAnim.arcHeight * arcRatio) * scale
                 };
             }
@@ -3635,10 +3698,87 @@
             ctx.stroke();
         }
 
+        function easeInOutRunnerProgress(value) {
+            const p = Math.max(0, Math.min(1, value || 0));
+            return p < 0.5
+                ? 2 * p * p
+                : 1 - Math.pow(-2 * p + 2, 2) / 2;
+        }
+
+        function getRunnerMotionProgress(runner) {
+            const p = Math.max(0, Math.min(1, runner.animProgress || 0));
+
+            // 「離壘觀察」的前後試探由 animateRunners 依時間即時控制，
+            // 這裡優先採用已算好的 probeVisualProgress，避免節奏被重新壓縮。
+            if (runner.motionType === "probe" && typeof runner.probeVisualProgress === "number") {
+                return Math.max(0, Math.min(1, runner.probeVisualProgress));
+            }
+
+            // 「守住壘包」維持貼近原壘，不畫出推進感。
+            if (runner.motionType === "hold") return 0;
+
+            return easeInOutRunnerProgress(p);
+        }
+
+        function getRunnerDrawPoint(runner, scale) {
+            const visualProgress = getRunnerMotionProgress(runner);
+            return {
+                x: (runner.startX + (runner.targetX - runner.startX) * visualProgress) * scale,
+                y: (runner.startY + (runner.targetY - runner.startY) * visualProgress) * scale
+            };
+        }
+
+        function drawRunnerMovementGuides(scale) {
+            const movingRunners = fieldRunners.filter(runner => {
+                const dx = runner.targetX - runner.startX;
+                const dy = runner.targetY - runner.startY;
+                return Math.hypot(dx, dy) > 1.5;
+            });
+            if (!movingRunners.length) return;
+
+            ctx.save();
+            ctx.setLineDash([5 * scale, 6 * scale]);
+            ctx.lineWidth = Math.max(1.35, 2.2 * scale);
+            ctx.strokeStyle = "rgba(245, 158, 11, 0.62)";
+            movingRunners.forEach(runner => {
+                // 跑壘示意線只畫「跑者自己的行進路線」，不畫跑者之間的連線；
+                // 起點與終點都被限制在壘間白線上，避免誤導小球員以為可以斜切球場。
+                ctx.beginPath();
+                ctx.moveTo(runner.startX * scale, runner.startY * scale);
+                ctx.lineTo(runner.targetX * scale, runner.targetY * scale);
+                ctx.stroke();
+            });
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+
+        function drawRunnerLinkage(scale) {
+            if (!runnerLinkMessage) return;
+
+            ctx.save();
+            ctx.font = `900 ${11 * scale}px Noto Sans TC`;
+            ctx.textAlign = "center";
+            const bubbleX = 200 * scale;
+            const bubbleY = 28 * scale;
+            const bubbleW = Math.min(220 * scale, canvas.width - 36 * scale);
+            const bubbleH = 24 * scale;
+            ctx.fillStyle = "rgba(255, 251, 235, 0.92)";
+            ctx.strokeStyle = "rgba(245, 158, 11, 0.85)";
+            ctx.lineWidth = 1.5 * scale;
+            ctx.beginPath();
+            ctx.roundRect(bubbleX - bubbleW / 2, bubbleY - bubbleH / 2, bubbleW, bubbleH, 10 * scale);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = "#92400e";
+            ctx.fillText(runnerLinkMessage, bubbleX, bubbleY + 4 * scale);
+            ctx.restore();
+        }
+
         function drawRunners(scale) {
             fieldRunners.forEach(runner => {
-                const rX = (runner.startX + (runner.targetX - runner.startX) * runner.animProgress) * scale;
-                const rY = (runner.startY + (runner.targetY - runner.startY) * runner.animProgress) * scale;
+                const point = getRunnerDrawPoint(runner, scale);
+                const rX = point.x;
+                const rY = point.y;
 
                 if (runner.isPlayer) {
                     const glowRadius = (15 + Math.sin(Date.now() / 120) * 4) * scale;
@@ -3647,13 +3787,13 @@
                     ctx.arc(rX, rY, glowRadius, 0, Math.PI * 2);
                     ctx.fill();
                 } else {
-                    ctx.fillStyle = "rgba(239, 68, 68, 0.25)"; 
+                    ctx.fillStyle = runner.label === "打" ? "rgba(245, 158, 11, 0.26)" : "rgba(239, 68, 68, 0.25)"; 
                     ctx.beginPath();
                     ctx.arc(rX, rY, 11 * scale, 0, Math.PI * 2);
                     ctx.fill();
                 }
 
-                ctx.fillStyle = runner.isPlayer ? "#0ea5e9" : "#ef4444"; 
+                ctx.fillStyle = runner.isPlayer ? "#0ea5e9" : (runner.label === "打" ? "#f59e0b" : "#ef4444"); 
                 ctx.beginPath();
                 ctx.arc(rX, rY, 8.5 * scale, 0, Math.PI * 2);
                 ctx.fill();
@@ -3680,6 +3820,7 @@
         }
 
         function setupRunnersForScenario(q) {
+            runnerLinkMessage = "";
             fieldRunners = [];
             currentVisualOccupiedBases = [...q.runners];
 
@@ -3695,6 +3836,8 @@
                 targetX: pPos.x,
                 targetY: pPos.y,
                 animProgress: 0,
+                probeVisualProgress: 0,
+                motionType: "hold",
                 taggedOut: false
             });
 
@@ -3711,6 +3854,8 @@
                     targetX: tPos.x,
                     targetY: tPos.y,
                     animProgress: 0,
+                    probeVisualProgress: 0,
+                    motionType: "hold",
                     taggedOut: false
                 });
             });
@@ -3731,9 +3876,10 @@
         }
 
         function addBatterRunnerToFirst() {
-            const start = { x: bases.home.x, y: bases.home.y - 20 };
-            const target = getRunnerStartPosition(1);
-            const firstAlreadyRepresented = fieldRunners.some(runner => !runner.taggedOut && runner.base === 1 && runner.targetX === target.x && runner.targetY === target.y);
+            // 打者起跑也必須沿著本壘到一壘的白線，不能從打擊區斜切。
+            const start = { x: bases.home.x + 12, y: bases.home.y - 12 };
+            const target = getBasePosition(1);
+            const firstAlreadyRepresented = fieldRunners.some(runner => !runner.taggedOut && runner.base === 1 && Math.abs(runner.targetX - target.x) < 1 && Math.abs(runner.targetY - target.y) < 1);
             if (firstAlreadyRepresented) return;
             fieldRunners.push({
                 base: 1,
@@ -3746,65 +3892,220 @@
                 targetX: target.x,
                 targetY: target.y,
                 animProgress: 0,
+                probeVisualProgress: 0,
+                motionType: "advance",
                 taggedOut: false
             });
         }
 
         function moveRunnerToBase(runner, nextBaseNumber) {
-            const nextPos = getRunnerStartPosition(nextBaseNumber);
+            const nextPos = getBasePosition(nextBaseNumber);
+            if (!nextPos) return;
+            // 進壘動畫終點設在壘包本體，確保從目前離壘點到下一壘的路線完全落在壘間白線上。
+            runner.motionType = "advance";
             runner.targetX = nextPos.x;
             runner.targetY = nextPos.y;
             runner.base = nextBaseNumber === 4 ? 4 : nextBaseNumber;
         }
 
-        function moveRunnerTowardNextBase(runner, ratio = 0.32) {
+        function holdRunnerAtCurrentBase(runner) {
+            const original = getRunnerStartPosition(runner.base);
+            // 守住壘包：跑者貼近原壘，不推進、不試探、不畫移動路線。
+            runner.motionType = "hold";
+            runner.targetX = original.x;
+            runner.targetY = original.y;
+        }
+
+        function moveRunnerTowardNextBase(runner, ratio = 0.30) {
+            const currentBase = getBasePosition(runner.base);
             const nextBase = getNextBasePosition(runner.base);
-            if (!nextBase) return;
-            runner.targetX = runner.x + (nextBase.x - runner.x) * ratio;
-            runner.targetY = runner.y + (nextBase.y - runner.y) * ratio;
+            if (!currentBase || !nextBase) return;
+
+            // 離壘觀察：一定以「原壘包中心 → 下一壘包中心」作為壘線基準。
+            // 不使用跑者原本的偏移站位來計算，避免視覺上跑到 40%～50%。
+            // 目標最遠固定在壘間 30%，循環時回到 25%。
+            runner.motionType = "probe";
+            runner.startX = currentBase.x;
+            runner.startY = currentBase.y;
+            runner.x = currentBase.x;
+            runner.y = currentBase.y;
+            runner.targetX = currentBase.x + (nextBase.x - currentBase.x) * ratio;
+            runner.targetY = currentBase.y + (nextBase.y - currentBase.y) * ratio;
+        }
+
+        function isRunnerBehindPlayer(runner, currentQ) {
+            return !runner.isPlayer && runner.base < currentQ.playerBase;
+        }
+
+        function isRunnerAheadOfPlayer(runner, currentQ) {
+            return !runner.isPlayer && runner.base > currentQ.playerBase;
+        }
+
+        function canRunnerBeForcedByBatterOrTeammate(runner, currentQ) {
+            if (runner.base === 1) return currentQ.batType === "grounder" || currentQ.batType === "clean_hit" || currentQ.outs === 2;
+            if (runner.base === 2) return currentQ.runners.includes(1);
+            if (runner.base === 3) return currentQ.runners.includes(1) && currentQ.runners.includes(2);
+            return false;
         }
 
         function markPlayerOutForWrongChoice(runner, choiceId) {
             runner.taggedOut = true;
-            runner.outLabel = choiceId === "C" ? "❌ 封殺" : "❌ 觸殺";
-            if (choiceId === "A") {
-                moveRunnerTowardNextBase(runner, 0.68);
+            if (choiceId === "C") {
+                runner.outLabel = "❌ 被推擠封殺";
             } else if (choiceId === "B") {
-                moveRunnerTowardNextBase(runner, 0.38);
+                runner.outLabel = "❌ 猶豫出局";
             } else {
-                const original = getRunnerStartPosition(runner.base);
-                runner.targetX = original.x;
-                runner.targetY = original.y;
+                runner.outLabel = "❌ 冒進觸殺";
             }
+
+            if (choiceId === "A") {
+                moveRunnerTowardNextBase(runner, 0.72);
+            } else if (choiceId === "B") {
+                moveRunnerTowardNextBase(runner, 0.42);
+            } else {
+                holdRunnerAtCurrentBase(runner);
+            }
+        }
+
+        function applyBasicRunnerMovement(runner, action, currentQ, ratioOverride = null) {
+            if (!runner || runner.taggedOut) return;
+
+            if (action === "A") {
+                const nextBaseNumber = getNextBaseNumber(runner.base);
+                if (nextBaseNumber) moveRunnerToBase(runner, nextBaseNumber);
+                return;
+            }
+
+            if (action === "B") {
+                moveRunnerTowardNextBase(runner, ratioOverride ?? (runner.isPlayer ? 0.34 : 0.24));
+                return;
+            }
+
+            holdRunnerAtCurrentBase(runner);
+        }
+
+        function applyCorrectLinkedRunnerMovement(runner, currentQ) {
+            if (!runner || runner.taggedOut) return;
+
+            if (currentQ.correct === "A") {
+                // 正確直接衝壘：焦點跑者一跑，前後壘隊友也要依序推進，避免「一個人自己跑」的錯覺。
+                applyBasicRunnerMovement(runner, "A", currentQ);
+                return;
+            }
+
+            if (currentQ.correct === "B") {
+                // 正確離壘觀察：焦點跑者較明顯；前方隊友保留回壘空間，後方隊友等你判斷後再跟。
+                if (runner.isPlayer) applyBasicRunnerMovement(runner, "B", currentQ, 1 / 3);
+                else if (isRunnerAheadOfPlayer(runner, currentQ)) applyBasicRunnerMovement(runner, "B", currentQ, 0.28);
+                else applyBasicRunnerMovement(runner, "B", currentQ, 0.22);
+                return;
+            }
+
+            // 正確守住壘包：不是所有人都呆住，而是依職責連動。
+            if (currentQ.ruleKey === "deepFlyThirdTag" && currentQ.playerBase === 3) {
+                // 三壘跑者踩壘準備 tag up；一、二壘隊友則小幅離壘看球。
+                if (runner.isPlayer) holdRunnerAtCurrentBase(runner);
+                else applyBasicRunnerMovement(runner, "B", currentQ, 0.24);
+                return;
+            }
+
+            if (currentQ.batType === "grounder" && !runner.isPlayer && isRunnerBehindPlayer(runner, currentQ) && canRunnerBeForcedByBatterOrTeammate(runner, currentQ)) {
+                // 你前方守住不冒進；後方被迫前進的隊友仍會推上來，畫面呈現壘包連鎖壓力。
+                applyBasicRunnerMovement(runner, "A", currentQ);
+                return;
+            }
+
+            holdRunnerAtCurrentBase(runner);
+        }
+
+        function applyWrongLinkedRunnerMovement(runner, action, currentQ) {
+            if (!runner || runner.taggedOut) return;
+
+            if (runner.isPlayer) {
+                // 焦點跑者仍演示玩家的錯誤選擇，並在後面標出出局風險。
+                applyBasicRunnerMovement(runner, action, currentQ);
+                return;
+            }
+
+            if (action === "A") {
+                // 你冒進時，隊友通常不會全部跟著衝；前方要保壘，後方只會被迫小幅跟進，凸顯你把自己跑進風險。
+                if (isRunnerBehindPlayer(runner, currentQ)) applyBasicRunnerMovement(runner, "B", currentQ, 0.14);
+                else holdRunnerAtCurrentBase(runner);
+                return;
+            }
+
+            if (action === "B") {
+                if (currentQ.correct === "A") {
+                    // 該衝卻觀察：後方/打者把壓力往前推，前方隊友已經啟動，焦點跑者卡在中間最危險。
+                    applyBasicRunnerMovement(runner, canRunnerBeForcedByBatterOrTeammate(runner, currentQ) ? "A" : "B", currentQ, 0.2);
+                } else {
+                    // 該守卻離壘：隊友多半收住，你自己離壘太遠。
+                    holdRunnerAtCurrentBase(runner);
+                }
+                return;
+            }
+
+            if (action === "C") {
+                if (currentQ.correct === "A") {
+                    // 該衝卻不衝：後方隊友或打者仍推進，形成封殺壓力；前方隊友也可能已經往前跑。
+                    applyBasicRunnerMovement(runner, "A", currentQ);
+                } else if (currentQ.correct === "B") {
+                    // 該觀察卻死守：隊友已經開始讀球，你卻沒有跟上節奏。
+                    applyBasicRunnerMovement(runner, "B", currentQ, isRunnerAheadOfPlayer(runner, currentQ) ? 0.24 : 0.14);
+                } else {
+                    holdRunnerAtCurrentBase(runner);
+                }
+            }
+        }
+
+        function cancelRunnerReplayAnimation() {
+            runnerReplayAnimationToken += 1;
+            if (runnerReplayAnimationFrame) {
+                cancelAnimationFrame(runnerReplayAnimationFrame);
+                runnerReplayAnimationFrame = null;
+            }
+        }
+
+        function getProbeLoopVisualProgress(elapsed) {
+            const advanceDuration = 1450; // 先慢慢到 30%
+            const cycleDuration = 1800;   // 再以較慢節奏在 30% / 25% 之間前後試探
+            const farPoint = 1;           // target 已經是壘間 30% 的位置
+            const nearPoint = 25 / 30;    // 回到約壘間 25% 的位置
+
+            if (elapsed <= advanceDuration) {
+                return farPoint * easeInOutRunnerProgress(elapsed / advanceDuration);
+            }
+
+            const cycleElapsed = (elapsed - advanceDuration) % cycleDuration;
+            const halfCycle = cycleDuration / 2;
+
+            if (cycleElapsed <= halfCycle) {
+                return farPoint - (farPoint - nearPoint) * easeInOutRunnerProgress(cycleElapsed / halfCycle);
+            }
+
+            return nearPoint + (farPoint - nearPoint) * easeInOutRunnerProgress((cycleElapsed - halfCycle) / halfCycle);
         }
 
         function animateRunners(action, isCorrect) {
             const currentQ = generatedQuestions[currentQuestionIdx];
+            runnerLinkMessage = isCorrect ? "正確：前後壘連動" : "錯誤：隊友節奏被卡住";
+            cancelRunnerReplayAnimation();
+            const animationToken = runnerReplayAnimationToken;
 
             fieldRunners.forEach(runner => {
                 runner.startX = runner.x;
                 runner.startY = runner.y;
                 runner.animProgress = 0;
+                runner.probeVisualProgress = 0;
+                runner.motionType = "hold";
                 runner.taggedOut = false;
                 runner.outLabel = "❌ OUT";
             });
 
             if (isCorrect) {
-                if (currentQ.runTarget === "advance_one_base" || currentQ.runTarget === "force_all") {
-                    fieldRunners.forEach(runner => {
-                        const nextBaseNumber = getNextBaseNumber(runner.base);
-                        if (nextBaseNumber) moveRunnerToBase(runner, nextBaseNumber);
-                    });
-                } else if (currentQ.runTarget === "lead_off") {
-                    fieldRunners.forEach(runner => {
-                        if (runner.isPlayer) moveRunnerTowardNextBase(runner, 0.32);
-                    });
-                } else if (currentQ.runTarget === "tag_up_3toH") {
-                    fieldRunners.forEach(runner => {
-                        if (runner.isPlayer && runner.base === 3) moveRunnerToBase(runner, 4);
-                    });
-                }
+                fieldRunners.forEach(runner => applyCorrectLinkedRunnerMovement(runner, currentQ));
             } else {
+                fieldRunners.forEach(runner => applyWrongLinkedRunnerMovement(runner, action, currentQ));
                 fieldRunners.forEach(runner => {
                     if (runner.isPlayer) markPlayerOutForWrongChoice(runner, action);
                 });
@@ -3817,31 +4118,43 @@
             currentVisualOccupiedBases = getVisualBasesFromRunners(fieldRunners);
             document.getElementById('baseStatusText').innerText = `${currentQ.outs}出局 - 選擇後：${describeOccupiedBases(currentVisualOccupiedBases)}`;
 
+            const normalDuration = 1450;
+            const hasProbeRunners = fieldRunners.some(runner => runner.motionType === "probe");
             let start = null;
-            const duration = 1200;
 
             function step(timestamp) {
+                if (animationToken !== runnerReplayAnimationToken) return;
                 if (!start) start = timestamp;
                 const elapsed = timestamp - start;
-                const progress = Math.min(elapsed / duration, 1);
+                const progress = Math.min(elapsed / normalDuration, 1);
 
                 fieldRunners.forEach(runner => {
-                    runner.animProgress = progress;
-                    runner.x = runner.startX + (runner.targetX - runner.startX) * progress;
-                    runner.y = runner.startY + (runner.targetY - runner.startY) * progress;
+                    if (runner.motionType === "probe") {
+                        runner.probeVisualProgress = getProbeLoopVisualProgress(elapsed);
+                        runner.animProgress = 1;
+                    } else {
+                        runner.animProgress = progress;
+                        runner.probeVisualProgress = 0;
+                    }
 
-                    if (progress < 0.9 && Math.random() > 0.4) {
-                        createDust(runner.x, runner.y, 2);
+                    const visualProgress = getRunnerMotionProgress(runner);
+                    runner.x = runner.startX + (runner.targetX - runner.startX) * visualProgress;
+                    runner.y = runner.startY + (runner.targetY - runner.startY) * visualProgress;
+
+                    if (runner.motionType !== "hold" && (hasProbeRunners || progress < 0.92) && Math.random() > 0.5) {
+                        createDust(runner.x, runner.y, runner.motionType === "probe" ? 1 : 2);
                     }
                 });
 
                 drawStadium();
 
-                if (progress < 1) {
-                    requestAnimationFrame(step);
+                if (hasProbeRunners || progress < 1) {
+                    runnerReplayAnimationFrame = requestAnimationFrame(step);
+                } else {
+                    runnerReplayAnimationFrame = null;
                 }
             }
-            requestAnimationFrame(step);
+            runnerReplayAnimationFrame = requestAnimationFrame(step);
         }
 
         function generateGameScenarios() {
@@ -3871,6 +4184,7 @@
 
             answered = false;
             lastSelectedChoiceId = null;
+            document.getElementById('runnerReplayControls')?.remove();
             currentQuestionIdx = idx;
             const currentQ = generatedQuestions[idx];
             if (!currentQ) {
@@ -3961,6 +4275,7 @@
             }
 
             const fielderPos = fielders[fielderKey];
+            ballAnim.fielderKey = fielderKey;
             ballAnim.targetX = fielderPos.x;
             ballAnim.targetY = fielderPos.y;
 
@@ -4035,40 +4350,104 @@
             return nextBtn;
         }
 
+        function showCurrentQuestionAnswerAgain() {
+            const currentQ = generatedQuestions[currentQuestionIdx];
+            if (!currentQ) return;
+
+            const choiceId = lastSelectedChoiceId || currentQ.correct;
+            const selectedOpt = (currentQ.options || []).find(option => option.id === choiceId)
+                || (currentQ.options || []).find(option => option.id === currentQ.correct)
+                || null;
+            const isCorrect = choiceId === currentQ.correct;
+
+            showAnswerExplanationModal(choiceId, selectedOpt, isCorrect);
+        }
+
+        function ensureAnswerButtonVisible() {
+            const container = document.getElementById('optionsContainer');
+            if (!container || document.getElementById('showAnswerAgainButton')) return;
+
+            const answerBtn = document.createElement('button');
+            answerBtn.id = 'showAnswerAgainButton';
+            answerBtn.type = 'button';
+            answerBtn.className = 'full-row-action w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-4 rounded-2xl shadow-lg shadow-amber-500/20 transition-all active:scale-95 flex justify-center items-center gap-2 text-sm sm:text-base min-h-[4.2rem] border-2 border-amber-300';
+            answerBtn.innerHTML = `查看解答 <i class="fa-solid fa-circle-info"></i>`;
+            answerBtn.onclick = showCurrentQuestionAnswerAgain;
+
+            // 關掉解答視窗回到題目後，讓小球員可以隨時重看解答。
+            container.prepend(answerBtn);
+        }
+
         function getDemoWrongChoice(currentQ) {
             if (lastSelectedChoiceId && lastSelectedChoiceId !== currentQ.correct) return lastSelectedChoiceId;
             const wrong = (currentQ.options || []).find(option => option.id !== currentQ.correct);
             return wrong ? wrong.id : "A";
         }
 
-        function replayRunnerPath(mode) {
+        function getReplayChoiceTitle(choiceId) {
+            if (choiceId === "A") return "直接衝壘";
+            if (choiceId === "B") return "離壘觀察";
+            if (choiceId === "C") return "守住壘包";
+            return getDecisionLabel(choiceId);
+        }
+
+        function updateReplayButtonStates(activeChoiceId) {
+            document.querySelectorAll('#runnerReplayControls .runner-replay-button').forEach(btn => {
+                const choiceId = btn.getAttribute('data-choice-id');
+                btn.classList.toggle('runner-replay-active', choiceId === activeChoiceId);
+            });
+        }
+
+        function replayRunnerPath(choiceId) {
             const currentQ = generatedQuestions[currentQuestionIdx];
             if (!currentQ) return;
+
             setupRunnersForScenario(currentQ);
             currentVisualOccupiedBases = [...currentQ.runners];
             drawStadium();
-            if (mode === "correct") {
-                animateRunners(currentQ.correct, true);
-            } else {
-                animateRunners(getDemoWrongChoice(currentQ), false);
+            updateReplayButtonStates(choiceId);
+
+            const isCorrect = choiceId === currentQ.correct;
+            const coachFeedback = document.getElementById('coachFeedback');
+            const choiceTitle = getReplayChoiceTitle(choiceId);
+
+            if (coachFeedback) {
+                coachFeedback.innerText = isCorrect
+                    ? `「目前對照：${choiceId} ${choiceTitle}是正確跑法。看你的判斷如何帶動前後壘隊友連動。」`
+                    : `「目前對照：${choiceId} ${choiceTitle}是錯誤跑法。比較它和正確答案的差異，注意哪裡造成出局風險。」`;
             }
+
+            animateRunners(choiceId, isCorrect);
         }
 
         function ensureReplayButtonsVisible() {
-            const container = document.getElementById('optionsContainer');
-            if (!container || document.getElementById('runnerReplayControls')) return;
+            const fieldStage = document.getElementById('fieldStage');
+            if (!fieldStage || document.getElementById('runnerReplayControls')) return;
+
+            const currentQ = generatedQuestions[currentQuestionIdx];
+            const correctId = currentQ ? currentQ.correct : "";
+            const choices = [
+                { id: "A", title: "直接衝壘", icon: "fa-person-running" },
+                { id: "B", title: "離壘觀察", icon: "fa-eye" },
+                { id: "C", title: "守住壘包", icon: "fa-hand" }
+            ];
+
             const replayBox = document.createElement('div');
             replayBox.id = 'runnerReplayControls';
-            replayBox.className = 'full-row-action grid grid-cols-2 gap-2 w-full';
-            replayBox.innerHTML = `
-                <button type="button" onclick="replayRunnerPath('correct')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-2xl shadow-lg shadow-emerald-600/20 transition-all active:scale-95 flex justify-center items-center gap-2 text-xs sm:text-sm">
-                    正確跑法 <i class="fa-solid fa-route"></i>
-                </button>
-                <button type="button" onclick="replayRunnerPath('wrong')" class="w-full bg-rose-700 hover:bg-rose-600 text-white font-black py-3 rounded-2xl shadow-lg shadow-rose-700/20 transition-all active:scale-95 flex justify-center items-center gap-2 text-xs sm:text-sm">
-                    錯誤跑法 <i class="fa-solid fa-triangle-exclamation"></i>
-                </button>
-            `;
-            container.prepend(replayBox);
+            replayBox.setAttribute('aria-label', '三種跑法演示對照');
+            replayBox.innerHTML = choices.map(choice => {
+                const isCorrect = choice.id === correctId;
+                return `
+                    <button type="button"
+                            data-choice-id="${choice.id}"
+                            onclick="replayRunnerPath('${choice.id}')"
+                            class="runner-replay-button ${isCorrect ? 'runner-replay-correct' : 'runner-replay-wrong'}">
+                        <span>${choice.id} ${choice.title}</span>
+                        <span>${isCorrect ? '正確' : '錯誤'} <i class="fa-solid ${choice.icon}"></i></span>
+                    </button>
+                `;
+            }).join('');
+            fieldStage.appendChild(replayBox);
         }
 
         window.addEventListener('error', function(event) {
@@ -4182,6 +4561,7 @@
             // 這樣即使 LINE 內建瀏覽器或舊版 Safari 對動畫/彈窗支援不穩，也不會卡住。
             ensureNextButtonVisible();
             ensureReplayButtonsVisible();
+            ensureAnswerButtonVisible();
 
             try {
                 animateRunners(choiceId, isCorrect);
