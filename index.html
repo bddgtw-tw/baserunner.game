@@ -2203,12 +2203,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20260527-10</span>
+        <span id="footerVersionText">版本：v20260527-11</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20260527-10";
+        const APP_VERSION = "v20260527-11";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -2542,6 +2542,14 @@
             } catch (e) {}
         }
 
+        function playCatchSound() {
+            if (!soundEnabled || !toneInitialized || !failSynth) return;
+            try {
+                const now = Tone.now();
+                failSynth.triggerAttackRelease("C2", "32n", now);
+            } catch (e) {}
+        }
+
         function playCheerSound() {
             if (!soundEnabled || !toneInitialized || !cheerNoise) return;
             try { cheerNoise.triggerAttackRelease("1.5s"); } catch (e) {}
@@ -2766,6 +2774,255 @@
         const hitTypes = BASERUNNING_CONTENT.hitTypes;
         const fielders = BASERUNNING_CONTENT.fielders;
         let scenarioMatrixCache = null;
+
+        // ================= DEFENSIVE PLAY & BALL FLOW SYSTEM =================
+        let fieldersState = {};
+        const throwAnim = {
+            active: false,
+            startX: 0,
+            startY: 0,
+            targetX: 0,
+            targetY: 0,
+            x: 0,
+            y: 0,
+            progress: 0,
+            startTime: 0,
+            duration: 400,
+            onComplete: null
+        };
+
+        function initFieldersState() {
+            fieldersState = {};
+            for (const [key, pos] of Object.entries(fielders)) {
+                fieldersState[key] = {
+                    key: key,
+                    name: pos.name,
+                    x: pos.x,
+                    y: pos.y,
+                    startX: pos.x,
+                    startY: pos.y,
+                    targetX: pos.x,
+                    targetY: pos.y,
+                    isMoving: false,
+                    moveProgress: 0,
+                    state: 'idle'
+                };
+            }
+        }
+        initFieldersState();
+
+        function resetFieldersState() {
+            for (const [key, pos] of Object.entries(fielders)) {
+                if (fieldersState[key]) {
+                    fieldersState[key].x = pos.x;
+                    fieldersState[key].y = pos.y;
+                    fieldersState[key].startX = pos.x;
+                    fieldersState[key].startY = pos.y;
+                    fieldersState[key].targetX = pos.x;
+                    fieldersState[key].targetY = pos.y;
+                    fieldersState[key].isMoving = false;
+                    fieldersState[key].moveProgress = 0;
+                    fieldersState[key].state = 'idle';
+                }
+            }
+            throwAnim.active = false;
+        }
+
+        function moveFielderTo(key, targetX, targetY, duration = 800) {
+            const f = fieldersState[key];
+            if (!f) return;
+            f.startX = f.x;
+            f.startY = f.y;
+            f.targetX = targetX;
+            f.targetY = targetY;
+            f.isMoving = true;
+            f.state = 'run';
+            f.moveProgress = 0;
+
+            const startTime = Date.now();
+            function step() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                f.moveProgress = progress;
+                f.x = f.startX + (f.targetX - f.startX) * progress;
+                f.y = f.startY + (f.targetY - f.startY) * progress;
+
+                if (progress < 0.9 && Math.random() > 0.4) {
+                    createDust(f.x, f.y, 2);
+                }
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    f.isMoving = false;
+                    f.state = 'idle';
+                }
+            }
+            requestAnimationFrame(step);
+        }
+
+        function triggerThrowAnimation(fromX, fromY, toX, toY, duration = 420, onComplete = null) {
+            throwAnim.active = true;
+            throwAnim.startX = fromX;
+            throwAnim.startY = fromY;
+            throwAnim.targetX = toX;
+            throwAnim.targetY = toY;
+            throwAnim.x = fromX;
+            throwAnim.y = fromY;
+            throwAnim.progress = 0;
+            throwAnim.startTime = Date.now();
+            throwAnim.duration = duration;
+            throwAnim.onComplete = onComplete;
+
+            function stepThrow() {
+                if (!throwAnim.active) return;
+                const elapsed = Date.now() - throwAnim.startTime;
+                const progress = Math.min(elapsed / throwAnim.duration, 1);
+                throwAnim.progress = progress;
+                throwAnim.x = throwAnim.startX + (throwAnim.targetX - throwAnim.startX) * progress;
+                throwAnim.y = throwAnim.startY + (throwAnim.targetY - throwAnim.startY) * progress;
+
+                drawStadium();
+
+                if (progress < 1) {
+                    requestAnimationFrame(stepThrow);
+                } else {
+                    throwAnim.active = false;
+                    createGrassSplash(throwAnim.targetX, throwAnim.targetY, 10);
+                    playCatchSound();
+                    if (throwAnim.onComplete) throwAnim.onComplete();
+                    drawStadium();
+                }
+            }
+            requestAnimationFrame(stepThrow);
+        }
+
+        /**
+         * 守備方自動跑位踩壘與二段傳球流動 (Defensive Play Coordinator)
+         */
+        function triggerDefensivePlay(currentQ, choiceId, consequence) {
+            if (!currentQ) return;
+            resetFieldersState();
+
+            const fielderKey = currentQ.fielderKey;
+            const originFielder = fielders[fielderKey] || { x: 200, y: 210 };
+            const playerBase = currentQ.playerBase;
+            const ruleKey = currentQ.ruleKey;
+
+            // 1. 平飛球回原壘促請裁決刺殺 (例如投手方向平飛球，二壘跑者離壘出局)
+            if (ruleKey === 'lineDriveReturn' && consequence.outcome === 'OUT') {
+                const basePos = getBasePosition(playerBase);
+                if (!basePos) return;
+
+                let coveringKey = "2B";
+                if (playerBase === 2) {
+                    coveringKey = (fielderKey === "SS" || fielderKey === "3B") ? "2B" : "SS";
+                } else if (playerBase === 1) {
+                    coveringKey = (fielderKey === "1B") ? "P" : "1B";
+                } else if (playerBase === 3) {
+                    coveringKey = "3B";
+                }
+
+                moveFielderTo(coveringKey, basePos.x, basePos.y, 700);
+
+                setTimeout(() => {
+                    const fromPos = fieldersState[fielderKey] || originFielder;
+                    triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 380, () => {
+                        const coverF = fieldersState[coveringKey];
+                        if (coverF) {
+                            coverF.x = basePos.x;
+                            coverF.y = basePos.y;
+                            coverF.state = 'catch';
+                        }
+                    });
+                }, 750);
+            }
+            // 2. 強迫進壘封殺 (例如滾地球，跑者被逼進下一壘卻猶豫或留壘)
+            else if (ruleKey === 'forcedGrounderRun' && consequence.outcome === 'OUT') {
+                const nextBaseNum = getNextBaseNumber(playerBase);
+                const basePos = getBasePosition(nextBaseNum);
+                if (!basePos) return;
+
+                let coveringKey = "2B";
+                if (nextBaseNum === 2) {
+                    coveringKey = (fielderKey === "SS" || fielderKey === "3B") ? "2B" : "SS";
+                } else if (nextBaseNum === 3) {
+                    coveringKey = "3B";
+                } else if (nextBaseNum === 4) {
+                    coveringKey = "C";
+                }
+
+                moveFielderTo(coveringKey, basePos.x, basePos.y, 700);
+
+                setTimeout(() => {
+                    const fromPos = fieldersState[fielderKey] || originFielder;
+                    triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 380, () => {
+                        const coverF = fieldersState[coveringKey];
+                        if (coverF) {
+                            coverF.x = basePos.x;
+                            coverF.y = basePos.y;
+                            coverF.state = 'catch';
+                        }
+                    });
+                }, 750);
+            }
+            // 3. 深遠飛球提早起跑促請裁決 (Tag-up Appeal Out)
+            else if (ruleKey === 'deepFlyThirdTag' && choiceId === 'A') {
+                const basePos = getBasePosition(3);
+                const coveringKey = "3B";
+
+                moveFielderTo(coveringKey, basePos.x, basePos.y, 600);
+
+                setTimeout(() => {
+                    const fromPos = fieldersState[fielderKey] || originFielder;
+                    triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 500, () => {
+                        const coverF = fieldersState[coveringKey];
+                        if (coverF) {
+                            coverF.x = basePos.x;
+                            coverF.y = basePos.y;
+                            coverF.state = 'catch';
+                        }
+                    });
+                }, 900);
+            }
+            // 4. 非強迫進壘滾地球硬衝遭觸殺
+            else if ((ruleKey === 'leftSideGrounderStay' || ruleKey === 'unforcedGrounderStay') && choiceId === 'A') {
+                const nextBaseNum = getNextBaseNumber(playerBase);
+                const basePos = getBasePosition(nextBaseNum);
+                if (!basePos) return;
+
+                const coveringKey = nextBaseNum === 3 ? "3B" : "2B";
+                moveFielderTo(coveringKey, basePos.x, basePos.y, 600);
+
+                setTimeout(() => {
+                    const fromPos = fieldersState[fielderKey] || originFielder;
+                    triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 380, () => {
+                        const coverF = fieldersState[coveringKey];
+                        if (coverF) {
+                            coverF.x = basePos.x;
+                            coverF.y = basePos.y;
+                            coverF.state = 'catch';
+                        }
+                    });
+                }, 700);
+            }
+            // 5. 正解或安打：外野接球後傳回內野轉傳 (Cutoff)
+            else if (currentQ.batType === 'clean_hit' || consequence.outcome === 'SAFE') {
+                if (fielderKey === 'LF' || fielderKey === 'CF' || fielderKey === 'RF') {
+                    const cutoffBase = getBasePosition(2);
+                    const coveringKey = (fielderKey === 'LF') ? 'SS' : '2B';
+                    moveFielderTo(coveringKey, cutoffBase.x, cutoffBase.y, 800);
+
+                    setTimeout(() => {
+                        const fromPos = fieldersState[fielderKey] || originFielder;
+                        triggerThrowAnimation(fromPos.x, fromPos.y, cutoffBase.x, cutoffBase.y, 520, () => {
+                            const coverF = fieldersState[coveringKey];
+                            if (coverF) coverF.state = 'catch';
+                        });
+                    }, 1000);
+                }
+            }
+        }
 
         let particles = [];
         function createDust(x, y, count = 5) {
@@ -3758,6 +4015,7 @@
             // 執行場上 16-bit 衝擊彈跳框與跑者動態
             triggerOutcomeBanner(consequence.bannerText, consequence.bannerSub, consequence.outcome);
             animateRunners(choiceId, consequence.isCorrect);
+            triggerDefensivePlay(currentQ, choiceId, consequence);
         }
 
         function goNextQuestionFromModal() {
@@ -4666,6 +4924,9 @@
             if (ballAnim.active) {
                 drawBallFlight(scale);
             }
+            if (throwAnim.active) {
+                drawThrowBall(scale);
+            }
 
             updateAndDrawParticles(ctx, scale);
             drawRunners(scale);
@@ -4677,6 +4938,33 @@
             if (outcomeBanner && outcomeBanner.active) {
                 drawOutcomeBanner(ctx, w, h, scale);
             }
+        }
+
+        function drawThrowBall(scale) {
+            if (!throwAnim.active) return;
+            const curX = throwAnim.x * scale;
+            const curY = throwAnim.y * scale;
+
+            ctx.save();
+            // 守備雷射肩快速長傳白光拖尾線
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+            ctx.lineWidth = 2.2 * scale;
+            if (ctx.setLineDash) ctx.setLineDash([4 * scale, 2 * scale]);
+            ctx.beginPath();
+            ctx.moveTo(throwAnim.startX * scale, throwAnim.startY * scale);
+            ctx.lineTo(curX, curY);
+            ctx.stroke();
+            if (ctx.setLineDash) ctx.setLineDash([]);
+
+            // 棒球本體 (飛行小白球)
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(curX, curY, 3.8 * scale, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#0f172a";
+            ctx.lineWidth = 1 * scale;
+            ctx.stroke();
+            ctx.restore();
         }
 
         function drawStadiumLights(ctx, w, h, scale) {
@@ -4809,8 +5097,14 @@
             const currentQ = generatedQuestions[currentQuestionIdx];
             const targetFielderKey = currentQ ? currentQ.fielderKey : null;
 
-            for (const [key, pos] of Object.entries(fielders)) {
+            const fieldersToDraw = (Object.keys(fieldersState).length > 0) ? fieldersState : fielders;
+
+            for (const [key, fData] of Object.entries(fieldersToDraw)) {
                 const isHandling = (key === targetFielderKey);
+                const posX = (fData.x !== undefined ? fData.x : fData.x) * scale;
+                const posY = (fData.y !== undefined ? fData.y : fData.y) * scale;
+                const fState = fData.state || 'idle';
+                const fFrame = fData.isMoving ? (Math.floor(Date.now() / 120) % 3) : 0;
                 
                 if (isHandling) {
                     ctx.save();
@@ -4818,7 +5112,7 @@
                     const haloR = (16 + Math.sin(Date.now() / 150) * 2.5) * scale;
                     ctx.fillStyle = "rgba(234, 179, 8, 0.28)";
                     ctx.beginPath();
-                    ctx.arc(pos.x * scale, pos.y * scale, haloR, 0, Math.PI * 2);
+                    ctx.arc(posX, posY, haloR, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.strokeStyle = "#eab308";
                     ctx.lineWidth = 2 * scale;
@@ -4826,13 +5120,14 @@
                     ctx.restore();
                 }
 
-                // 24×24 像素 Q 版守備員
-                drawPixelPlayer(ctx, pos.x * scale, pos.y * scale, {
+                // 24×24 像素 Q 版守備員（動態狀態支援：跑動、接球、待機）
+                drawPixelPlayer(ctx, posX, posY, {
                     scale: scale,
                     isPlayer: false,
                     isFielder: true,
                     isHandling: isHandling,
-                    state: isHandling ? 'idle' : 'idle',
+                    state: fState,
+                    frame: fFrame,
                     badge: key
                 });
             }
@@ -5551,6 +5846,7 @@
 
             currentVisualOccupiedBases = [...currentQ.runners];
             setupRunnersForScenario(currentQ);
+            resetFieldersState();
             drawStadium();
 
             document.querySelectorAll('#progressBar span').forEach((dot, dIdx) => {
@@ -5859,6 +6155,7 @@
 
             try {
                 animateRunners(choiceId, isCorrect);
+                triggerDefensivePlay(currentQ, choiceId, consequence);
             } catch (error) {
                 console.error('跑者動畫失敗，但已保留下一題按鈕：', error);
             }
