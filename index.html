@@ -2190,10 +2190,10 @@
 
             <!-- Modal Footer (永遠固定在底部的按鈕) -->
             <div id="answerModalFooter" class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 flex-shrink-0">
-                <button onclick="toggleAnswerModal(false)" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-100 transition-all flex items-center gap-1.5">
-                    <i class="fa-solid fa-magnifying-glass"></i> 看球場走位
+                <button onclick="startFieldSimulationMode()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
+                    <i class="fa-solid fa-play"></i> 回到球場演示不同走法
                 </button>
-                <button onclick="goNextQuestionFromModal()" class="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-black text-xs sm:text-sm hover:bg-blue-500 shadow-md transition-all flex items-center gap-2">
+                <button onclick="goNextQuestionFromModal()" class="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-black text-xs sm:text-sm hover:bg-blue-500 shadow-md transition-all flex items-center gap-2 active:scale-95">
                     <span>下一題</span> <i class="fa-solid fa-arrow-right"></i>
                 </button>
             </div>
@@ -3199,6 +3199,102 @@
                     lastAnsweredExplanation.isCorrect
                 );
             }
+        }
+
+        // ⚾ 回到球場演示不同答案的結果 (跑壘會出局、滑壘推進等互動戰術演示)
+        function startFieldSimulationMode() {
+            toggleAnswerModal(false);
+            const currentQ = generatedQuestions[currentQuestionIdx];
+            if (!currentQ) return;
+
+            // 重設跑者回初始位置
+            setupRunnersForScenario(currentQ);
+            drawStadium();
+
+            const container = document.getElementById('optionsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            // 1. 頂部演示控制條 (含「進入下一題」與「重新打開講義詳解」)
+            const controlBar = document.createElement('div');
+            controlBar.className = 'col-span-3 flex flex-col sm:flex-row gap-2 mb-1 p-2.5 rounded-2xl bg-slate-900 border border-amber-500/40 shadow-lg';
+            controlBar.innerHTML = `
+                <div class="flex-1 flex items-center gap-2">
+                    <span class="text-base">🎮</span>
+                    <div>
+                        <p class="text-xs font-black text-amber-400">自由戰術演示模式</p>
+                        <p class="text-[11px] text-slate-300 font-bold">點選下方 3 個按鈕，實況觀看選不同走法的後果！</p>
+                    </div>
+                </div>
+                <div class="flex gap-2 flex-shrink-0">
+                    <button onclick="reopenAnswerExplanationModal()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs border border-amber-500/30 flex items-center gap-1 transition-all">
+                        <i class="fa-solid fa-book-open"></i> 看詳解
+                    </button>
+                    <button onclick="loadQuestion(currentQuestionIdx + 1)" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs shadow-md flex items-center gap-1 transition-all">
+                        <span>下一題</span> <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(controlBar);
+
+            // 2. 渲染可自由重複點選的 3 個策略按鈕 (A, B, C)
+            currentQ.options.forEach(opt => {
+                const isCorrectOpt = opt.id === currentQ.correct;
+                const btn = document.createElement('button');
+                btn.className = `option-btn runner-action text-center p-3 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center min-h-[4.2rem] shadow-md ${
+                    isCorrectOpt 
+                        ? 'border-emerald-500/70 bg-emerald-950/40 hover:bg-emerald-900/60' 
+                        : 'border-slate-800 bg-slate-900/70 hover:bg-slate-800 hover:border-slate-700'
+                }`;
+                const keyNum = opt.id === 'A' ? '1' : (opt.id === 'B' ? '2' : '3');
+                btn.innerHTML = `
+                    <div class="flex flex-col items-center justify-center gap-1 w-full relative">
+                        <span class="key-badge absolute top-0 right-0">${keyNum}</span>
+                        <span class="text-xs sm:text-sm font-black ${isCorrectOpt ? 'text-emerald-400' : 'text-amber-500'} leading-tight">
+                            ${opt.title} ${isCorrectOpt ? '🟢' : '🔴'}
+                        </span>
+                        <span class="text-[11px] font-bold text-slate-200 leading-snug">${opt.text}</span>
+                    </div>
+                `;
+                btn.onclick = () => {
+                    simulateChoiceOnField(opt.id);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // 實況模擬選取特定答案的跑壘動畫與出局/安全判定
+        function simulateChoiceOnField(choiceId) {
+            const currentQ = generatedQuestions[currentQuestionIdx];
+            if (!currentQ) return;
+
+            // 先重置跑者位置
+            setupRunnersForScenario(currentQ);
+            drawStadium();
+
+            const isCorrect = choiceId === currentQ.correct;
+            const selectedOpt = currentQ.options.find(o => o.id === choiceId);
+            const coachAvatar = document.getElementById('coachAvatar');
+            const coachFeedback = document.getElementById('coachFeedback');
+
+            // 觸發音效與教練表情
+            if (isCorrect) {
+                playSuccessSound();
+                coachAvatar.innerText = "🤩";
+                coachAvatar.className = "w-14 h-14 rounded-full bg-slate-900 border-2 border-emerald-500 flex items-center justify-center text-3xl animate-bounce";
+                coachFeedback.className = "text-xs sm:text-sm text-emerald-400 mt-1 leading-relaxed font-black";
+                coachFeedback.innerText = `「 漂亮！【${selectedOpt.title}】${selectedOpt.explain} 」`;
+            } else {
+                playFailSound();
+                coachAvatar.innerText = "😭";
+                coachAvatar.className = "w-14 h-14 rounded-full bg-slate-900 border-2 border-red-500 flex items-center justify-center text-3xl animate-wiggle";
+                coachFeedback.className = "text-xs sm:text-sm text-red-400 mt-1 leading-relaxed font-black";
+                coachFeedback.innerText = `「 哇！【${selectedOpt.title}】會出局！${selectedOpt.explain} 」`;
+            }
+
+            // 執行場上 16-bit 衝擊彈跳框與跑者動態
+            triggerOutcomeBanner(isCorrect ? "SAFE! 🟢" : "OUT! 🔴", selectedOpt.explain, isCorrect);
+            animateRunners(choiceId, isCorrect);
         }
 
         function goNextQuestionFromModal() {
