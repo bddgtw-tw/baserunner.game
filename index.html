@@ -5251,10 +5251,10 @@
                 eduBox.classList.remove('hidden');
             }
 
-            // 🌟 做出決定後自動彈出前因後果剖析視窗（延遲 650ms，先讓跑者滑壘與判決大字呈現，隨後平滑展開）
+            // 🌟 先在畫面上演出完整的 SAFE / OUT 大字、音效、衝壘/滑壘動畫（完整 1.8~2.0 秒），演出完畢才跳出前因後果剖析彈窗
             setTimeout(() => {
                 showAnswerExplanationModal(choiceId, selectedOpt, isCorrect);
-            }, 650);
+            }, 1950);
         }
 
         function insertNextButton() {
@@ -5761,38 +5761,67 @@
             const elapsed = Date.now() - outcomeBanner.startTime;
             if (elapsed > 2000) return;
 
-            // 柔和淡入淡出，絕不閃爍
-            const alpha = Math.min(1, Math.sin((elapsed / 2000) * Math.PI) * 1.25);
+            // 16-bit 街機彈跳衝擊感 (Arcade Punch Out Elastic Animation)
+            // 0~250ms: 超快速從 0.2 縮放放大到 1.15 (震盪彈入)
+            // 250~450ms: 彈回 1.0 穩定懸浮
+            // 1600~2000ms: 漸變淡出
+            let bannerScale = 1.0;
+            let alpha = 1.0;
+            if (elapsed < 250) {
+                const t = elapsed / 250;
+                bannerScale = 0.2 + (Math.sin(t * Math.PI / 2) * 0.95); // 快速放大到 1.15
+            } else if (elapsed < 450) {
+                const t = (elapsed - 250) / 200;
+                bannerScale = 1.15 - (t * 0.15); // 緩慢回彈到 1.0
+            } else if (elapsed > 1600) {
+                alpha = Math.max(0, 1 - (elapsed - 1600) / 400);
+            }
+
             const cx = w / 2;
             const cy = h / 2 - 12 * scale;
 
             ctx.save();
-            ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+            ctx.globalAlpha = alpha;
+            ctx.translate(cx, cy);
+            ctx.scale(bannerScale, bannerScale);
 
-            // 優雅高級毛玻璃底盒 (Pill Badge)
-            const bannerW = 180 * scale;
-            const bannerH = 46 * scale;
-            const bgFill = outcomeBanner.isSafe ? "rgba(6, 78, 59, 0.92)" : "rgba(153, 27, 27, 0.92)";
-            const borderCol = outcomeBanner.isSafe ? "#34d399" : "#f87171";
+            // 16-bit 像素浮雕黑底深陰影 (Drop Shadow)
+            const bannerW = 210 * scale;
+            const bannerH = 50 * scale;
+            ctx.fillStyle = "#0f172a";
+            ctx.fillRect(-bannerW / 2 + 3 * scale, -bannerH / 2 + 4 * scale, bannerW, bannerH);
 
-            ctx.fillStyle = bgFill;
-            ctx.strokeStyle = borderCol;
+            // 主框底色 (SAFE: 翡翠綠 #059669 / OUT: 鮮紅 #dc2626)
+            ctx.fillStyle = outcomeBanner.isSafe ? "#059669" : "#dc2626";
+            ctx.fillRect(-bannerW / 2, -bannerH / 2, bannerW, bannerH);
+
+            // 16-bit 像素內框立體高光 (Top/Left Bevel)
+            ctx.fillStyle = outcomeBanner.isSafe ? "#34d399" : "#f87171";
+            ctx.fillRect(-bannerW / 2, -bannerH / 2, bannerW, 3 * scale);
+            ctx.fillRect(-bannerW / 2, -bannerH / 2, 3 * scale, bannerH);
+
+            // 內框底暗部 (Bottom/Right Bevel)
+            ctx.fillStyle = outcomeBanner.isSafe ? "#047857" : "#b91c1c";
+            ctx.fillRect(-bannerW / 2, bannerH / 2 - 3 * scale, bannerW, 3 * scale);
+            ctx.fillRect(bannerW / 2 - 3 * scale, -bannerH / 2, 3 * scale, bannerH);
+
+            // 1px 黑色墨水外框
+            ctx.strokeStyle = "#111827";
             ctx.lineWidth = 2 * scale;
+            ctx.strokeRect(-bannerW / 2, -bannerH / 2, bannerW, bannerH);
 
-            ctx.beginPath();
-            if (ctx.roundRect) {
-                ctx.roundRect(cx - bannerW / 2, cy - bannerH / 2, bannerW, bannerH, 23 * scale);
-            } else {
-                ctx.rect(cx - bannerW / 2, cy - bannerH / 2, bannerW, bannerH);
-            }
-            ctx.fill();
-            ctx.stroke();
-
-            // 裁決文字（白字端莊銳利）
-            ctx.fillStyle = "#ffffff";
-            ctx.font = `900 ${20 * scale}px Noto Sans TC, sans-serif`;
+            // 裁決文字（巨大立體像素感字體）
+            ctx.font = `900 ${22 * scale}px 'Press Start 2P', 'Noto Sans TC', sans-serif`;
             ctx.textAlign = "center";
-            ctx.fillText(outcomeBanner.text, cx, cy + 6.5 * scale);
+            ctx.textBaseline = "middle";
+
+            // 文字黑影
+            ctx.fillStyle = "#000000";
+            ctx.fillText(outcomeBanner.text, 1.5 * scale, 2.5 * scale);
+
+            // 文字亮白本體
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(outcomeBanner.text, 0, 0);
 
             ctx.restore();
         }
