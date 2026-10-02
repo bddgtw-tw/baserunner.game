@@ -4252,14 +4252,23 @@
             }
 
             function getFlySeriesControlPoint() {
+                // 根據球種精細微調飛行控制點 (Control Point)：
+                // 1. 強勁平飛球 (line_drive)：帶有輕微側向漂移與低空弧度 (微微下墜/側旋，弧高適中)
+                // 2. 落地安打 (clean_hit)：流暢中度過頂弧線
+                // 3. 高飛球 (fly_ball)：彎很多、高高飛起 (高達 150px 頂點)
                 const arcRatioByType = {
-                    line_drive: 0.28,
-                    clean_hit: 0.48,
-                    fly_ball: 0.98
+                    line_drive: 0.38,
+                    clean_hit: 0.60,
+                    fly_ball: 1.15
                 };
                 const arcRatio = arcRatioByType[ballAnim.type] || 0.7;
+                
+                // 平飛球在水平方向微帶自然側彎 (橫向曲度 +4px ~ -4px)，呈現切球/尾勁
+                const dx = ballAnim.targetX - ballAnim.x;
+                const lateralCurve = (ballAnim.type === "line_drive") ? (dx > 0 ? 12 : -12) * scale : 0;
+
                 return {
-                    x: (ballAnim.x + ballAnim.targetX) / 2 * scale,
+                    x: ((ballAnim.x + ballAnim.targetX) / 2) * scale + lateralCurve,
                     y: ((ballAnim.y + ballAnim.targetY) / 2 - ballAnim.arcHeight * arcRatio) * scale
                 };
             }
@@ -4272,37 +4281,63 @@
                 };
             }
 
-            // Draw the full planned ball path first; the ball then travels along it.
+            // 繪製「隨飛行漸漸消失的動態虛線軌跡」 (Fading Dashed Trajectory Trail)
+            // 規則：僅顯示球當前位置後方一段距離的軌跡（tailLength），並由起點至球所在位置呈現漸變透明 (Fade-out)
             ctx.save();
-            ctx.strokeStyle = ballAnim.trailColor;
             ctx.lineWidth = Math.max(1.2, 2.2 * scale);
-            ctx.setLineDash(isGrounder ? [3 * scale, 4 * scale] : []);
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            if (isFlySeries) {
-                const controlPoint = getFlySeriesControlPoint();
-                ctx.quadraticCurveTo(controlPoint.x, controlPoint.y, endX, endY);
-            } else {
-                const segments = 48;
-                for (let i = 1; i <= segments; i++) {
-                    const point = getBallPathPoint(i / segments);
-                    ctx.lineTo(point.x, point.y - point.height);
+            ctx.setLineDash([4 * scale, 3 * scale]); // 經典復古像素風虛線
+            ctx.lineCap = "round";
+
+            const segments = 40;
+            const currentSeg = Math.floor(p * segments);
+            const tailLength = isGrounder ? 12 : 20; // 拖尾長度 (滾地球短俐落，飛球流暢悠長)
+            const startSeg = Math.max(0, currentSeg - tailLength);
+
+            function getTrajectoryCoord(prog) {
+                if (isFlySeries) {
+                    const cp = getFlySeriesControlPoint();
+                    return getQuadraticPoint(prog, cp);
+                } else {
+                    const pt = getBallPathPoint(prog);
+                    return { x: pt.x, y: pt.y - pt.height };
                 }
             }
-            ctx.stroke();
+
+            // 分段繪製具備漸逝透明度 (Alpha Gradient) 的虛線尾跡
+            for (let i = startSeg; i < currentSeg; i++) {
+                const prog1 = i / segments;
+                const prog2 = (i + 1) / segments;
+                const pt1 = getTrajectoryCoord(prog1);
+                const pt2 = getTrajectoryCoord(prog2);
+
+                // 越靠近球透明度越高，越靠近拖尾後端越淡 (漸漸消失)
+                const ageRatio = (i - startSeg) / Math.max(1, (currentSeg - startSeg)); // 0.0 (尾巴) -> 1.0 (靠近球)
+                const alpha = Math.max(0.08, ageRatio * (isGrounder ? 0.75 : 0.85));
+
+                ctx.strokeStyle = isGrounder 
+                    ? `rgba(245, 158, 11, ${alpha})` 
+                    : (ballAnim.type === "fly_ball" ? `rgba(255, 255, 255, ${alpha})` : `rgba(56, 189, 248, ${alpha})`);
+
+                ctx.beginPath();
+                ctx.moveTo(pt1.x, pt1.y);
+                ctx.lineTo(pt2.x, pt2.y);
+                ctx.stroke();
+            }
             ctx.setLineDash([]);
 
-            // 滾地球落地彈跳點 (Bounce Impact Marks)
+            // 滾地球落地彈跳點 (Bounce Impact Marks - 隨球經過才浮現)
             if (isGrounder) {
                 ctx.fillStyle = "rgba(180, 83, 9, 0.55)";
                 for (let b = 1; b < ballAnim.bounceCount; b++) {
                     const bProg = b / ballAnim.bounceCount;
-                    const bpX = (ballAnim.x + (ballAnim.targetX - ballAnim.x) * bProg) * scale;
-                    const bpY = (ballAnim.y + (ballAnim.targetY - ballAnim.y) * bProg) * scale;
-                    // 落地小土塵光斑
-                    ctx.beginPath();
-                    ctx.ellipse ? ctx.ellipse(bpX, bpY, 3.5 * scale, 1.8 * scale, 0, 0, Math.PI * 2) : ctx.arc(bpX, bpY, 2.5 * scale, 0, Math.PI * 2);
-                    ctx.fill();
+                    if (p >= bProg) {
+                        const bpX = (ballAnim.x + (ballAnim.targetX - ballAnim.x) * bProg) * scale;
+                        const bpY = (ballAnim.y + (ballAnim.targetY - ballAnim.y) * bProg) * scale;
+                        // 落地衝擊點
+                        ctx.beginPath();
+                        ctx.ellipse ? ctx.ellipse(bpX, bpY, 3.2 * scale, 1.6 * scale, 0, 0, Math.PI * 2) : ctx.arc(bpX, bpY, 2.2 * scale, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
                 }
             }
             ctx.restore();
@@ -4807,19 +4842,19 @@
             ballAnim.targetY = fielderPos.y;
 
             if (batType === "fly_ball") {
-                ballAnim.arcHeight = 140;
+                ballAnim.arcHeight = 150; // 超大拋物線
                 ballAnim.bounceCount = 0;
                 ballAnim.trailColor = "rgba(255, 255, 255, 0.48)";
             } else if (batType === "clean_hit") {
-                ballAnim.arcHeight = 65;
+                ballAnim.arcHeight = 70;
                 ballAnim.bounceCount = 1;
                 ballAnim.trailColor = "rgba(250, 204, 21, 0.45)";
             } else if (batType === "line_drive") {
-                ballAnim.arcHeight = 38;
+                ballAnim.arcHeight = 42; // 微彎平飛弧線
                 ballAnim.bounceCount = 0;
-                ballAnim.trailColor = "rgba(248, 250, 252, 0.6)";
+                ballAnim.trailColor = "rgba(56, 189, 248, 0.6)";
             } else { 
-                // 滾地球：彈跳高度增加到 36，彈跳次數設為 4 次（每次彈跳節奏分明清晰），落塵有勁
+                // 滾地球：彈跳高度 36，4次清晰落地彈跳
                 ballAnim.arcHeight = 36;
                 ballAnim.bounceCount = 4;
                 ballAnim.trailColor = "rgba(245, 158, 11, 0.55)";
@@ -4829,8 +4864,18 @@
             if (window.ballTimeout) clearTimeout(window.ballTimeout);
             
             const fps = 60;
-            // 飛行速度放慢：滾地球由 1.25s 放慢至 2.1s；高飛球放慢至 2.5s；平飛球放慢至 1.85s
-            const duration = batType === "grounder" ? 2.1 : (batType === "fly_ball" ? 2.5 : 1.85); 
+            // 根據球種精準控制飛行時間 (Duration)：
+            // 1. 高飛球 (fly_ball)：彎最多、滯空最久、速度最慢 (2.8 秒)
+            // 2. 落地安打 (clean_hit)：流暢過頂弧線 (2.3 秒)
+            // 3. 滾地球 (grounder)：多段彈跳節奏清晰 (2.1 秒)
+            // 4. 強勁平飛球 (line_drive)：帶有自然尾勁側弧，初速快且稍快到達 (1.65 秒)
+            const durationMap = {
+                fly_ball: 2.8,
+                clean_hit: 2.3,
+                grounder: 2.1,
+                line_drive: 1.65
+            };
+            const duration = durationMap[batType] || 2.0; 
             const totalSteps = fps * duration;
             let step = 0;
 
