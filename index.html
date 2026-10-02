@@ -4221,13 +4221,12 @@
                 });
             }
 
-            // 📢 捕手 16-Bit 像素風大喊對話框 (Catcher Shout Bubble: 平飛球！/ 高飛球！/ 滾地球！)
-            // 按照需求：置於捕手右側邊緣的「綠色草地區」(不遮擋任何本壘板、右打者、壘線與球路)
-            // 捕手視角右手邊在俯視圖右側 (X: 252~256, Y: 342~346)，純淨草皮，無任何球場元件
+            // 📢 捕手 16-Bit 像素風對話框 (精準還原使用者指定的日系經典像素對話氣泡)
+            // 特徵：乳白本體、黑深藍外框 (1px)、階梯像素圓角、左側斜三角小尾巴、內圈淡紫微陰影
             if (ballAnim.active && ballAnim.progress < 0.85) {
                 const cPos = fielders["C"];
                 if (cPos) {
-                    const pS = scale * 0.95;
+                    const pS = scale * 0.95; // 像素單元
 
                     const shoutTexts = {
                         grounder: "滾地球！",
@@ -4237,7 +4236,7 @@
                     };
                     const shoutText = shoutTexts[ballAnim.type] || "打擊出去！";
 
-                    // 對話框微浮動呼吸/驚呼彈跳效果
+                    // 微浮動呼吸彈跳效果
                     const popY = Math.sin(ballAnim.progress * Math.PI * 4) * 1.5 * scale;
                     // 置於本壘與打擊區右側的綠色草皮區 (X: 254, Y: 346)
                     const bx = 254 * scale;
@@ -4246,48 +4245,98 @@
                     ctx.save();
                     ctx.imageSmoothingEnabled = false;
 
-                    // 測量文字寬度以自適應像素氣泡
+                    // 測量文字寬度
                     ctx.font = `900 ${10.5 * scale}px 'Noto Sans TC', sans-serif`;
                     const textMetrics = ctx.measureText(shoutText);
-                    const padX = 7 * scale;
-                    const bW = Math.max(54 * scale, textMetrics.width + padX * 2);
+                    const padX = 8 * scale;
+                    const bW = Math.max(58 * scale, textMetrics.width + padX * 2);
                     const bH = 20 * scale;
                     const left = bx - bW / 2;
                     const top = by - bH / 2;
 
-                    // 16-bit 像素框體 (雙層描邊 + 經典亮黃/純白底色 + 朝向左方捕手的箭頭尾巴)
-                    // 1. 外層墨黑陰影外框 (Shadow Box)
-                    ctx.fillStyle = "#0f172a";
-                    ctx.fillRect(left - 2 * pS, top - 2 * pS, bW + 4 * pS, bH + 4 * pS);
-                    
-                    // 氣泡尾巴：朝左指向捕手 (Pointing Left toward Catcher)
+                    // 顏色調配 (取自使用者上傳之經典像素圖)
+                    const cBorder = "#121829";   // 深墨黑外框 (1px)
+                    const cFill   = "#fcfbfa";   // 象牙純白本體
+                    const cShad   = "#d8d7e3";   // 內圈下緣/右緣淡紫灰立體陰影 (Bevel)
+                    const cHi     = "#ffffff";   // 內圈頂緣亮白高光
+
+                    // 1. 象牙白主體 (帶階梯像素圓角)
+                    // 中間主體與橫向/縱向微縮進
+                    ctx.fillStyle = cFill;
+                    ctx.fillRect(left + 2 * pS, top, bW - 4 * pS, bH);
+                    ctx.fillRect(left, top + 2 * pS, bW, bH - 4 * pS);
+                    ctx.fillRect(left + 1 * pS, top + 1 * pS, bW - 2 * pS, bH - 2 * pS);
+
+                    // 2. 內圈立體陰影與高光 (Inner Bevel)
+                    // 頂緣與左緣白高光
+                    ctx.fillStyle = cHi;
+                    ctx.fillRect(left + 2 * pS, top + 1 * pS, bW - 4 * pS, 1 * pS);
+                    ctx.fillRect(left + 1 * pS, top + 2 * pS, 1 * pS, bH - 4 * pS);
+                    // 底緣與右緣淡紫灰陰影
+                    ctx.fillStyle = cShad;
+                    ctx.fillRect(left + 2 * pS, top + bH - 2 * pS, bW - 4 * pS, 1 * pS);
+                    ctx.fillRect(left + bW - 2 * pS, top + 2 * pS, 1 * pS, bH - 4 * pS);
+                    // 右下圓角陰影點
+                    ctx.fillRect(left + bW - 3 * pS, top + bH - 3 * pS, 1 * pS, 1 * pS);
+
+                    // 3. 階梯像素黑邊外框 (1px Pixel Border around rectangle)
+                    ctx.fillStyle = cBorder;
+                    // 頂邊與底邊
+                    ctx.fillRect(left + 2 * pS, top - 1 * pS, bW - 4 * pS, 1 * pS);
+                    ctx.fillRect(left + 2 * pS, top + bH, bW - 4 * pS, 1 * pS);
+                    // 左邊與右邊
+                    ctx.fillRect(left - 1 * pS, top + 2 * pS, 1 * pS, bH - 4 * pS);
+                    ctx.fillRect(left + bW, top + 2 * pS, 1 * pS, bH - 4 * pS);
+                    // 四個角落像素階梯 (1px Corner Steps)
+                    // 左上
+                    ctx.fillRect(left + 1 * pS, top, 1 * pS, 1 * pS);
+                    ctx.fillRect(left, top + 1 * pS, 1 * pS, 1 * pS);
+                    // 右上
+                    ctx.fillRect(left + bW - 2 * pS, top, 1 * pS, 1 * pS);
+                    ctx.fillRect(left + bW - 1 * pS, top + 1 * pS, 1 * pS, 1 * pS);
+                    // 左下
+                    ctx.fillRect(left + 1 * pS, top + bH - 1 * pS, 1 * pS, 1 * pS);
+                    ctx.fillRect(left, top + bH - 2 * pS, 1 * pS, 1 * pS);
+                    // 右下
+                    ctx.fillRect(left + bW - 2 * pS, top + bH - 1 * pS, 1 * pS, 1 * pS);
+                    ctx.fillRect(left + bW - 1 * pS, top + bH - 2 * pS, 1 * pS, 1 * pS);
+
+                    // 4. 左側像素尾巴 (Left Pointing Tail - 位於氣泡左側偏中下位置)
+                    const tailY = by;
+                    // 打開主體邊框口 (擦除左邊一小段黑線讓尾巴無縫連通本體)
+                    ctx.fillStyle = cFill;
+                    ctx.fillRect(left - 1 * pS, tailY - 3 * pS, 2 * pS, 6 * pS);
+
+                    // 尾巴白色本體
                     ctx.beginPath();
-                    ctx.moveTo(left, by - 4 * pS);
-                    ctx.lineTo(left, by + 4 * pS);
-                    ctx.lineTo(left - 7 * pS, by);
+                    ctx.moveTo(left, tailY - 3 * pS);
+                    ctx.lineTo(left, tailY + 3 * pS);
+                    ctx.lineTo(left - 6 * pS, tailY - 0.5 * pS);
                     ctx.closePath();
                     ctx.fill();
 
-                    // 2. 氣泡底色 (高對比醒目亮黃 #fef08a，帶復古街機立體陰影)
-                    ctx.fillStyle = "#fef08a";
-                    ctx.fillRect(left, top, bW, bH);
-                    ctx.fillStyle = "#fde047";
-                    ctx.fillRect(left, top + bH - 3 * pS, bW, 3 * pS); // 下方陰影條
-
-                    // 氣泡內尾巴 (黃色)
+                    // 尾巴下緣淡紫灰陰影
+                    ctx.strokeStyle = cShad;
+                    ctx.lineWidth = 1 * pS;
                     ctx.beginPath();
-                    ctx.fillStyle = "#fef08a";
-                    ctx.moveTo(left + 1 * pS, by - 3 * pS);
-                    ctx.lineTo(left + 1 * pS, by + 3 * pS);
-                    ctx.lineTo(left - 5 * pS, by);
-                    ctx.closePath();
-                    ctx.fill();
+                    ctx.moveTo(left, tailY + 2 * pS);
+                    ctx.lineTo(left - 5 * pS, tailY);
+                    ctx.stroke();
 
-                    // 3. 驚呼文字與小驚嘆號 (Punchy Text)
-                    ctx.fillStyle = (ballAnim.type === "line_drive") ? "#dc2626" : (ballAnim.type === "fly_ball" ? "#1d4ed8" : "#b45309");
+                    // 尾巴深墨黑描邊 (Upper and Lower Tail Border)
+                    ctx.strokeStyle = cBorder;
+                    ctx.lineWidth = 1.2 * pS;
+                    ctx.beginPath();
+                    ctx.moveTo(left, tailY - 3.5 * pS);
+                    ctx.lineTo(left - 6.5 * pS, tailY - 0.5 * pS);
+                    ctx.lineTo(left, tailY + 3.5 * pS);
+                    ctx.stroke();
+
+                    // 5. 驚呼文字 (高對比醒目字體：平飛紅、高飛深藍、滾地暖黑)
+                    ctx.fillStyle = (ballAnim.type === "line_drive") ? "#dc2626" : (ballAnim.type === "fly_ball" ? "#1d4ed8" : "#1f2937");
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
-                    ctx.fillText(`📢 ${shoutText}`, bx, by);
+                    ctx.fillText(`📢 ${shoutText}`, bx, by + 0.5 * pS);
 
                     ctx.restore();
                 }
