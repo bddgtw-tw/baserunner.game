@@ -2203,12 +2203,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20260527-14</span>
+        <span id="footerVersionText">版本：v20260527-15</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20260527-14";
+        const APP_VERSION = "v20260527-15";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -5728,11 +5728,25 @@
             return choiceId === "A" && q.outs === 2;
         }
 
-        function addBatterRunnerToFirst() {
+        function addBatterRunnerToFirst(isBlockedAtFirst = false) {
             const start = { x: bases.home.x, y: bases.home.y - 20 };
-            const target = getRunnerStartPosition(1);
-            const firstAlreadyRepresented = fieldRunners.some(runner => !runner.taggedOut && runner.base === 1 && runner.targetX === target.x && runner.targetY === target.y);
-            if (firstAlreadyRepresented) return;
+            const firstPos = getRunnerStartPosition(1);
+            const firstAlreadyRepresented = fieldRunners.some(runner => !runner.taggedOut && runner.base === 1 && runner.targetX === firstPos.x && runner.targetY === firstPos.y);
+            if (firstAlreadyRepresented && !isBlockedAtFirst) return;
+
+            let targetX = firstPos.x;
+            let targetY = firstPos.y;
+            let statusLabel = null;
+            let statusColor = "#10b981";
+
+            if (isBlockedAtFirst) {
+                // 一壘被不跑的跑者卡住：打者衝到一壘前 65% 處急煞
+                targetX = start.x + (firstPos.x - start.x) * 0.65;
+                targetY = start.y + (firstPos.y - start.y) * 0.65;
+                statusLabel = "⚠️ 塞壘卡住!";
+                statusColor = "#f59e0b";
+            }
+
             fieldRunners.push({
                 base: 1,
                 isPlayer: false,
@@ -5741,11 +5755,12 @@
                 startY: start.y,
                 x: start.x,
                 y: start.y,
-                targetX: target.x,
-                targetY: target.y,
+                targetX: targetX,
+                targetY: targetY,
                 animProgress: 0,
                 taggedOut: false,
-                statusLabel: null
+                statusLabel: statusLabel,
+                statusColor: statusColor
             });
         }
 
@@ -5842,13 +5857,67 @@
                     });
                 }
             } else {
+                // 玩家選錯時：
+                // 1. 玩家跑者依選取的動作反應（留壘/離壘/亂衝）
+                const playerRunner = fieldRunners.find(r => r.isPlayer);
+                if (playerRunner) {
+                    markPlayerForChoice(playerRunner, action, consequence);
+                }
+
+                // 2. 判斷戰術正解下，其他隊友的預期推進目標
+                const correctTarget = currentQ.runTarget;
+                const playerStayingOnBase = (action === 'C' || (playerRunner && playerRunner.targetX === playerRunner.startX && playerRunner.targetY === playerRunner.startY));
+                const playerOccupiedBase = playerRunner ? playerRunner.base : null;
+
+                // 3. 場上的隊友執行「正確標準跑壘」，但若目標壘包被不跑的玩家卡住，則觸發「塞壘 / 卡住」
                 fieldRunners.forEach(runner => {
-                    if (runner.isPlayer) markPlayerForChoice(runner, action, consequence);
+                    if (runner.isPlayer) return;
+
+                    if (correctTarget === "advance_one_base" || correctTarget === "force_all") {
+                        const nextBaseNumber = getNextBaseNumber(runner.base);
+                        if (nextBaseNumber) {
+                            // 檢查是否被留在原壘的玩家卡住
+                            if (playerStayingOnBase && nextBaseNumber === playerOccupiedBase) {
+                                // ⚠️ 塞壘卡位！衝到壘包前煞車，無法踩壘
+                                const basePos = getBasePosition(nextBaseNumber);
+                                const curPos = getRunnerStartPosition(runner.base);
+                                // 停在距離目標壘包約 24px 處（跑壘線 65% 位置）
+                                runner.targetX = curPos.x + (basePos.x - curPos.x) * 0.65;
+                                runner.targetY = curPos.y + (basePos.y - curPos.y) * 0.65;
+                                runner.statusLabel = "⚠️ 塞壘卡住!";
+                                runner.statusColor = "#f59e0b";
+                            } else {
+                                moveRunnerToBase(runner, nextBaseNumber);
+                            }
+                        }
+                    } else if (correctTarget === "tag_up_3toH") {
+                        if (runner.base === 3) {
+                            moveRunnerToBase(runner, 4);
+                        }
+                    } else if (correctTarget === "lead_off") {
+                        moveRunnerTowardNextBase(runner, 0.35);
+                    } else {
+                        // 正解為 stay_on_bases: 隊友冷靜守在原壘
+                        const basePos = getBasePosition(runner.base);
+                        if (basePos) {
+                            runner.targetX = basePos.x;
+                            runner.targetY = basePos.y;
+                        }
+                    }
                 });
+
+                // 若玩家選守壘 (C) 導致身後隊友被卡住，在玩家頭頂額外提示「⚠️ 佔用壘包」
+                if (playerStayingOnBase && fieldRunners.some(r => !r.isPlayer && r.statusLabel && r.statusLabel.includes("塞壘"))) {
+                    if (playerRunner && !playerRunner.taggedOut) {
+                        playerRunner.statusLabel = "⚠️ 佔用壘包";
+                        playerRunner.statusColor = "#ef4444";
+                    }
+                }
             }
 
             if (shouldShowBatterRunner(currentQ, action, isCorrect)) {
-                addBatterRunnerToFirst();
+                const isBlockedAtFirst = !isCorrect && fieldRunners.some(r => r.base === 1 && r.targetX === getRunnerStartPosition(1).x && r.targetY === getRunnerStartPosition(1).y);
+                addBatterRunnerToFirst(isBlockedAtFirst);
             }
 
             currentVisualOccupiedBases = getVisualBasesFromRunners(fieldRunners);
