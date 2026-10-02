@@ -1640,7 +1640,7 @@
                 </div>
 
                 <!-- Game Phase Badge (Overlay Top-Right) -->
-                <div class="absolute top-4 right-4 z-10">
+                <div class="absolute top-8 right-4 z-10">
                     <span id="hitTypeBadge" class="px-3 py-1.5 rounded-xl text-xs font-black bg-slate-900/90 border border-slate-800 text-slate-300 tracking-wider">
                         準備擊球
                     </span>
@@ -3533,6 +3533,8 @@
             bounceCount: 0,
             trailColor: "rgba(255,255,255,0.35)"
         };
+        // 捕手對話框文字：設定後持續顯示直到答題完畢才清除 (null = 不顯示)
+        let catcherShoutText = null;
         let fieldRunners = [];
         let currentVisualOccupiedBases = []; 
 
@@ -4223,21 +4225,16 @@
 
             // 📢 捕手 16-Bit 像素風對話框 (精準還原使用者指定的日系經典像素對話氣泡)
             // 特徵：乳白本體、黑深藍外框 (1px)、階梯像素圓角、左側斜三角小尾巴、內圈淡紫微陰影
-            if (ballAnim.active && ballAnim.progress < 0.85) {
+            // 出現一次就不消失：由 catcherShoutText 控制，答題後才清除
+            if (catcherShoutText) {
                 const cPos = fielders["C"];
                 if (cPos) {
                     const pS = scale * 0.95; // 像素單元
 
-                    const shoutTexts = {
-                        grounder: "滾地球！",
-                        line_drive: "平飛球！",
-                        fly_ball: "高飛球！",
-                        clean_hit: "安打球！"
-                    };
-                    const shoutText = shoutTexts[ballAnim.type] || "打擊出去！";
+                    const shoutText = catcherShoutText;
 
                     // 微浮動呼吸彈跳效果
-                    const popY = Math.sin(ballAnim.progress * Math.PI * 4) * 1.5 * scale;
+                    const popY = Math.sin(Date.now() / 400) * 1.5 * scale;
                     // 置於本壘與打擊區右側的綠色草皮區 (X: 254, Y: 346)
                     const bx = 254 * scale;
                     const by = (cPos.y - 4) * scale + popY;
@@ -4333,7 +4330,8 @@
                     ctx.stroke();
 
                     // 5. 驚呼文字 (高對比醒目字體：平飛紅、高飛深藍、滾地暖黑)
-                    ctx.fillStyle = (ballAnim.type === "line_drive") ? "#dc2626" : (ballAnim.type === "fly_ball" ? "#1d4ed8" : "#1f2937");
+                    const bubbleType = ballAnim.type;
+                    ctx.fillStyle = (bubbleType === "line_drive") ? "#dc2626" : (bubbleType === "fly_ball" ? "#1d4ed8" : "#1f2937");
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
                     ctx.fillText(`📢 ${shoutText}`, bx, by + 0.5 * pS);
@@ -4862,6 +4860,7 @@
             }
 
             answered = false;
+            catcherShoutText = null; // 換題時清除上一題捕手氣泡
             currentQuestionIdx = idx;
             const eduBox = document.getElementById('educationCardBox');
             if (eduBox) eduBox.classList.add('hidden');
@@ -4956,6 +4955,14 @@
                 };
                 document.getElementById('hitTypeBadge').innerText = hitTypeLabels[batType] || "打擊出去！";
                 document.getElementById('hitTypeBadge').className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-amber-500 text-slate-950 animate-pulse tracking-wider";
+                // 設定捕手對話框文字 (出現後持續顯示直到答題完畢)
+                const shoutTexts = {
+                    grounder: "滾地球！",
+                    line_drive: "平飛球！",
+                    fly_ball: "高飛球！",
+                    clean_hit: "安打球！"
+                };
+                catcherShoutText = shoutTexts[batType] || "打擊出去！";
             }
 
             const fielderPos = fielders[fielderKey];
@@ -5069,6 +5076,7 @@
         function selectChoice(choiceId) {
             if (answered) return;
             answered = true;
+            catcherShoutText = null; // 答題後清除捕手喊話對話框
 
             if (window.ballInterval) clearInterval(window.ballInterval);
             if (window.ballTimeout) clearTimeout(window.ballTimeout);
