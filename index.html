@@ -2203,12 +2203,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20260527-11</span>
+        <span id="footerVersionText">版本：v20260527-12</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20260527-11";
+        const APP_VERSION = "v20260527-12";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -2812,6 +2812,7 @@
         initFieldersState();
 
         function resetFieldersState() {
+            if (window.defensiveThrowTimeout) clearTimeout(window.defensiveThrowTimeout);
             for (const [key, pos] of Object.entries(fielders)) {
                 if (fieldersState[key]) {
                     fieldersState[key].x = pos.x;
@@ -2899,8 +2900,12 @@
 
         /**
          * 守備方自動跑位踩壘與二段傳球流動 (Defensive Play Coordinator)
+         * 嚴格貫徹因果順序：
+         * 1. 擊球時，補位野手可提前跑位踩壘 (符合棒球預判)。
+         * 2. 接球野手必須等打擊球確實抵達並接住後 (或經由 sequential 回呼)，才啟動雷射肩傳球！
+         * 3. 傳球抵達壘包時，補位野手轉為接球態，完成踩壘出局判定！
          */
-        function triggerDefensivePlay(currentQ, choiceId, consequence) {
+        function triggerDefensivePlay(currentQ, choiceId, consequence, onBallCaughtCallback = null) {
             if (!currentQ) return;
             resetFieldersState();
 
@@ -2908,6 +2913,15 @@
             const originFielder = fielders[fielderKey] || { x: 200, y: 210 };
             const playerBase = currentQ.playerBase;
             const ruleKey = currentQ.ruleKey;
+
+            // 根據擊球型態計算真實接球時間 (秒 -> 毫秒)
+            const durationMapMs = {
+                fly_ball: 2800,
+                clean_hit: 2300,
+                grounder: 2100,
+                line_drive: 1650
+            };
+            const catchWaitMs = durationMapMs[currentQ.batType] || 2000;
 
             // 1. 平飛球回原壘促請裁決刺殺 (例如投手方向平飛球，二壘跑者離壘出局)
             if (ruleKey === 'lineDriveReturn' && consequence.outcome === 'OUT') {
@@ -2923,19 +2937,27 @@
                     coveringKey = "3B";
                 }
 
-                moveFielderTo(coveringKey, basePos.x, basePos.y, 700);
+                // 補位野手提前跑向壘包待命
+                moveFielderTo(coveringKey, basePos.x, basePos.y, 800);
 
-                setTimeout(() => {
-                    const fromPos = fieldersState[fielderKey] || originFielder;
-                    triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 380, () => {
-                        const coverF = fieldersState[coveringKey];
-                        if (coverF) {
-                            coverF.x = basePos.x;
-                            coverF.y = basePos.y;
-                            coverF.state = 'catch';
-                        }
-                    });
-                }, 750);
+                // 嚴格等待接球野手接到平飛球後，才拿出球傳向壘包！
+                window.defensiveThrowTimeout = setTimeout(() => {
+                    const catchF = fieldersState[fielderKey];
+                    if (catchF) catchF.state = 'catch';
+                    playCatchSound();
+
+                    setTimeout(() => {
+                        const fromPos = fieldersState[fielderKey] || originFielder;
+                        triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 420, () => {
+                            const coverF = fieldersState[coveringKey];
+                            if (coverF) {
+                                coverF.x = basePos.x;
+                                coverF.y = basePos.y;
+                                coverF.state = 'catch';
+                            }
+                        });
+                    }, 120); // 野手接球後抽球傳出微間隔
+                }, catchWaitMs);
             }
             // 2. 強迫進壘封殺 (例如滾地球，跑者被逼進下一壘卻猶豫或留壘)
             else if (ruleKey === 'forcedGrounderRun' && consequence.outcome === 'OUT') {
@@ -2952,38 +2974,52 @@
                     coveringKey = "C";
                 }
 
-                moveFielderTo(coveringKey, basePos.x, basePos.y, 700);
+                // 補位野手提前往目標壘包補位
+                moveFielderTo(coveringKey, basePos.x, basePos.y, 800);
 
-                setTimeout(() => {
-                    const fromPos = fieldersState[fielderKey] || originFielder;
-                    triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 380, () => {
-                        const coverF = fieldersState[coveringKey];
-                        if (coverF) {
-                            coverF.x = basePos.x;
-                            coverF.y = basePos.y;
-                            coverF.state = 'catch';
-                        }
-                    });
-                }, 750);
+                // 等滾地球滾進野手手套後，野手才傳球給補位隊友！
+                window.defensiveThrowTimeout = setTimeout(() => {
+                    const catchF = fieldersState[fielderKey];
+                    if (catchF) catchF.state = 'catch';
+                    playCatchSound();
+
+                    setTimeout(() => {
+                        const fromPos = fieldersState[fielderKey] || originFielder;
+                        triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 420, () => {
+                            const coverF = fieldersState[coveringKey];
+                            if (coverF) {
+                                coverF.x = basePos.x;
+                                coverF.y = basePos.y;
+                                coverF.state = 'catch';
+                            }
+                        });
+                    }, 120);
+                }, catchWaitMs);
             }
             // 3. 深遠飛球提早起跑促請裁決 (Tag-up Appeal Out)
             else if (ruleKey === 'deepFlyThirdTag' && choiceId === 'A') {
                 const basePos = getBasePosition(3);
                 const coveringKey = "3B";
 
-                moveFielderTo(coveringKey, basePos.x, basePos.y, 600);
+                moveFielderTo(coveringKey, basePos.x, basePos.y, 700);
 
-                setTimeout(() => {
-                    const fromPos = fieldersState[fielderKey] || originFielder;
-                    triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 500, () => {
-                        const coverF = fieldersState[coveringKey];
-                        if (coverF) {
-                            coverF.x = basePos.x;
-                            coverF.y = basePos.y;
-                            coverF.state = 'catch';
-                        }
-                    });
-                }, 900);
+                window.defensiveThrowTimeout = setTimeout(() => {
+                    const catchF = fieldersState[fielderKey];
+                    if (catchF) catchF.state = 'catch';
+                    playCatchSound();
+
+                    setTimeout(() => {
+                        const fromPos = fieldersState[fielderKey] || originFielder;
+                        triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 500, () => {
+                            const coverF = fieldersState[coveringKey];
+                            if (coverF) {
+                                coverF.x = basePos.x;
+                                coverF.y = basePos.y;
+                                coverF.state = 'catch';
+                            }
+                        });
+                    }, 150);
+                }, catchWaitMs);
             }
             // 4. 非強迫進壘滾地球硬衝遭觸殺
             else if ((ruleKey === 'leftSideGrounderStay' || ruleKey === 'unforcedGrounderStay') && choiceId === 'A') {
@@ -2992,34 +3028,46 @@
                 if (!basePos) return;
 
                 const coveringKey = nextBaseNum === 3 ? "3B" : "2B";
-                moveFielderTo(coveringKey, basePos.x, basePos.y, 600);
+                moveFielderTo(coveringKey, basePos.x, basePos.y, 700);
 
-                setTimeout(() => {
-                    const fromPos = fieldersState[fielderKey] || originFielder;
-                    triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 380, () => {
-                        const coverF = fieldersState[coveringKey];
-                        if (coverF) {
-                            coverF.x = basePos.x;
-                            coverF.y = basePos.y;
-                            coverF.state = 'catch';
-                        }
-                    });
-                }, 700);
+                window.defensiveThrowTimeout = setTimeout(() => {
+                    const catchF = fieldersState[fielderKey];
+                    if (catchF) catchF.state = 'catch';
+                    playCatchSound();
+
+                    setTimeout(() => {
+                        const fromPos = fieldersState[fielderKey] || originFielder;
+                        triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 420, () => {
+                            const coverF = fieldersState[coveringKey];
+                            if (coverF) {
+                                coverF.x = basePos.x;
+                                coverF.y = basePos.y;
+                                coverF.state = 'catch';
+                            }
+                        });
+                    }, 120);
+                }, catchWaitMs);
             }
             // 5. 正解或安打：外野接球後傳回內野轉傳 (Cutoff)
             else if (currentQ.batType === 'clean_hit' || consequence.outcome === 'SAFE') {
                 if (fielderKey === 'LF' || fielderKey === 'CF' || fielderKey === 'RF') {
                     const cutoffBase = getBasePosition(2);
                     const coveringKey = (fielderKey === 'LF') ? 'SS' : '2B';
-                    moveFielderTo(coveringKey, cutoffBase.x, cutoffBase.y, 800);
+                    moveFielderTo(coveringKey, cutoffBase.x, cutoffBase.y, 900);
 
-                    setTimeout(() => {
-                        const fromPos = fieldersState[fielderKey] || originFielder;
-                        triggerThrowAnimation(fromPos.x, fromPos.y, cutoffBase.x, cutoffBase.y, 520, () => {
-                            const coverF = fieldersState[coveringKey];
-                            if (coverF) coverF.state = 'catch';
-                        });
-                    }, 1000);
+                    window.defensiveThrowTimeout = setTimeout(() => {
+                        const catchF = fieldersState[fielderKey];
+                        if (catchF) catchF.state = 'catch';
+                        playCatchSound();
+
+                        setTimeout(() => {
+                            const fromPos = fieldersState[fielderKey] || originFielder;
+                            triggerThrowAnimation(fromPos.x, fromPos.y, cutoffBase.x, cutoffBase.y, 520, () => {
+                                coverF = fieldersState[coveringKey];
+                                if (coverF) coverF.state = 'catch';
+                            });
+                        }, 150);
+                    }, catchWaitMs);
                 }
             }
         }
@@ -5990,15 +6038,32 @@
                 if (step >= totalSteps) {
                     clearInterval(window.ballInterval);
                     createGrassSplash(ballAnim.targetX, ballAnim.targetY, 15);
+                    ballAnim.active = false; // 球已進手套，第一階段打擊球消失
 
-                    if (!answered || isSimulationActive) {
+                    if (!answered) {
+                        // 答題前循環飛行：間隔 600ms 重新擊出下一球
                         window.ballTimeout = setTimeout(() => {
-                            if (!answered || isSimulationActive) {
+                            if (!answered) {
                                 triggerBallFlight(fielderKey, batType, true);
                             }
                         }, 600); 
+                    } else if (isSimulationActive) {
+                        // 自由演示模式：若當前守備傳球尚未結束，等待傳球完成後才循環重飛下一球
+                        function checkAndRestartSim() {
+                            if (!isSimulationActive) return;
+                            if (throwAnim.active || window.defensiveThrowTimeout) {
+                                window.ballTimeout = setTimeout(checkAndRestartSim, 400);
+                            } else {
+                                window.ballTimeout = setTimeout(() => {
+                                    if (isSimulationActive) {
+                                        resetFieldersState();
+                                        triggerBallFlight(fielderKey, batType, true);
+                                    }
+                                }, 700);
+                            }
+                        }
+                        checkAndRestartSim();
                     } else {
-                        ballAnim.active = false;
                         drawStadium();
                     }
                 }
@@ -6175,10 +6240,18 @@
                 eduBox.classList.remove('hidden');
             }
 
-            // 🌟 先在畫面上演出完整的 SAFE / OUT 大字、音效、衝壘/滑壘/回踩動作（完整 2.5 秒），演出完畢才跳出前因後果剖析彈窗
+            // 🌟 依照球種與守備流動時間（擊球接殺 ~2.8s + 二段傳球踩壘 ~0.6s），確保場上動作完全演繹完畢，才跳出前因後果剖析彈窗
+            const durationMapMs = {
+                fly_ball: 2800,
+                clean_hit: 2300,
+                grounder: 2100,
+                line_drive: 1650
+            };
+            const modalDelay = (durationMapMs[currentQ.batType] || 2000) + 1000; // 接球 + 傳球踩壘 + 緩衝 1 秒
+
             setTimeout(() => {
                 showAnswerExplanationModal(choiceId, selectedOpt, isCorrect);
-            }, 2500);
+            }, modalDelay);
         }
 
         function insertNextButton() {
