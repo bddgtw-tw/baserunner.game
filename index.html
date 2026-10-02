@@ -4568,13 +4568,24 @@
                 const rX = baseX * scale;
                 const rY = baseY * scale;
 
-                // 玩家跑者：精緻柔和淡藍光圈（不刺眼）
+                // 玩家跑者：經典 16-bit 金色像素階梯光環 (Retro Golden Pixel Halo)
                 if (runner.isPlayer) {
-                    const glowRadius = (15 + Math.sin(Date.now() / 150) * 2.5) * scale;
-                    ctx.fillStyle = "rgba(56, 189, 248, 0.28)";
+                    const now = Date.now();
+                    const haloPulse = Math.sin(now / 150) * 1.5;
+                    const hR = (13 + haloPulse) * scale;
+                    const pAlpha = 0.35 + Math.sin(now / 180) * 0.15;
+                    
+                    ctx.save();
+                    // 雙層同心像素光圈
+                    ctx.fillStyle = `rgba(245, 158, 11, ${pAlpha})`;
                     ctx.beginPath();
-                    ctx.arc(rX, rY, glowRadius, 0, Math.PI * 2);
+                    ctx.ellipse ? ctx.ellipse(rX, rY + 8 * scale, hR, hR * 0.45, 0, 0, Math.PI * 2) : ctx.arc(rX, rY + 8 * scale, hR * 0.6, 0, Math.PI * 2);
                     ctx.fill();
+
+                    ctx.strokeStyle = `rgba(251, 191, 36, ${Math.min(1, pAlpha + 0.35)})`;
+                    ctx.lineWidth = 1.5 * scale;
+                    ctx.stroke();
+                    ctx.restore();
                 }
 
                 // 24×24 像素 Q 版跑者
@@ -4587,70 +4598,77 @@
                     badge: runner.label || (runner.isPlayer ? "我" : "隊")
                 });
 
-                // 👦 小球員視角：經典 16-bit 像素風「👇」往下指的手動態指標
+                // 👦 玩家焦點標記：經典 16-bit 像素風「PLAYER ▼」動態懸浮標籤
                 if (runner.isPlayer) {
-                    const bounceY = Math.sin(Date.now() / 140) * 3 * scale;
+                    const bounceY = Math.sin(Date.now() / 150) * 2.5 * scale;
                     const hx = rX;
-                    const hy = rY - 28 * scale + bounceY;
-                    const pS = scale * 1.0; // 每個像素單元
+                    const hy = rY - 26 * scale + bounceY;
 
                     ctx.save();
                     ctx.imageSmoothingEnabled = false;
 
-                    function pxBox(rx, ry, rw, rh, color) {
+                    // 1. 像素標籤徽章背景 (PLAYER 標籤外框與填色)
+                    const bw = 46 * scale;
+                    const bh = 13 * scale;
+                    const bx = hx - bw / 2;
+                    const by = hy - bh;
+
+                    // 像素陰影 (黑)
+                    ctx.fillStyle = "#0f172a";
+                    ctx.fillRect(bx + 1.5 * scale, by + 1.5 * scale, bw, bh);
+
+                    // 主框邊界 (金黃邊框 #d97706)
+                    ctx.fillStyle = "#b45309";
+                    ctx.fillRect(bx, by, bw, bh);
+
+                    // 內膽亮黃填色 (#facc15 -> #fbbf24)
+                    ctx.fillStyle = "#facc15";
+                    ctx.fillRect(bx + 1 * scale, by + 1 * scale, bw - 2 * scale, bh - 2 * scale);
+
+                    // 頂部高光線條 (White bevel)
+                    ctx.fillStyle = "#fef08a";
+                    ctx.fillRect(bx + 1 * scale, by + 1 * scale, bw - 2 * scale, 1.5 * scale);
+
+                    // PLAYER 8-bit 文字
+                    ctx.font = `900 ${8.5 * scale}px 'Press Start 2P', monospace, sans-serif`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    // 字體黑色立體投影
+                    ctx.fillStyle = "#78350f";
+                    ctx.fillText("PLAYER", hx, by + bh / 2 + 0.5 * scale);
+                    ctx.fillStyle = "#1e293b";
+                    ctx.fillText("PLAYER", hx, by + bh / 2 - 0.5 * scale);
+
+                    // 2. 正下方倒三角指針「▼」
+                    const pS = scale * 1.2;
+                    const arrowY = by + bh;
+
+                    function pxArrow(rx, ry, rw, rh, color) {
                         ctx.fillStyle = color;
-                        ctx.fillRect(hx + rx * pS, hy + ry * pS, rw * pS, rh * pS);
+                        ctx.fillRect(hx + rx * pS, arrowY + ry * pS, rw * pS, rh * pS);
                     }
 
-                    // 經典 16-bit SFC 遊戲指針 (Standard Pointing Down Hand 👇)
-                    // 配色：黑邊框 #0f172a, 肉色主體 #fcd34d / #fde047 (或暖肉色 #fbb771 / #fde047), 陰影 #ea580c / #c2410c, 高光 #ffffff
-                    const cOut = "#111827";   // 墨黑外框
-                    const cSkin = "#fde047";  // 經典黃色手套/手掌 (如Emoji/熱血風醒目黃手套)
-                    const cShad = "#f59e0b";  // 陰影/關節分隔色
-                    const cDeep = "#b45309";  // 深處陰影
-                    const cHigh = "#ffffff";  // 高光
+                    // 倒三角階梯像素繪製 (黑邊 + 亮黃芯)
+                    // Row 0
+                    pxArrow(-4, 0, 8, 1, "#b45309");
+                    pxArrow(-3, 0, 6, 1, "#facc15");
+                    // Row 1
+                    pxArrow(-3, 1, 6, 1, "#b45309");
+                    pxArrow(-2, 1, 4, 1, "#facc15");
+                    // Row 2
+                    pxArrow(-2, 2, 4, 1, "#b45309");
+                    pxArrow(-1, 2, 2, 1, "#facc15");
+                    // Row 3 (指針尖端)
+                    pxArrow(-1, 3, 2, 1, "#b45309");
+                    pxArrow(0, 3, 1, 1, "#facc15");
+                    // 底部收尾黑點
+                    pxArrow(0, 4, 1, 1, "#78350f");
 
-                    // 手掌結構 (約 12寬 x 15高 像素圖形)
-                    // 上方手背與手腕
-                    pxBox(-3, -8, 6, 1, cOut);
-                    pxBox(-3, -7, 6, 2, cSkin);
-                    pxBox(-4, -7, 1, 2, cOut);
-                    pxBox(3, -7, 1, 2, cOut);
-
-                    // 手背主體
-                    pxBox(-5, -5, 10, 1, cOut);
-                    pxBox(-5, -4, 10, 4, cSkin);
-                    pxBox(-6, -4, 1, 4, cOut);
-                    pxBox(5, -4, 1, 4, cOut);
-
-                    // 捲曲的手指關節 (左側手指握拳細節：中指、無名指、小指)
-                    pxBox(-5, -3, 2, 1, cHigh); // 握拳受光高光
-                    pxBox(-5, -1, 4, 1, cShad); // 手指間縫隙陰影
-                    pxBox(-5, 1, 4, 1, cShad);  // 握拳下沿關節
-                    pxBox(-6, 2, 6, 1, cOut);   // 握拳底部外框
-
-                    // 大拇指 (內側彎曲扣住)
-                    pxBox(1, -2, 3, 3, cSkin);
-                    pxBox(2, -1, 2, 1, cDeep);  // 大拇指凹陷陰影
-                    pxBox(4, -1, 1, 2, cOut);
-
-                    // 往下伸出的食指 (Index Finger Pointing Down)
-                    // 食指外框
-                    pxBox(-2, 0, 1, 6, cOut);   // 食指左框線
-                    pxBox(1, 0, 1, 6, cOut);    // 食指右框線
-                    pxBox(-1, 6, 2, 1, cOut);   // 食指底部指尖框線
-
-                    // 食指內部肉色與立體感
-                    pxBox(-1, 0, 2, 6, cSkin);
-                    pxBox(-1, 1, 1, 4, cHigh);  // 食指左緣亮部高光
-                    pxBox(0, 2, 1, 3, cShad);   // 食指右緣暗部陰影
-                    pxBox(-1, 5, 2, 1, cSkin);  // 指尖平滑
-
-                    // 雙側動態像素光芒 (Pulse Sparkles)
-                    const pAlpha = 0.5 + Math.sin(Date.now() / 140) * 0.4;
-                    ctx.fillStyle = `rgba(56, 189, 248, ${pAlpha})`;
-                    ctx.fillRect(hx - 8 * pS, hy + 2 * pS, 2 * pS, 2 * pS);
-                    ctx.fillRect(hx + 7 * pS, hy + 2 * pS, 2 * pS, 2 * pS);
+                    // 左右閃爍的小像素星芒 (Glint sparkles)
+                    const sparkleAlpha = 0.5 + Math.sin(Date.now() / 120) * 0.45;
+                    ctx.fillStyle = `rgba(254, 240, 138, ${sparkleAlpha})`;
+                    ctx.fillRect(bx - 3 * scale, by + 3 * scale, 1.8 * scale, 1.8 * scale);
+                    ctx.fillRect(bx + bw + 1.2 * scale, by + 3 * scale, 1.8 * scale, 1.8 * scale);
 
                     ctx.restore();
                 }
