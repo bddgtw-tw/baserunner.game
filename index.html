@@ -2203,12 +2203,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20260527-09</span>
+        <span id="footerVersionText">版本：v20260527-10</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20260527-09";
+        const APP_VERSION = "v20260527-10";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -6370,7 +6370,7 @@
             setSandboxHit(item.hitVariantId);
         }
 
-        // ================= CANVAS OUTCOME BANNER =================
+        // ================= CANVAS OUTCOME BANNER (TV LOWER-THIRD RIBBON) =================
         function triggerOutcomeBanner(text, subText, outcomeType = 'safe') {
             let parsedType = 'out';
             if (typeof outcomeType === 'string') {
@@ -6388,101 +6388,96 @@
             };
             setTimeout(() => {
                 outcomeBanner.active = false;
-            }, 2300);
+            }, 1800);
         }
 
         function drawOutcomeBanner(ctx, w, h, scale) {
             const elapsed = Date.now() - outcomeBanner.startTime;
-            if (elapsed > 2000) return;
+            if (elapsed > 1800) return;
 
-            // 16-bit 街機彈跳衝擊感 (Arcade Punch Out Elastic Animation)
-            let bannerScale = 1.0;
+            // 平滑浮現與優雅淡出 (Slide-up & Fade)
+            // 0~200ms: 從底部向上平滑浮現
+            // 1300~1800ms: 漸變淡出
             let alpha = 1.0;
-            if (elapsed < 250) {
-                const t = elapsed / 250;
-                bannerScale = 0.2 + (Math.sin(t * Math.PI / 2) * 0.95); // 快速放大到 1.15
-            } else if (elapsed < 450) {
-                const t = (elapsed - 250) / 200;
-                bannerScale = 1.15 - (t * 0.15); // 緩慢回彈到 1.0
-            } else if (elapsed > 1600) {
-                alpha = Math.max(0, 1 - (elapsed - 1600) / 400);
+            let slideY = 0;
+            if (elapsed < 200) {
+                const t = elapsed / 200;
+                slideY = (1 - Math.sin(t * Math.PI / 2)) * 10 * scale;
+                alpha = t;
+            } else if (elapsed > 1300) {
+                alpha = Math.max(0, 1 - (elapsed - 1300) / 500);
             }
 
+            // 🌟 徹底移出球場中間！改為緊貼畫布最下方（本壘擋網處，Lower-Third），100% 零遮擋內野、跑者與擊球飛行視線
             const cx = w / 2;
-            const cy = h / 2 - 12 * scale;
+            const cy = (h - 17 * scale) + slideY;
 
             ctx.save();
             ctx.globalAlpha = alpha;
             ctx.translate(cx, cy);
-            ctx.scale(bannerScale, bannerScale);
 
-            const hasSubText = !!outcomeBanner.subText;
-            const bannerW = (hasSubText ? 240 : 210) * scale;
-            const bannerH = (hasSubText ? 56 : 50) * scale;
+            const bannerW = Math.min(w - 20 * scale, 360 * scale);
+            const bannerH = 26 * scale;
 
-            // 16-bit 像素浮雕黑底深陰影 (Drop Shadow)
-            ctx.fillStyle = "#0f172a";
-            ctx.fillRect(-bannerW / 2 + 3 * scale, -bannerH / 2 + 4 * scale, bannerW, bannerH);
+            // 16-bit 像素深黑落底陰影
+            ctx.fillStyle = "rgba(15, 23, 42, 0.95)";
+            ctx.fillRect(-bannerW / 2 + 2 * scale, -bannerH / 2 + 2 * scale, bannerW, bannerH);
 
-            // 主框底色 (SAFE: 翡翠綠 #059669 / WASTED: 琥珀金 #d97706 / OUT: 鮮紅 #dc2626)
-            let mainBg = "#dc2626";
-            let bevelHighlight = "#f87171";
-            let bevelShadow = "#b91c1c";
+            // 主題配色 (SAFE / WASTED / OUT)
+            let accentHighlight = "#34d399";
+            let accentBadgeBg = "#059669";
+            let textAccent = "#6ee7b7";
 
             if (outcomeBanner.type === 'safe') {
-                mainBg = "#059669";
-                bevelHighlight = "#34d399";
-                bevelShadow = "#047857";
+                accentHighlight = "#34d399";
+                accentBadgeBg = "#059669";
+                textAccent = "#6ee7b7";
             } else if (outcomeBanner.type === 'wasted') {
-                mainBg = "#d97706";
-                bevelHighlight = "#fde047";
-                bevelShadow = "#b45309";
+                accentHighlight = "#fbbf24";
+                accentBadgeBg = "#b45309";
+                textAccent = "#fef08a";
+            } else {
+                accentHighlight = "#f87171";
+                accentBadgeBg = "#dc2626";
+                textAccent = "#fca5a5";
             }
 
-            ctx.fillStyle = mainBg;
+            // 電視轉播條底色 (深邃黑藍底)
+            ctx.fillStyle = "#090d16";
             ctx.fillRect(-bannerW / 2, -bannerH / 2, bannerW, bannerH);
 
-            // 16-bit 像素內框立體高光 (Top/Left Bevel)
-            ctx.fillStyle = bevelHighlight;
-            ctx.fillRect(-bannerW / 2, -bannerH / 2, bannerW, 3 * scale);
-            ctx.fillRect(-bannerW / 2, -bannerH / 2, 3 * scale, bannerH);
+            // 左側裁決徽章區塊
+            const badgeW = 86 * scale;
+            ctx.fillStyle = accentBadgeBg;
+            ctx.fillRect(-bannerW / 2, -bannerH / 2, badgeW, bannerH);
+            
+            // 徽章頂部 16-bit 高光線
+            ctx.fillStyle = accentHighlight;
+            ctx.fillRect(-bannerW / 2, -bannerH / 2, badgeW, 2 * scale);
 
-            // 內框底暗部 (Bottom/Right Bevel)
-            ctx.fillStyle = bevelShadow;
-            ctx.fillRect(-bannerW / 2, bannerH / 2 - 3 * scale, bannerW, 3 * scale);
-            ctx.fillRect(bannerW / 2 - 3 * scale, -bannerH / 2, 3 * scale, bannerH);
-
-            // 1px 黑色墨水外框
-            ctx.strokeStyle = "#111827";
-            ctx.lineWidth = 2 * scale;
+            // 全框細緻外邊框
+            ctx.strokeStyle = accentHighlight;
+            ctx.lineWidth = 1.5 * scale;
             ctx.strokeRect(-bannerW / 2, -bannerH / 2, bannerW, bannerH);
 
-            if (hasSubText) {
-                // 裁決主文字（上方）
-                ctx.font = `900 ${18 * scale}px 'Press Start 2P', 'Noto Sans TC', sans-serif`;
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillStyle = "#000000";
-                ctx.fillText(outcomeBanner.text, 1.2 * scale, -7 * scale + 1.5 * scale);
-                ctx.fillStyle = "#ffffff";
-                ctx.fillText(outcomeBanner.text, 0, -7 * scale);
+            // 左側徽章主文字 (Press Start 2P 街機像素字體)
+            ctx.font = `900 ${10.5 * scale}px 'Press Start 2P', 'Noto Sans TC', sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "#000000";
+            ctx.fillText(outcomeBanner.text, -bannerW / 2 + badgeW / 2 + 1 * scale, 1 * scale);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(outcomeBanner.text, -bannerW / 2 + badgeW / 2, 0);
 
-                // 副標題解說（下方）
-                ctx.font = `900 ${10.5 * scale}px 'Noto Sans TC', sans-serif`;
-                ctx.fillStyle = "#000000";
-                ctx.fillText(outcomeBanner.subText, 1 * scale, 12 * scale + 1 * scale);
-                ctx.fillStyle = outcomeBanner.type === 'wasted' ? "#fef08a" : "#ffffff";
-                ctx.fillText(outcomeBanner.subText, 0, 12 * scale);
-            } else {
-                // 裁決文字（巨大立體像素感字體）
-                ctx.font = `900 ${22 * scale}px 'Press Start 2P', 'Noto Sans TC', sans-serif`;
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillStyle = "#000000";
-                ctx.fillText(outcomeBanner.text, 1.5 * scale, 2.5 * scale);
-                ctx.fillStyle = "#ffffff";
-                ctx.fillText(outcomeBanner.text, 0, 0);
-            }
+            // 右側解說文字 (單行清晰排版，絕不擋球)
+            const textX = -bannerW / 2 + badgeW + 8 * scale;
+            ctx.font = `900 ${10.5 * scale}px 'Noto Sans TC', Inter, sans-serif`;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = textAccent;
+            
+            const maxSubW = bannerW - badgeW - 14 * scale;
+            ctx.fillText(outcomeBanner.subText || "", textX, 0.5 * scale, maxSubW);
 
             ctx.restore();
         }
