@@ -2126,9 +2126,9 @@
 
                         <!-- 錯題警告剖析 (有錯才顯示) -->
                         <div id="answerModalMistakeBox" class="rounded-2xl bg-rose-50 border border-rose-200 p-3 hidden shadow-sm">
-                            <div class="flex items-center gap-1.5 mb-1 text-rose-700">
-                                <i class="fa-solid fa-triangle-exclamation text-xs"></i>
-                                <span class="text-xs font-black">選錯後果剖析</span>
+                            <div class="flex items-center gap-1.5 mb-1" id="answerModalMistakeHeader">
+                                <i class="fa-solid fa-triangle-exclamation text-xs" id="answerModalMistakeIcon"></i>
+                                <span class="text-xs font-black" id="answerModalMistakeTitle">選錯後果剖析</span>
                             </div>
                             <p id="answerModalMistake" class="text-xs leading-relaxed font-bold text-rose-800"></p>
                         </div>
@@ -2203,12 +2203,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20260527-08</span>
+        <span id="footerVersionText">版本：v20260527-09</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20260527-08";
+        const APP_VERSION = "v20260527-09";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -2533,6 +2533,15 @@
             } catch (e) {}
         }
 
+        function playWarningSound() {
+            if (!soundEnabled || !toneInitialized || !failSynth) return;
+            try {
+                const now = Tone.now();
+                failSynth.triggerAttackRelease("E3", "8n", now);
+                failSynth.triggerAttackRelease("B2", "8n", now + 0.14);
+            } catch (e) {}
+        }
+
         function playCheerSound() {
             if (!soundEnabled || !toneInitialized || !cheerNoise) return;
             try { cheerNoise.triggerAttackRelease("1.5s"); } catch (e) {}
@@ -2853,13 +2862,420 @@
             };
         }
 
+        /**
+         * 跑壘決策多維後果判定引擎 (Baserunning Consequence Engine)
+         * 判定跑者選擇 A/B/C 的具體棒球真實後果：
+         * - SAFE: 最佳判斷，全速推進、Tag-up 得分或沉著守壘
+         * - WASTED: 次佳/消極/猶豫，未出局但「少進一壘」或「錯失得分」
+         * - OUT: 致命錯誤/犯規，遭雙殺、觸殺、封殺或促請裁決刺殺出局
+         */
+        function getChoiceConsequence(ctx, choiceId) {
+            const ruleKey = ctx.ruleKey || (ctx.resolvedRule && ctx.resolvedRule.ruleKey) || ctx.id;
+            const correctChoice = ctx.correct || (ctx.resolvedRule && ctx.resolvedRule.correct);
+            const isCorrect = choiceId === correctChoice;
+            const playerBase = ctx.playerBase;
+            const outs = ctx.outs;
+            const isPlayerForced = ctx.isPlayerForced;
+
+            if (isCorrect) {
+                let bannerSub = '最佳判斷！成功推進壘包';
+                let feedback = '判斷精準！觀念非常扎實！';
+                let action = 'advance';
+                if (ruleKey === 'twoOutsRun' || ruleKey === 'cleanHitRun' || ruleKey === 'forcedGrounderRun') {
+                    bannerSub = '全力衝刺！成功推進壘包';
+                    feedback = '漂亮！沒有絲毫猶豫，全速推進！';
+                    action = 'advance';
+                } else if (ruleKey === 'deepFlyThirdTag') {
+                    bannerSub = '外野接殺瞬間 Tag-up！暴衝本壘得分';
+                    feedback = '完美 Tag-up！為球隊搶下寶貴的一分！';
+                    action = 'tag_up_home';
+                } else if (ruleKey === 'deepFlyHalfway' || ruleKey === 'shortFlyHalfway') {
+                    bannerSub = '離壘觀察！進可攻退可守';
+                    feedback = '站位漂亮！保持進退彈性，兼顧推進與安全！';
+                    action = 'lead_off';
+                } else {
+                    bannerSub = '冷靜守住原壘！避開守備陷阱';
+                    feedback = '沉著回踩！完全不給對方抓出局數的機會！';
+                    action = 'hold';
+                }
+                return {
+                    choiceId: choiceId,
+                    isCorrect: true,
+                    outcome: 'SAFE',
+                    bannerText: 'SAFE! 🟢',
+                    bannerSub: bannerSub,
+                    runnerLabel: 'SAFE 🟢',
+                    runnerAnimAction: action,
+                    coachAvatar: '🤩',
+                    coachFeedback: `「 很好！${feedback} 」`,
+                    badgeText: 'SAFE 🟢',
+                    badgeClass: 'bg-emerald-600 text-white',
+                    mistakeTitle: '最佳戰術判斷',
+                    detailReason: ctx.explanation || (ctx.options && ctx.options.find(o => o.id === choiceId)?.explain) || '判斷正確，完美掌握局勢！'
+                };
+            }
+
+            // ---------------- 非正解：精細分析錯誤類型（WASTED 錯失戰機 vs OUT 致命出局） ----------------
+            if (ruleKey === 'twoOutsRun') {
+                if (choiceId === 'B') {
+                    return {
+                        choiceId: 'B',
+                        isCorrect: false,
+                        outcome: 'WASTED',
+                        bannerText: 'TOO LATE! ⚠️',
+                        bannerSub: '少進一壘！兩出局猶豫浪費起跑時間',
+                        runnerLabel: '⚠️ 錯失戰機',
+                        runnerAnimAction: 'wasted_leadoff',
+                        coachAvatar: '🤦‍♂️',
+                        coachFeedback: '「 兩出局了不用看球！聽到擊球聲就要全力狂奔，猶豫讓球隊少推進一個壘包！ 」',
+                        badgeText: '少進一壘 ⚠️',
+                        badgeClass: 'bg-amber-600 text-white',
+                        mistakeTitle: '⚠️ 錯失戰機（少進一個壘包）',
+                        detailReason: '已經兩出局了，只要球被空中接殺，半局就立刻結束換場，留在壘上毫無意義；相反地若球落地成安打，你猶豫離壘沒第一時間全力衝，會少跑好幾步，錯失搶占下個壘包甚至跑回本壘得分的機會！'
+                    };
+                } else { // C 守住壘包
+                    return {
+                        choiceId: 'C',
+                        isCorrect: false,
+                        outcome: 'WASTED',
+                        bannerText: 'MISSED! ⚠️',
+                        bannerSub: '嚴重少進壘包！兩出局呆站在原壘',
+                        runnerLabel: '⚠️ 嚴重少進壘',
+                        runnerAnimAction: 'wasted_hold',
+                        coachAvatar: '🤦‍♂️',
+                        coachFeedback: '「 兩出局怎麼還釘在原壘！隊友打出去你就要跑，留在原壘白白浪費得分機會！ 」',
+                        badgeText: '嚴重少進壘 ⚠️',
+                        badgeClass: 'bg-amber-600 text-white',
+                        mistakeTitle: '⚠️ 嚴重消極（浪費得分良機）',
+                        detailReason: '兩出局只要打者出局就結束，原壘完全沒有保護價值。你死守在原壘不動，隊友打出長打你原本能直接衝回本壘得分，現在卻只停在原壘或少進兩個壘包，甚至卡住後方打者！'
+                    };
+                }
+            }
+
+            if (ruleKey === 'cleanHitRun') {
+                if (choiceId === 'B') {
+                    return {
+                        choiceId: 'B',
+                        isCorrect: false,
+                        outcome: 'WASTED',
+                        bannerText: 'MISSED! ⚠️',
+                        bannerSub: '少進一壘！安打球猶豫不敢大膽繞壘',
+                        runnerLabel: '⚠️ 少進一壘',
+                        runnerAnimAction: 'wasted_leadoff',
+                        coachAvatar: '🤦‍♂️',
+                        coachFeedback: '「 球已經穿過內野成安打了！這時候要大膽加速繞壘，猶豫觀望讓你少進一個壘包！ 」',
+                        badgeText: '少進一壘 ⚠️',
+                        badgeClass: 'bg-amber-600 text-white',
+                        mistakeTitle: '⚠️ 錯失戰機（少推進一個壘包）',
+                        detailReason: '球已經落地穿透守備防線，沒有空中被接殺的危險。此時跑者必須果斷加速繞壘推進，離壘猶豫只會浪費寶貴的推進時間，錯失多搶一個壘包的好機會！'
+                    };
+                } else { // C 守住壘包
+                    return {
+                        choiceId: 'C',
+                        isCorrect: false,
+                        outcome: 'WASTED',
+                        bannerText: 'MISSED! ⚠️',
+                        bannerSub: '嚴重消極！安打球居然死踩在原壘',
+                        runnerLabel: '⚠️ 嚴重少進壘',
+                        runnerAnimAction: 'wasted_hold',
+                        coachAvatar: '🤦‍♂️',
+                        coachFeedback: '「 球都打穿成安打了，怎麼還踩在原壘不動？進攻攻勢完全被卡死了！ 」',
+                        badgeText: '嚴重少進壘 ⚠️',
+                        badgeClass: 'bg-amber-600 text-white',
+                        mistakeTitle: '⚠️ 嚴重消極（阻礙球隊攻勢）',
+                        detailReason: '球已經落地球員卻踩著原壘不動，不僅浪費自己的進壘權利，還會阻擋身後打者進壘，在實戰中是絕對不能犯的消極錯誤！'
+                    };
+                }
+            }
+
+            if (ruleKey === 'forcedGrounderRun') {
+                if (choiceId === 'C') {
+                    return {
+                        choiceId: 'C',
+                        isCorrect: false,
+                        outcome: 'OUT',
+                        bannerText: 'OUT! 🔴',
+                        bannerSub: '強迫進壘不跑！下個壘包被踩直接封殺',
+                        runnerLabel: '❌ 封殺出局',
+                        runnerAnimAction: 'out_holding',
+                        coachAvatar: '😭',
+                        coachFeedback: '「 後面隊友推過來了！你已經沒有原壘的權利，留在原壘下個壘包一被踩你就封殺出局！ 」',
+                        badgeText: '封殺出局 🔴',
+                        badgeClass: 'bg-rose-600 text-white',
+                        mistakeTitle: '❌ 致命錯誤：強迫進壘遭封殺',
+                        detailReason: '這是強迫進壘！打者跑向一壘迫使前位跑者必須讓出壘包前進。防守員只要持球踩觸下一個壘包你就出局，不需要觸碰你。停在原壘毫無保護作用！'
+                    };
+                } else { // B 離壘猶豫
+                    return {
+                        choiceId: 'B',
+                        isCorrect: false,
+                        outcome: 'OUT',
+                        bannerText: 'OUT! 🔴',
+                        bannerSub: '強迫進壘半路猶豫！遭守備輕鬆封殺',
+                        runnerLabel: '❌ 封殺出局',
+                        runnerAnimAction: 'out_advancing',
+                        coachAvatar: '😭',
+                        coachFeedback: '「 強迫進壘沒有退路！停在半路只會讓守備員輕鬆傳球封殺，甚至造成雙殺！ 」',
+                        badgeText: '封殺出局 🔴',
+                        badgeClass: 'bg-rose-600 text-white',
+                        mistakeTitle: '❌ 致命猶豫：強迫進壘遭封殺',
+                        detailReason: '強迫進壘時身後沒有退路，停在半路只會給守備員充裕的時間傳球封殺。哪怕前面有野手，也要全速低頭衝刺並以滑壘破壞雙殺傳球！'
+                    };
+                }
+            }
+
+            if (ruleKey === 'lineDriveReturn') {
+                if (choiceId === 'A') {
+                    return {
+                        choiceId: 'A',
+                        isCorrect: false,
+                        outcome: 'OUT',
+                        bannerText: 'DOUBLE PLAY! 🔴',
+                        bannerSub: '平飛球亂衝！內野接殺傳原壘雙殺',
+                        runnerLabel: '❌ 雙殺出局',
+                        runnerAnimAction: 'out_advancing',
+                        coachAvatar: '😭',
+                        coachFeedback: '「 平飛球亂衝是跑壘大忌！內野手接殺後隨手回傳原壘，你直接奉送雙殺！ 」',
+                        badgeText: '雙殺出局 🔴',
+                        badgeClass: 'bg-rose-600 text-white',
+                        mistakeTitle: '❌ 致命大忌：平飛球送雙殺',
+                        detailReason: '平飛球飛行速度極快，內野防守員一伸手就能瞬間接殺。你往前衝根本來不及回踩，野手回傳原壘直接抓雙殺（一次死兩個人）！'
+                    };
+                } else { // B 離壘
+                    return {
+                        choiceId: 'B',
+                        isCorrect: false,
+                        outcome: 'OUT',
+                        bannerText: 'OUT! 🔴',
+                        bannerSub: '平飛球離壘！回踩不及遭刺殺',
+                        runnerLabel: '❌ 回壘不及出局',
+                        runnerAnimAction: 'out_leadoff',
+                        coachAvatar: '😭',
+                        coachFeedback: '「 平飛球飛行太快！離壘一步都嫌多，野手手套一收回傳你就出局了！ 」',
+                        badgeText: '回壘不及 🔴',
+                        badgeClass: 'bg-rose-600 text-white',
+                        mistakeTitle: '❌ 致命錯誤：平飛球離壘不及回踩',
+                        detailReason: '平飛球眨眼間就進內野手手套，哪怕只離壘兩步，守備員傳球回壘的速度也遠快過你回撲的速度，會被直接促請裁決刺殺出局！'
+                    };
+                }
+            }
+
+            if (ruleKey === 'infieldFlyStay') {
+                if (choiceId === 'A') {
+                    return {
+                        choiceId: 'A',
+                        isCorrect: false,
+                        outcome: 'OUT',
+                        bannerText: 'OUT! 🔴',
+                        bannerSub: '強迫進壘已解除！盲目往前跑被觸殺',
+                        runnerLabel: '❌ 觸殺出局',
+                        runnerAnimAction: 'out_advancing',
+                        coachAvatar: '😭',
+                        coachFeedback: '「 主審已經喊 Infield Fly 打者出局了！強迫進壘已經解除，你往前跑會被野手拿球觸殺！ 」',
+                        badgeText: '觸殺出局 🔴',
+                        badgeClass: 'bg-rose-600 text-white',
+                        mistakeTitle: '❌ 觀念不清：遭觸殺出局',
+                        detailReason: '內野必死球成立時打者直接出局，強迫狀態解除，你沒有必須進壘的義務。往前衝反而失去原壘保護，野手持球碰到你就出局！'
+                    };
+                } else { // B 離壘
+                    return {
+                        choiceId: 'B',
+                        isCorrect: false,
+                        outcome: 'WASTED',
+                        bannerText: 'HOLD! ⚠️',
+                        bannerSub: '不必要的冒險！離壘過大容易被引誘觸殺',
+                        runnerLabel: '⚠️ 站位危險',
+                        runnerAnimAction: 'wasted_leadoff',
+                        coachAvatar: '🤦‍♂️',
+                        coachFeedback: '「 內野高飛球打者已經出局了，踩緊壘包最安全，離壘只會平白增加被夾殺的危險！ 」',
+                        badgeText: '不必要冒險 ⚠️',
+                        badgeClass: 'bg-amber-600 text-white',
+                        mistakeTitle: '⚠️ 站位冒險（不必要的離壘）',
+                        detailReason: '打者已經自動出局，踩住原壘是 100% 安全的。離壘觀察若遇到野手故意放球落地、或假動作迅速牽制，反而容易讓自己身陷夾殺危機！'
+                    };
+                }
+            }
+
+            if (ruleKey === 'deepFlyThirdTag') {
+                if (choiceId === 'A') {
+                    return {
+                        choiceId: 'A',
+                        isCorrect: false,
+                        outcome: 'OUT',
+                        bannerText: 'OUT! 🔴',
+                        bannerSub: '提前離壘！外野回傳三壘促請裁決出局',
+                        runnerLabel: '❌ 提前離壘出局',
+                        runnerAnimAction: 'out_advancing',
+                        coachAvatar: '😭',
+                        coachFeedback: '「 外野手手套還沒碰到球你就起跑！對手回傳三壘促請裁決，得分不算且出局！ 」',
+                        badgeText: '違規出局 🔴',
+                        badgeClass: 'bg-rose-600 text-white',
+                        mistakeTitle: '❌ 嚴重犯規：提前離壘出局',
+                        detailReason: 'Tag-up 規則規定：跑者必須等到外野手手套接觸到球的瞬間才能起跑。提早離壘起跑屬於犯規，防守方把球傳回三壘 appeal，跑者出局且分數沒收！'
+                    };
+                } else { // B 離壘半路
+                    return {
+                        choiceId: 'B',
+                        isCorrect: false,
+                        outcome: 'WASTED',
+                        bannerText: 'NO TAG! ⚠️',
+                        bannerSub: '錯失得分！離壘半路導致無法 Tag-Up 衝本壘',
+                        runnerLabel: '⚠️ 錯失得分',
+                        runnerAnimAction: 'wasted_leadoff',
+                        coachAvatar: '🤦‍♂️',
+                        coachFeedback: '「 三壘深遠飛球要踩死壘包等接殺！離壘到半路，接殺後回踩再起跑早就來不及衝本壘得分了！ 」',
+                        badgeText: '錯失得分 ⚠️',
+                        badgeClass: 'bg-amber-600 text-white',
+                        mistakeTitle: '⚠️ 錯失得分（無法 Tag-Up）',
+                        detailReason: '遇到深遠外野飛球，三壘跑者任務是靠高飛犧牲打得分。若離壘到半路看球，等球被接殺時你必須先回頭踩三壘才能起跑，這時傳球已經到了，白白錯失跑回本壘得分的良機！'
+                    };
+                }
+            }
+
+            if (ruleKey === 'deepFlyHalfway' || ruleKey === 'shortFlyHalfway') {
+                if (choiceId === 'A') {
+                    return {
+                        choiceId: 'A',
+                        isCorrect: false,
+                        outcome: 'OUT',
+                        bannerText: 'DOUBLE PLAY! 🔴',
+                        bannerSub: '飛球遭接殺！回壘不及直接遭雙殺',
+                        runnerLabel: '❌ 雙殺出局',
+                        runnerAnimAction: 'out_advancing',
+                        coachAvatar: '😭',
+                        coachFeedback: '「 球還在空中不能直接狂奔！外野手一接殺回傳原壘，你根本回不來直接雙殺！ 」',
+                        badgeText: '雙殺出局 🔴',
+                        badgeClass: 'bg-rose-600 text-white',
+                        mistakeTitle: '❌ 盲目起跑：遭雙殺出局',
+                        detailReason: '外野飛球尚未落地前不能直接衝下一壘。外野手一旦完成接殺，把球長傳回原壘，你已經跑太遠回不來，形成雙殺出局！'
+                    };
+                } else { // C 死踩原壘
+                    return {
+                        choiceId: 'C',
+                        isCorrect: false,
+                        outcome: 'WASTED',
+                        bannerText: 'MISSED! ⚠️',
+                        bannerSub: '少進一壘！外野手一旦漏接或落地無法搶壘',
+                        runnerLabel: '⚠️ 少進一壘',
+                        runnerAnimAction: 'wasted_hold',
+                        coachAvatar: '🤦‍♂️',
+                        coachFeedback: '「 一、二壘飛球要離壘抓距離！死踩原壘，萬一外野手漏接你也來不及多跑一個壘包！ 」',
+                        badgeText: '少進一壘 ⚠️',
+                        badgeClass: 'bg-amber-600 text-white',
+                        mistakeTitle: '⚠️ 錯失戰機（少進一個壘包）',
+                        detailReason: '一二壘跑者遇到外野飛球應離壘 1/3 觀望。若死踩原壘包，外野手一旦失誤漏接或球落地，你從原壘起跑速度太慢，無法多搶一個壘包，白白浪費推進機會！'
+                    };
+                }
+            }
+
+            if (ruleKey === 'leftSideGrounderStay' || ruleKey === 'unforcedGrounderStay') {
+                if (choiceId === 'A') {
+                    return {
+                        choiceId: 'A',
+                        isCorrect: false,
+                        outcome: 'OUT',
+                        bannerText: 'OUT! 🔴',
+                        bannerSub: '非強迫進壘亂衝！防守方持球觸殺',
+                        runnerLabel: '❌ 觸殺出局',
+                        runnerAnimAction: 'out_advancing',
+                        coachAvatar: '😭',
+                        coachFeedback: '「 身後沒有隊友推你！滾地球在前面你硬衝三壘，直接跑進野手手套被觸殺！ 」',
+                        badgeText: '觸殺出局 🔴',
+                        badgeClass: 'bg-rose-600 text-white',
+                        mistakeTitle: '❌ 盲目送死：遭觸殺出局',
+                        detailReason: '非強迫進壘時回到原壘是安全的。球打在三游方向，守備員接球距離下個壘包極近，你冒險硬跑會直接被持球觸殺出局！'
+                    };
+                } else { // B 離壘過多
+                    return {
+                        choiceId: 'B',
+                        isCorrect: false,
+                        outcome: 'OUT',
+                        bannerText: 'OUT! 🔴',
+                        bannerSub: '離壘過大！遭內野防守員夾殺出局',
+                        runnerLabel: '❌ 遭夾殺出局',
+                        runnerAnimAction: 'out_leadoff',
+                        coachAvatar: '😭',
+                        coachFeedback: '「 滾地球在內野手面前離壘太遠，野手回頭一傳你就被夾殺出局了！ 」',
+                        badgeText: '夾殺出局 🔴',
+                        badgeClass: 'bg-rose-600 text-white',
+                        mistakeTitle: '❌ 站位危險：遭夾殺出局',
+                        detailReason: '非強迫進壘滾地球在眼前橫過時離壘過多，野手只要做假動作回頭一傳，你進退不得便會直接陷入夾殺（Pickoff / Rundown）出局！'
+                    };
+                }
+            }
+
+            if (ruleKey === 'shortFlyThirdHold') {
+                if (choiceId === 'A') {
+                    return {
+                        choiceId: 'A',
+                        isCorrect: false,
+                        outcome: 'OUT',
+                        bannerText: 'OUT! 🔴',
+                        bannerSub: '短淺飛球距離不足！本壘前遭長傳阻殺',
+                        runnerLabel: '❌ 阻殺出局',
+                        runnerAnimAction: 'out_advancing',
+                        coachAvatar: '😭',
+                        coachFeedback: '「 飛球太短淺了！外野手接球後只要一步就能長傳本壘，硬衝直接死在本壘前！ 」',
+                        badgeText: '阻殺出局 🔴',
+                        badgeClass: 'bg-rose-600 text-white',
+                        mistakeTitle: '❌ 冒險衝本壘：遭長傳阻殺',
+                        detailReason: '短淺飛球距離本壘太近，外野手傳球臂力足以在本壘前將跑者刺殺。三壘跑者必須踩穩原壘，不可冒險衝刺！'
+                    };
+                } else { // B 離壘過遠
+                    return {
+                        choiceId: 'B',
+                        isCorrect: false,
+                        outcome: 'OUT',
+                        bannerText: 'OUT! 🔴',
+                        bannerSub: '短淺飛球離壘過遠！回踩不及遭刺殺',
+                        runnerLabel: '❌ 回壘不及出局',
+                        runnerAnimAction: 'out_leadoff',
+                        coachAvatar: '😭',
+                        coachFeedback: '「 短淺飛球接殺速度極快！離壘太遠外野手回傳三壘你就回不去了！ 」',
+                        badgeText: '回壘不及 🔴',
+                        badgeClass: 'bg-rose-600 text-white',
+                        mistakeTitle: '❌ 離壘過遠：遭刺殺出局',
+                        detailReason: '短淺飛球接殺時間很短，若離壘過大，野手接殺後迅速回傳三壘，跑者來不及回踩就會被促請裁決刺殺出局！'
+                    };
+                }
+            }
+
+            // 預設 fallback
+            return {
+                choiceId: choiceId,
+                isCorrect: false,
+                outcome: 'OUT',
+                bannerText: 'OUT! 🔴',
+                bannerSub: '跑壘判斷失誤造成出局',
+                runnerLabel: '❌ OUT',
+                runnerAnimAction: 'out_advancing',
+                coachAvatar: '😭',
+                coachFeedback: '「 這球的跑壘策略不對，容易造成出局或少推進壘包！ 」',
+                badgeText: 'OUT 🔴',
+                badgeClass: 'bg-rose-600 text-white',
+                mistakeTitle: '❌ 判斷失誤',
+                detailReason: '請根據出局數、是否被強迫進壘、擊球型態與野手守備位置綜合判斷！'
+            };
+        }
+
         function buildDecisionOptions(resolvedRule, context) {
-            return Object.entries(BASERUNNING_CONTENT.decisions).map(([id, decision]) => ({
-                id: id,
-                title: decision.title,
-                text: decision.text,
-                explain: resolvedRule.correct === id ? resolvedRule.explanation : decision.miss(context)
-            }));
+            return Object.entries(BASERUNNING_CONTENT.decisions).map(([id, decision]) => {
+                const conseq = getChoiceConsequence({
+                    ...context,
+                    ruleKey: resolvedRule.ruleKey,
+                    correct: resolvedRule.correct,
+                    explanation: resolvedRule.explanation
+                }, id);
+                return {
+                    id: id,
+                    title: decision.title,
+                    text: decision.text,
+                    explain: conseq.detailReason || (resolvedRule.correct === id ? resolvedRule.explanation : decision.miss(context)),
+                    outcome: conseq.outcome,
+                    bannerText: conseq.bannerText,
+                    bannerSub: conseq.bannerSub
+                };
+            });
         }
 
         function getDecisionLabel(choiceId) {
@@ -3127,25 +3543,52 @@
             lastAnsweredExplanation = { choiceId, selectedOpt, isCorrect };
 
             const correctOpt = currentQ.options.find(o => o.id === currentQ.correct);
+            const consequence = getChoiceConsequence(currentQ, choiceId);
             const ruleTeaching = getRuleTeachingByLevel(currentQ.level);
             const rulePrinciple = getRulePrincipleByLevel(currentQ.level);
             const modalHeader = document.getElementById('answerModalHeader');
             const modalTitle = document.getElementById('answerModalTitle');
             const modalBadge = document.getElementById('answerModalBadge');
             const mistakeBox = document.getElementById('answerModalMistakeBox');
+            const mistakeTitle = document.getElementById('answerModalMistakeTitle');
+            const mistakeHeader = document.getElementById('answerModalMistakeHeader');
+            const mistakeIcon = document.getElementById('answerModalMistakeIcon');
+            const mistakeEl = document.getElementById('answerModalMistake');
 
             if (isCorrect) {
                 modalHeader.className = "px-5 py-4 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between gap-3 flex-shrink-0";
                 modalTitle.innerText = "答對了，這球判斷漂亮！ 🟢";
                 modalBadge.className = "px-3.5 py-1 rounded-full text-xs font-black bg-emerald-600 text-white shadow-sm";
-                modalBadge.innerText = "SAFE";
+                modalBadge.innerText = "SAFE 🟢";
                 mistakeBox.classList.add('hidden');
+            } else if (consequence.outcome === 'WASTED') {
+                modalHeader.className = "px-5 py-4 bg-amber-50 border-b border-amber-100 flex items-center justify-between gap-3 flex-shrink-0";
+                modalTitle.innerText = "未出局，但錯失了關鍵進壘/得分機會！ ⚠️";
+                modalBadge.className = "px-3.5 py-1 rounded-full text-xs font-black bg-amber-600 text-white shadow-sm";
+                modalBadge.innerText = consequence.badgeText;
+                mistakeBox.className = "rounded-2xl bg-amber-50 border border-amber-200 p-3 shadow-sm";
+                mistakeBox.classList.remove('hidden');
+                if (mistakeHeader) mistakeHeader.className = "flex items-center gap-1.5 mb-1 text-amber-800";
+                if (mistakeTitle) mistakeTitle.innerText = consequence.mistakeTitle;
+                if (mistakeIcon) mistakeIcon.className = "fa-solid fa-triangle-exclamation text-xs text-amber-700";
+                if (mistakeEl) {
+                    mistakeEl.className = "text-xs leading-relaxed font-bold text-amber-900";
+                    mistakeEl.innerText = consequence.detailReason;
+                }
             } else {
                 modalHeader.className = "px-5 py-4 bg-rose-50 border-b border-rose-100 flex items-center justify-between gap-3 flex-shrink-0";
                 modalTitle.innerText = "這題出局了，再看一次規則！ 🔴";
                 modalBadge.className = "px-3.5 py-1 rounded-full text-xs font-black bg-rose-600 text-white shadow-sm";
-                modalBadge.innerText = "OUT";
+                modalBadge.innerText = consequence.badgeText;
+                mistakeBox.className = "rounded-2xl bg-rose-50 border border-rose-200 p-3 shadow-sm";
                 mistakeBox.classList.remove('hidden');
+                if (mistakeHeader) mistakeHeader.className = "flex items-center gap-1.5 mb-1 text-rose-700";
+                if (mistakeTitle) mistakeTitle.innerText = consequence.mistakeTitle;
+                if (mistakeIcon) mistakeIcon.className = "fa-solid fa-triangle-exclamation text-xs text-rose-700";
+                if (mistakeEl) {
+                    mistakeEl.className = "text-xs leading-relaxed font-bold text-rose-800";
+                    mistakeEl.innerText = consequence.detailReason;
+                }
             }
 
             document.getElementById('answerModalEyebrow').innerText = `位階規則：${currentQ.ruleKey || currentQ.level}`;
@@ -3154,7 +3597,6 @@
             
             const answerFacts = currentQ.baseFactsText || describeBaseFactsForDisplay(currentQ);
             document.getElementById('answerModalReason').innerText = `${answerFacts}。${correctOpt ? correctOpt.explain : selectedOpt.explain}`;
-            document.getElementById('answerModalMistake').innerText = selectedOpt.explain;
 
             // 3D 技巧與教育卡片
             const rhymeEl = document.getElementById('answerModalRhyme');
@@ -3243,21 +3685,30 @@
 
             // 2. 渲染可自由重複點選的 3 個策略按鈕 (A, B, C)
             currentQ.options.forEach(opt => {
-                const isCorrectOpt = opt.id === currentQ.correct;
+                const consequence = getChoiceConsequence(currentQ, opt.id);
                 const btn = document.createElement('button');
-                btn.className = `option-btn runner-action text-center p-3 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center min-h-[4.2rem] shadow-md ${
-                    isCorrectOpt 
-                        ? 'border-emerald-500/70 bg-emerald-950/40 hover:bg-emerald-900/60' 
-                        : 'border-slate-800 bg-slate-900/70 hover:bg-slate-800 hover:border-slate-700'
-                }`;
+                
+                let borderAndBg = 'border-slate-800 bg-slate-900/70 hover:bg-slate-800 hover:border-slate-700';
+                let tagBadge = '<span class="text-xs sm:text-sm font-black text-rose-400 leading-tight">🔴 OUT</span>';
+                
+                if (consequence.isCorrect) {
+                    borderAndBg = 'border-emerald-500/70 bg-emerald-950/40 hover:bg-emerald-900/60 shadow-emerald-900/20';
+                    tagBadge = '<span class="text-xs sm:text-sm font-black text-emerald-400 leading-tight">🟢 SAFE</span>';
+                } else if (consequence.outcome === 'WASTED') {
+                    borderAndBg = 'border-amber-500/70 bg-amber-950/40 hover:bg-amber-900/60 shadow-amber-900/20';
+                    tagBadge = '<span class="text-xs sm:text-sm font-black text-amber-400 leading-tight">⚠️ 錯失戰機</span>';
+                }
+
+                btn.className = `option-btn runner-action text-center p-3 rounded-2xl border transition-all active:scale-95 flex flex-col items-center justify-center min-h-[4.4rem] shadow-md ${borderAndBg}`;
                 const keyNum = opt.id === 'A' ? '1' : (opt.id === 'B' ? '2' : '3');
                 btn.innerHTML = `
                     <div class="flex flex-col items-center justify-center gap-1 w-full relative">
                         <span class="key-badge absolute top-0 right-0">${keyNum}</span>
-                        <span class="text-xs sm:text-sm font-black ${isCorrectOpt ? 'text-emerald-400' : 'text-amber-500'} leading-tight">
-                            ${opt.title} ${isCorrectOpt ? '🟢' : '🔴'}
-                        </span>
-                        <span class="text-[11px] font-bold text-slate-200 leading-snug">${opt.text}</span>
+                        <div class="flex items-center gap-1">
+                            <span class="text-xs sm:text-sm font-black text-slate-100">${opt.title}</span>
+                            ${tagBadge}
+                        </div>
+                        <span class="text-[11px] font-bold text-slate-300 leading-snug line-clamp-1">${opt.text}</span>
                     </div>
                 `;
                 btn.onclick = () => {
@@ -3267,7 +3718,7 @@
             });
         }
 
-        // 實況模擬選取特定答案的跑壘動畫與出局/安全判定
+        // 實況模擬選取特定答案的跑壘動畫與出局/安全/少進壘判定
         function simulateChoiceOnField(choiceId) {
             const currentQ = generatedQuestions[currentQuestionIdx];
             if (!currentQ) return;
@@ -3279,29 +3730,34 @@
             triggerBallFlight(currentQ.fielderKey, currentQ.batType);
             drawStadium();
 
-            const isCorrect = choiceId === currentQ.correct;
-            const selectedOpt = currentQ.options.find(o => o.id === choiceId);
+            const consequence = getChoiceConsequence(currentQ, choiceId);
             const coachAvatar = document.getElementById('coachAvatar');
             const coachFeedback = document.getElementById('coachFeedback');
 
             // 觸發音效與教練表情
-            if (isCorrect) {
+            if (consequence.isCorrect) {
                 playSuccessSound();
                 coachAvatar.innerText = "🤩";
                 coachAvatar.className = "w-14 h-14 rounded-full bg-slate-900 border-2 border-emerald-500 flex items-center justify-center text-3xl animate-bounce";
                 coachFeedback.className = "text-xs sm:text-sm text-emerald-400 mt-1 leading-relaxed font-black";
-                coachFeedback.innerText = `「 漂亮！【${selectedOpt.title}】${selectedOpt.explain} 」`;
+                coachFeedback.innerText = consequence.coachFeedback;
+            } else if (consequence.outcome === 'WASTED') {
+                playWarningSound();
+                coachAvatar.innerText = "🤦‍♂️";
+                coachAvatar.className = "w-14 h-14 rounded-full bg-slate-900 border-2 border-amber-500 flex items-center justify-center text-3xl animate-wiggle";
+                coachFeedback.className = "text-xs sm:text-sm text-amber-400 mt-1 leading-relaxed font-black";
+                coachFeedback.innerText = consequence.coachFeedback;
             } else {
                 playFailSound();
                 coachAvatar.innerText = "😭";
                 coachAvatar.className = "w-14 h-14 rounded-full bg-slate-900 border-2 border-red-500 flex items-center justify-center text-3xl animate-wiggle";
                 coachFeedback.className = "text-xs sm:text-sm text-red-400 mt-1 leading-relaxed font-black";
-                coachFeedback.innerText = `「 哇！【${selectedOpt.title}】會出局！${selectedOpt.explain} 」`;
+                coachFeedback.innerText = consequence.coachFeedback;
             }
 
             // 執行場上 16-bit 衝擊彈跳框與跑者動態
-            triggerOutcomeBanner(isCorrect ? "SAFE! 🟢" : "OUT! 🔴", selectedOpt.explain, isCorrect);
-            animateRunners(choiceId, isCorrect);
+            triggerOutcomeBanner(consequence.bannerText, consequence.bannerSub, consequence.outcome);
+            animateRunners(choiceId, consequence.isCorrect);
         }
 
         function goNextQuestionFromModal() {
@@ -4833,9 +5289,14 @@
 
                 if (runner.taggedOut) {
                     ctx.fillStyle = "#ef4444";
-                    ctx.font = `900 ${11 * scale}px Inter`;
+                    ctx.font = `900 ${11 * scale}px 'Noto Sans TC', Inter, sans-serif`;
                     ctx.textAlign = "center";
                     ctx.fillText(runner.outLabel || "❌ OUT", rX, rY - 14 * scale);
+                } else if (runner.statusLabel) {
+                    ctx.fillStyle = runner.statusColor || "#f59e0b";
+                    ctx.font = `900 ${11 * scale}px 'Noto Sans TC', Inter, sans-serif`;
+                    ctx.textAlign = "center";
+                    ctx.fillText(runner.statusLabel, rX, rY - 14 * scale);
                 }
             });
         }
@@ -4856,7 +5317,8 @@
                 targetX: pPos.x,
                 targetY: pPos.y,
                 animProgress: 0,
-                taggedOut: false
+                taggedOut: false,
+                statusLabel: null
             });
 
             q.teammates.forEach(base => {
@@ -4872,7 +5334,8 @@
                     targetX: tPos.x,
                     targetY: tPos.y,
                     animProgress: 0,
-                    taggedOut: false
+                    taggedOut: false,
+                    statusLabel: null
                 });
             });
         }
@@ -4907,7 +5370,8 @@
                 targetX: target.x,
                 targetY: target.y,
                 animProgress: 0,
-                taggedOut: false
+                taggedOut: false,
+                statusLabel: null
             });
         }
 
@@ -4925,14 +5389,24 @@
             runner.targetY = runner.y + (nextBase.y - runner.y) * ratio;
         }
 
-        function markPlayerOutForWrongChoice(runner, choiceId) {
-            runner.taggedOut = true;
-            runner.outLabel = choiceId === "C" ? "❌ 封殺" : "❌ 觸殺";
-            if (choiceId === "A") {
-                moveRunnerTowardNextBase(runner, 0.68);
-            } else if (choiceId === "B") {
-                moveRunnerTowardNextBase(runner, 0.38);
+        function markPlayerForChoice(runner, choiceId, consequence) {
+            runner.taggedOut = (consequence.outcome === 'OUT');
+            runner.statusLabel = consequence.runnerLabel;
+            runner.statusColor = consequence.outcome === 'SAFE' ? '#10b981' : (consequence.outcome === 'WASTED' ? '#f59e0b' : '#ef4444');
+            runner.outLabel = consequence.runnerLabel;
+
+            const animAction = consequence.runnerAnimAction;
+            if (animAction === 'advance' || animAction === 'tag_up_home') {
+                const nextBaseNumber = getNextBaseNumber(runner.base);
+                if (nextBaseNumber) moveRunnerToBase(runner, nextBaseNumber);
+            } else if (animAction === 'lead_off' || animAction === 'wasted_leadoff') {
+                moveRunnerTowardNextBase(runner, 0.35);
+            } else if (animAction === 'out_advancing') {
+                moveRunnerTowardNextBase(runner, 0.68); // 衝到半路被刺殺/雙殺
+            } else if (animAction === 'out_leadoff') {
+                moveRunnerTowardNextBase(runner, 0.35); // 離壘處被回傳刺殺/夾殺
             } else {
+                // hold / wasted_hold / out_holding (守原壘或原壘被封殺)
                 const original = getRunnerStartPosition(runner.base);
                 runner.targetX = original.x;
                 runner.targetY = original.y;
@@ -4941,12 +5415,14 @@
 
         function animateRunners(action, isCorrect) {
             const currentQ = generatedQuestions[currentQuestionIdx];
+            const consequence = getChoiceConsequence(currentQ, action);
 
             fieldRunners.forEach(runner => {
                 runner.startX = runner.x;
                 runner.startY = runner.y;
                 runner.animProgress = 0;
                 runner.taggedOut = false;
+                runner.statusLabel = null;
                 runner.outLabel = "❌ OUT";
             });
 
@@ -4955,18 +5431,30 @@
                     fieldRunners.forEach(runner => {
                         const nextBaseNumber = getNextBaseNumber(runner.base);
                         if (nextBaseNumber) moveRunnerToBase(runner, nextBaseNumber);
+                        if (runner.isPlayer) {
+                            runner.statusLabel = "SAFE 🟢";
+                            runner.statusColor = "#10b981";
+                        }
                     });
                 } else if (currentQ.runTarget === "lead_off") {
                     // B: 離壘觀察，向前小跑步 3 步到中途觀察點
                     fieldRunners.forEach(runner => {
-                        if (runner.isPlayer) moveRunnerTowardNextBase(runner, 0.35);
+                        if (runner.isPlayer) {
+                            moveRunnerTowardNextBase(runner, 0.35);
+                            runner.statusLabel = "離壘觀察 👀";
+                            runner.statusColor = "#38bdf8";
+                        }
                     });
                 } else if (currentQ.runTarget === "tag_up_3toH") {
                     fieldRunners.forEach(runner => {
-                        if (runner.isPlayer && runner.base === 3) moveRunnerToBase(runner, 4);
+                        if (runner.isPlayer && runner.base === 3) {
+                            moveRunnerToBase(runner, 4);
+                            runner.statusLabel = "TAG-UP SAFE! 🟢";
+                            runner.statusColor = "#10b981";
+                        }
                     });
                 } else {
-                    // C: 守住原壘 / 回踩原壘 (Tag up 站穩或縮回原壘安全踩壘)
+                    // C: 守住原壘 / 回踩原壘
                     fieldRunners.forEach(runner => {
                         if (runner.isPlayer) {
                             const basePos = getBasePosition(runner.base);
@@ -4974,12 +5462,14 @@
                                 runner.targetX = basePos.x;
                                 runner.targetY = basePos.y;
                             }
+                            runner.statusLabel = "守住原壘 🟢";
+                            runner.statusColor = "#10b981";
                         }
                     });
                 }
             } else {
                 fieldRunners.forEach(runner => {
-                    if (runner.isPlayer) markPlayerOutForWrongChoice(runner, action);
+                    if (runner.isPlayer) markPlayerForChoice(runner, action, consequence);
                 });
             }
 
@@ -5276,7 +5766,8 @@
             const coachAvatar = document.getElementById('coachAvatar');
             const coachFeedback = document.getElementById('coachFeedback');
 
-            let isCorrect = choiceId === currentQ.correct;
+            const consequence = getChoiceConsequence(currentQ, choiceId);
+            const isCorrect = consequence.isCorrect;
 
             optionBtns.forEach(btn => {
                 const btnChoiceId = btn.dataset.choiceId;
@@ -5286,6 +5777,8 @@
                 if (isSelected) {
                     if (isCorrect) {
                         btn.className = 'option-btn runner-action text-center p-3 rounded-2xl border-2 border-emerald-500 bg-emerald-950/40 shadow-lg shadow-emerald-500/10 transition-all min-h-[4.2rem] flex items-center justify-center';
+                    } else if (consequence.outcome === 'WASTED') {
+                        btn.className = 'option-btn runner-action text-center p-3 rounded-2xl border-2 border-amber-500 bg-amber-950/40 shadow-lg shadow-amber-500/10 transition-all min-h-[4.2rem] flex items-center justify-center';
                     } else {
                         btn.className = 'option-btn runner-action text-center p-3 rounded-2xl border-2 border-red-500 bg-red-950/40 shadow-lg shadow-red-500/10 transition-all min-h-[4.2rem] flex items-center justify-center';
                     }
@@ -5320,10 +5813,27 @@
                 coachAvatar.className = "w-14 h-14 rounded-full bg-slate-900 border-2 border-emerald-500 flex items-center justify-center text-3xl animate-bounce";
                 
                 coachFeedback.className = "text-sm sm:text-base text-emerald-400 mt-1 leading-relaxed font-black";
-                coachFeedback.innerText = `「 很好！ ${selectedOpt.explain} 」`;
+                coachFeedback.innerText = consequence.coachFeedback;
                 
                 document.getElementById('hitTypeBadge').innerText = "SAFE! 🟢";
                 document.getElementById('hitTypeBadge').className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-emerald-500 text-slate-950 tracking-wider";
+            } else if (consequence.outcome === 'WASTED') {
+                playWarningSound();
+                currentWrongCount++;
+                consecutiveStreak = 0;
+                
+                const streakText = document.getElementById('streakText');
+                streakText.innerText = `🔥 ${consecutiveStreak}`;
+                streakText.className = "text-xl sm:text-2xl font-black text-slate-500";
+
+                coachAvatar.innerText = "🤦‍♂️";
+                coachAvatar.className = "w-14 h-14 rounded-full bg-slate-900 border-2 border-amber-500 flex items-center justify-center text-3xl animate-wiggle";
+                
+                coachFeedback.className = "text-sm sm:text-base text-amber-400 mt-1 leading-relaxed font-black";
+                coachFeedback.innerText = consequence.coachFeedback;
+
+                document.getElementById('hitTypeBadge').innerText = consequence.bannerText;
+                document.getElementById('hitTypeBadge').className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-amber-500 text-slate-950 tracking-wider";
             } else {
                 playFailSound();
                 currentWrongCount++;
@@ -5337,9 +5847,9 @@
                 coachAvatar.className = "w-14 h-14 rounded-full bg-slate-900 border-2 border-red-500 flex items-center justify-center text-3xl animate-wiggle";
                 
                 coachFeedback.className = "text-sm sm:text-base text-red-400 mt-1 leading-relaxed font-black";
-                coachFeedback.innerText = `「 出局！ ${selectedOpt.explain} 」`;
+                coachFeedback.innerText = consequence.coachFeedback;
 
-                document.getElementById('hitTypeBadge').innerText = "OUT! 🔴";
+                document.getElementById('hitTypeBadge').innerText = consequence.bannerText;
                 document.getElementById('hitTypeBadge').className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-red-600 text-white tracking-wider";
             }
 
@@ -5353,8 +5863,8 @@
                 console.error('跑者動畫失敗，但已保留下一題按鈕：', error);
             }
 
-            // 觸發場中大字動態判定（SAFE / OUT）與音效視覺打擊感
-            triggerOutcomeBanner(isCorrect ? "SAFE! 🟢" : "OUT! 🔴", selectedOpt.explain, isCorrect);
+            // 觸發場中大字動態判定（SAFE / OUT / MISSED）與音效視覺打擊感
+            triggerOutcomeBanner(consequence.bannerText, consequence.bannerSub, consequence.outcome);
 
             // 即時展開三合一教育卡片（小球員口訣 / 家長小百科 / 教練戰術）
             const eduBox = document.getElementById('educationCardBox');
@@ -5861,12 +6371,19 @@
         }
 
         // ================= CANVAS OUTCOME BANNER =================
-        function triggerOutcomeBanner(text, subText, isSafe) {
+        function triggerOutcomeBanner(text, subText, outcomeType = 'safe') {
+            let parsedType = 'out';
+            if (typeof outcomeType === 'string') {
+                parsedType = outcomeType.toLowerCase();
+            } else if (outcomeType === true) {
+                parsedType = 'safe';
+            }
+
             outcomeBanner = {
                 active: true,
                 text: text,
                 subText: subText || "",
-                isSafe: isSafe,
+                type: parsedType, // 'safe' | 'wasted' | 'out'
                 startTime: Date.now()
             };
             setTimeout(() => {
@@ -5879,9 +6396,6 @@
             if (elapsed > 2000) return;
 
             // 16-bit 街機彈跳衝擊感 (Arcade Punch Out Elastic Animation)
-            // 0~250ms: 超快速從 0.2 縮放放大到 1.15 (震盪彈入)
-            // 250~450ms: 彈回 1.0 穩定懸浮
-            // 1600~2000ms: 漸變淡出
             let bannerScale = 1.0;
             let alpha = 1.0;
             if (elapsed < 250) {
@@ -5902,23 +6416,39 @@
             ctx.translate(cx, cy);
             ctx.scale(bannerScale, bannerScale);
 
+            const hasSubText = !!outcomeBanner.subText;
+            const bannerW = (hasSubText ? 240 : 210) * scale;
+            const bannerH = (hasSubText ? 56 : 50) * scale;
+
             // 16-bit 像素浮雕黑底深陰影 (Drop Shadow)
-            const bannerW = 210 * scale;
-            const bannerH = 50 * scale;
             ctx.fillStyle = "#0f172a";
             ctx.fillRect(-bannerW / 2 + 3 * scale, -bannerH / 2 + 4 * scale, bannerW, bannerH);
 
-            // 主框底色 (SAFE: 翡翠綠 #059669 / OUT: 鮮紅 #dc2626)
-            ctx.fillStyle = outcomeBanner.isSafe ? "#059669" : "#dc2626";
+            // 主框底色 (SAFE: 翡翠綠 #059669 / WASTED: 琥珀金 #d97706 / OUT: 鮮紅 #dc2626)
+            let mainBg = "#dc2626";
+            let bevelHighlight = "#f87171";
+            let bevelShadow = "#b91c1c";
+
+            if (outcomeBanner.type === 'safe') {
+                mainBg = "#059669";
+                bevelHighlight = "#34d399";
+                bevelShadow = "#047857";
+            } else if (outcomeBanner.type === 'wasted') {
+                mainBg = "#d97706";
+                bevelHighlight = "#fde047";
+                bevelShadow = "#b45309";
+            }
+
+            ctx.fillStyle = mainBg;
             ctx.fillRect(-bannerW / 2, -bannerH / 2, bannerW, bannerH);
 
             // 16-bit 像素內框立體高光 (Top/Left Bevel)
-            ctx.fillStyle = outcomeBanner.isSafe ? "#34d399" : "#f87171";
+            ctx.fillStyle = bevelHighlight;
             ctx.fillRect(-bannerW / 2, -bannerH / 2, bannerW, 3 * scale);
             ctx.fillRect(-bannerW / 2, -bannerH / 2, 3 * scale, bannerH);
 
             // 內框底暗部 (Bottom/Right Bevel)
-            ctx.fillStyle = outcomeBanner.isSafe ? "#047857" : "#b91c1c";
+            ctx.fillStyle = bevelShadow;
             ctx.fillRect(-bannerW / 2, bannerH / 2 - 3 * scale, bannerW, 3 * scale);
             ctx.fillRect(bannerW / 2 - 3 * scale, -bannerH / 2, 3 * scale, bannerH);
 
@@ -5927,18 +6457,32 @@
             ctx.lineWidth = 2 * scale;
             ctx.strokeRect(-bannerW / 2, -bannerH / 2, bannerW, bannerH);
 
-            // 裁決文字（巨大立體像素感字體）
-            ctx.font = `900 ${22 * scale}px 'Press Start 2P', 'Noto Sans TC', sans-serif`;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
+            if (hasSubText) {
+                // 裁決主文字（上方）
+                ctx.font = `900 ${18 * scale}px 'Press Start 2P', 'Noto Sans TC', sans-serif`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = "#000000";
+                ctx.fillText(outcomeBanner.text, 1.2 * scale, -7 * scale + 1.5 * scale);
+                ctx.fillStyle = "#ffffff";
+                ctx.fillText(outcomeBanner.text, 0, -7 * scale);
 
-            // 文字黑影
-            ctx.fillStyle = "#000000";
-            ctx.fillText(outcomeBanner.text, 1.5 * scale, 2.5 * scale);
-
-            // 文字亮白本體
-            ctx.fillStyle = "#ffffff";
-            ctx.fillText(outcomeBanner.text, 0, 0);
+                // 副標題解說（下方）
+                ctx.font = `900 ${10.5 * scale}px 'Noto Sans TC', sans-serif`;
+                ctx.fillStyle = "#000000";
+                ctx.fillText(outcomeBanner.subText, 1 * scale, 12 * scale + 1 * scale);
+                ctx.fillStyle = outcomeBanner.type === 'wasted' ? "#fef08a" : "#ffffff";
+                ctx.fillText(outcomeBanner.subText, 0, 12 * scale);
+            } else {
+                // 裁決文字（巨大立體像素感字體）
+                ctx.font = `900 ${22 * scale}px 'Press Start 2P', 'Noto Sans TC', sans-serif`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = "#000000";
+                ctx.fillText(outcomeBanner.text, 1.5 * scale, 2.5 * scale);
+                ctx.fillStyle = "#ffffff";
+                ctx.fillText(outcomeBanner.text, 0, 0);
+            }
 
             ctx.restore();
         }
