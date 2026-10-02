@@ -2,11 +2,16 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>你是跑壘王!!! - 少棒跑壘判斷互動遊戲</title>
+    <!-- BASEBALL FAVICON (精緻立體棒球圖標，支援本機與線上全平台) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22ballShade%22%20cx%3D%2235%25%22%20cy%3D%2230%25%22%20r%3D%2265%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23ffffff%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%2270%25%22%20stop-color%3D%22%23f8fafc%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23cbd5e1%22/%3E%0A%20%20%20%20%3C/radialGradient%3E%0A%20%20%20%20%3Cfilter%20id%3D%22shadow%22%20x%3D%22-20%25%22%20y%3D%22-20%25%22%20width%3D%22140%25%22%20height%3D%22140%25%22%3E%0A%20%20%20%20%20%20%3CfeDropShadow%20dx%3D%220%22%20dy%3D%222%22%20stdDeviation%3D%222.5%22%20flood-color%3D%22%23090d16%22%20flood-opacity%3D%220.4%22/%3E%0A%20%20%20%20%3C/filter%3E%0A%20%20%3C/defs%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2227%22%20fill%3D%22url%28%23ballShade%29%22%20filter%3D%22url%28%23shadow%29%22/%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2227%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%221%22/%3E%0A%20%20%3Cpath%20d%3D%22M%2018%2C9%20C%2025%2C18%2025%2C46%2018%2C55%22%20fill%3D%22none%22%20stroke%3D%22%23dc2626%22%20stroke-width%3D%222.2%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M%2015.5%2C13%20L%2019.5%2C11%20M%2018.5%2C19%20L%2023%2C17.5%20M%2020.2%2C25.5%20L%2025%2C25%20M%2020.5%2C32%20L%2025.2%2C32.2%20M%2020.2%2C38.5%20L%2025%2C39%20M%2018.5%2C45%20L%2023%2C46.5%20M%2015.5%2C51%20L%2019.5%2C53%22%20fill%3D%22none%22%20stroke%3D%22%23dc2626%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M%2046%2C9%20C%2039%2C18%2039%2C46%2046%2C55%22%20fill%3D%22none%22%20stroke%3D%22%23dc2626%22%20stroke-width%3D%222.2%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M%2048.5%2C13%20L%2044.5%2C11%20M%2045.5%2C19%20L%2041%2C17.5%20M%2043.8%2C25.5%20L%2039%2C25%20M%2043.5%2C32%20L%2038.8%2C32.2%20M%2043.8%2C38.5%20L%2039%2C39%20M%2045.5%2C45%20L%2041%2C46.5%20M%2048.5%2C51%20L%2044.5%2C53%22%20fill%3D%22none%22%20stroke%3D%22%23dc2626%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22/%3E%0A%3C/svg%3E">
+    <link rel="alternate icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22ballShade%22%20cx%3D%2235%25%22%20cy%3D%2230%25%22%20r%3D%2265%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23ffffff%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%2270%25%22%20stop-color%3D%22%23f8fafc%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23cbd5e1%22/%3E%0A%20%20%20%20%3C/radialGradient%3E%0A%20%20%20%20%3Cfilter%20id%3D%22shadow%22%20x%3D%22-20%25%22%20y%3D%22-20%25%22%20width%3D%22140%25%22%20height%3D%22140%25%22%3E%0A%20%20%20%20%20%20%3CfeDropShadow%20dx%3D%220%22%20dy%3D%222%22%20stdDeviation%3D%222.5%22%20flood-color%3D%22%23090d16%22%20flood-opacity%3D%220.4%22/%3E%0A%20%20%20%20%3C/filter%3E%0A%20%20%3C/defs%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2227%22%20fill%3D%22url%28%23ballShade%29%22%20filter%3D%22url%28%23shadow%29%22/%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2227%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%221%22/%3E%0A%20%20%3Cpath%20d%3D%22M%2018%2C9%20C%2025%2C18%2025%2C46%2018%2C55%22%20fill%3D%22none%22%20stroke%3D%22%23dc2626%22%20stroke-width%3D%222.2%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M%2015.5%2C13%20L%2019.5%2C11%20M%2018.5%2C19%20L%2023%2C17.5%20M%2020.2%2C25.5%20L%2025%2C25%20M%2020.5%2C32%20L%2025.2%2C32.2%20M%2020.2%2C38.5%20L%2025%2C39%20M%2018.5%2C45%20L%2023%2C46.5%20M%2015.5%2C51%20L%2019.5%2C53%22%20fill%3D%22none%22%20stroke%3D%22%23dc2626%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M%2046%2C9%20C%2039%2C18%2039%2C46%2046%2C55%22%20fill%3D%22none%22%20stroke%3D%22%23dc2626%22%20stroke-width%3D%222.2%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M%2048.5%2C13%20L%2044.5%2C11%20M%2045.5%2C19%20L%2041%2C17.5%20M%2043.8%2C25.5%20L%2039%2C25%20M%2043.5%2C32%20L%2038.8%2C32.2%20M%2043.8%2C38.5%20L%2039%2C39%20M%2045.5%2C45%20L%2041%2C46.5%20M%2048.5%2C51%20L%2044.5%2C53%22%20fill%3D%22none%22%20stroke%3D%22%23dc2626%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22/%3E%0A%3C/svg%3E">
+
     <!-- Tailwind CSS for high fidelity responsive layout -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for icons -->
@@ -17,6 +22,38 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     
     <style>
+        /* RWD & TOUCH ERGONOMICS (極致順暢觸控手感與無延遲反饋) */
+        html, body {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        button, .option-btn, .runner-action {
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+        }
+        /* 電腦鍵盤快捷鍵指示徽章 */
+        .key-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.25rem;
+            height: 1.25rem;
+            font-size: 0.65rem;
+            font-weight: 900;
+            border-radius: 0.35rem;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #94a3b8;
+        }
+        @media (max-width: 640px) {
+            .key-badge {
+                display: none; /* 手機端自動隱藏鍵盤徽章，保持介面簡潔乾淨 */
+            }
+        }
+
         body {
             font-family: 'Inter', 'Noto Sans TC', sans-serif;
             background-color: #0b0f19;
@@ -103,6 +140,11 @@
             min-height: 0;
             overflow: hidden;
             padding: clamp(0.8rem, 1.2vw, 1.25rem) !important;
+        }
+        #coachPanel.hidden,
+        #sandboxContainer.hidden,
+        .hidden {
+            display: none !important;
         }
         #optionsContainer {
             gap: clamp(0.45rem, 0.8vh, 0.625rem) !important;
@@ -1390,6 +1432,25 @@
             </div>
         </div>
     </header>
+    <!-- MODE NAVIGATION SWITCHER (實戰闖關 vs 教練戰術白板 vs 864矩陣全覽) -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-3 pb-1">
+        <div class="glass-panel p-1.5 rounded-2xl flex gap-2 border border-slate-800 shadow-xl">
+            <button id="modeChallengeTab" onclick="switchGameMode('challenge')" class="flex-1 py-2 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25">
+                <i class="fa-solid fa-trophy text-amber-400"></i>
+                <span>實戰挑戰闖關</span>
+            </button>
+            <button id="modeSandboxTab" onclick="switchGameMode('sandbox')" class="flex-1 py-2 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+                <i class="fa-solid fa-chalkboard-user text-cyan-400"></i>
+                <span>教練戰術白板 (自由條件產生器)</span>
+            </button>
+            <button id="modeMatrixTab" onclick="openMatrixExplorerModal()" class="py-2 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+                <i class="fa-solid fa-table-cells text-emerald-400"></i>
+                <span class="hidden sm:inline">864矩陣全覽</span>
+                <span class="sm:hidden">矩陣</span>
+            </button>
+        </div>
+    </div>
+
 
     <main id="gameShell" class="max-w-7xl mx-auto px-4 py-4 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
         
@@ -1502,11 +1563,233 @@
                     <p id="coachFeedback" class="text-xs text-slate-200 mt-0.5 leading-relaxed font-black">
                         「小球員們！注意看當前出局數，這會徹底改變你的起跑策略！」
                     </p>
+                    <!-- THREE-IN-ONE EDUCATIONAL TABS & CARD (小球員口訣 / 家長小百科 / 教練戰術) -->
+                    <div id="educationCardBox" class="hidden mt-3 rounded-2xl border border-slate-800 overflow-hidden transition-all duration-300 shadow-lg">
+                        <div class="flex border-b border-slate-800 bg-slate-950 text-xs font-black">
+                            <button id="eduTabKid" onclick="switchEduTab('kid')" class="flex-1 py-2 px-1 text-center border-b-2 border-amber-400 text-amber-300 bg-slate-900/90 flex items-center justify-center gap-1">
+                                👦 小球員口訣
+                            </button>
+                            <button id="eduTabParent" onclick="switchEduTab('parent')" class="flex-1 py-2 px-1 text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center justify-center gap-1">
+                                👨‍👩‍👧 家長3秒百科
+                            </button>
+                            <button id="eduTabCoach" onclick="switchEduTab('coach')" class="flex-1 py-2 px-1 text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center justify-center gap-1">
+                                🧢 教練戰術指令
+                            </button>
+                        </div>
+                        <div id="eduContentKid" class="p-3 bg-gradient-to-br from-amber-950/40 to-slate-900/90">
+                            <div class="flex items-start gap-2.5">
+                                <span class="text-xl">🗣️</span>
+                                <div>
+                                    <p class="text-[11px] font-black text-amber-400 tracking-wider">少棒跑壘黃金口訣</p>
+                                    <p id="eduKidText" class="text-xs sm:text-sm font-black text-white mt-0.5 leading-snug"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="eduContentParent" class="hidden p-3 bg-gradient-to-br from-emerald-950/40 to-slate-900/90">
+                            <div class="flex items-start gap-2.5">
+                                <span class="text-xl">💡</span>
+                                <div>
+                                    <p class="text-[11px] font-black text-emerald-400 tracking-wider">家長白話生活比喻</p>
+                                    <p id="eduParentText" class="text-xs sm:text-sm font-medium text-slate-200 mt-0.5 leading-relaxed"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="eduContentCoach" class="hidden p-3 bg-gradient-to-br from-blue-950/40 to-slate-900/90">
+                            <div class="flex items-start gap-2.5">
+                                <span class="text-xl">📋</span>
+                                <div>
+                                    <p class="text-[11px] font-black text-blue-400 tracking-wider">教練實戰心法</p>
+                                    <p id="eduCoachText" class="text-xs sm:text-sm font-medium text-slate-200 mt-0.5 leading-relaxed"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
+            <!-- COACH TACTICS SANDBOX CONTAINER (教練自由戰術白板) -->
+            <div id="sandboxContainer" class="hidden glass-panel rounded-3xl p-5 flex flex-col justify-between flex-grow shadow-2xl space-y-4">
+                <!-- Sandbox Header -->
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">🧢</span>
+                        <div>
+                            <h2 class="text-base sm:text-lg font-black text-white">教練戰術白板 (自由條件產生器)</h2>
+                            <p class="text-xs text-cyan-400 font-bold">點選局勢條件，秒算跑壘正解與動畫演示</p>
+                        </div>
+                    </div>
+                    <button onclick="resetSandboxConditions()" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 hover:text-white font-black">
+                        重設
+                    </button>
+                </div>
+
+                <!-- Condition Picker Groups -->
+                <div class="space-y-3.5 text-xs">
+                    <!-- 1. Outs -->
+                    <div>
+                        <label class="block font-black text-slate-400 mb-1.5 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-red-400"></span> 1. 出局數 (Outs)
+                        </label>
+                        <div class="grid grid-cols-3 gap-2" id="sandboxOutsGroup">
+                            <button onclick="setSandboxOuts(0)" data-val="0" class="sandbox-out-btn py-2 rounded-xl font-black border text-center transition-all bg-slate-900 border-slate-700 text-slate-300">0 出局</button>
+                            <button onclick="setSandboxOuts(1)" data-val="1" class="sandbox-out-btn py-2 rounded-xl font-black border text-center transition-all bg-red-600 border-red-400 text-white shadow-md">1 出局</button>
+                            <button onclick="setSandboxOuts(2)" data-val="2" class="sandbox-out-btn py-2 rounded-xl font-black border text-center transition-all bg-slate-900 border-slate-700 text-slate-300">2 出局</button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Runners -->
+                    <div>
+                        <label class="block font-black text-slate-400 mb-1.5 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span> 2. 壘上跑者配置
+                        </label>
+                        <div class="grid grid-cols-4 gap-1.5" id="sandboxRunnersGroup">
+                            <button onclick="setSandboxRunners('1')" data-val="1" class="sandbox-runner-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] bg-slate-900 border-slate-700 text-slate-300">一壘有人</button>
+                            <button onclick="setSandboxRunners('2')" data-val="2" class="sandbox-runner-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] bg-slate-900 border-slate-700 text-slate-300">二壘有人</button>
+                            <button onclick="setSandboxRunners('3')" data-val="3" class="sandbox-runner-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] bg-slate-900 border-slate-700 text-slate-300">三壘有人</button>
+                            <button onclick="setSandboxRunners('12')" data-val="12" class="sandbox-runner-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] bg-amber-600 border-amber-400 text-white shadow-md">一、二壘</button>
+                            <button onclick="setSandboxRunners('13')" data-val="13" class="sandbox-runner-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] bg-slate-900 border-slate-700 text-slate-300">一、三壘</button>
+                            <button onclick="setSandboxRunners('23')" data-val="23" class="sandbox-runner-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] bg-slate-900 border-slate-700 text-slate-300">二、三壘</button>
+                            <button onclick="setSandboxRunners('123')" data-val="123" class="sandbox-runner-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] col-span-2 bg-slate-900 border-slate-700 text-slate-300">滿壘 (1,2,3壘有人)</button>
+                        </div>
+                    </div>
+
+                    <!-- 3. Player Base -->
+                    <div>
+                        <label class="block font-black text-slate-400 mb-1.5 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-cyan-400"></span> 3. 你在哪個壘包 (You)
+                        </label>
+                        <div class="grid grid-cols-3 gap-2" id="sandboxPlayerBaseGroup">
+                            <button id="sandboxBase1Btn" onclick="setSandboxPlayerBase(1)" data-val="1" class="sandbox-pbase-btn py-2 rounded-xl font-black border text-center bg-slate-900 border-slate-700 text-slate-300">一壘跑者</button>
+                            <button id="sandboxBase2Btn" onclick="setSandboxPlayerBase(2)" data-val="2" class="sandbox-pbase-btn py-2 rounded-xl font-black border text-center bg-cyan-600 border-cyan-400 text-white shadow-md">二壘跑者</button>
+                            <button id="sandboxBase3Btn" onclick="setSandboxPlayerBase(3)" data-val="3" class="sandbox-pbase-btn py-2 rounded-xl font-black border text-center bg-slate-900 border-slate-700 text-slate-300">三壘跑者</button>
+                        </div>
+                    </div>
+
+                    <!-- 4. Hit Variant -->
+                    <div>
+                        <label class="block font-black text-slate-400 mb-1.5 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span> 4. 擊球型態與落點
+                        </label>
+                        <div class="grid grid-cols-3 gap-1.5" id="sandboxHitGroup">
+                            <button onclick="setSandboxHit('grounder_infield')" data-val="grounder_infield" class="sandbox-hit-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] bg-emerald-600 border-emerald-400 text-white shadow-md">內野滾地</button>
+                            <button onclick="setSandboxHit('line_drive_infield')" data-val="line_drive_infield" class="sandbox-hit-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] bg-slate-900 border-slate-700 text-slate-300">內野平飛球</button>
+                            <button onclick="setSandboxHit('fly_ball_infield_short')" data-val="fly_ball_infield_short" class="sandbox-hit-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] bg-slate-900 border-slate-700 text-slate-300">內野短高飛</button>
+                            <button onclick="setSandboxHit('fly_ball_outfield_short')" data-val="fly_ball_outfield_short" class="sandbox-hit-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] bg-slate-900 border-slate-700 text-slate-300">外野短飛球</button>
+                            <button onclick="setSandboxHit('fly_ball_outfield_deep')" data-val="fly_ball_outfield_deep" class="sandbox-hit-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] bg-slate-900 border-slate-700 text-slate-300">外野深遠飛球</button>
+                            <button onclick="setSandboxHit('clean_hit_outfield')" data-val="clean_hit_outfield" class="sandbox-hit-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] bg-slate-900 border-slate-700 text-slate-300">穿越安打</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sandbox Result Card -->
+                <div id="sandboxResultCard" class="mt-2 p-4 rounded-2xl bg-slate-950/90 border border-slate-800 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-black text-slate-400">矩陣判斷策略：</span>
+                            <span id="sandboxStrategyBadge" class="px-3 py-1 rounded-xl font-black text-xs bg-emerald-500 text-slate-950">🟢 直接衝壘 (A)</span>
+                        </div>
+                        <button onclick="playSandboxAction()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs hover:brightness-110 flex items-center gap-1 shadow-md shadow-emerald-600/30">
+                            <i class="fa-solid fa-play"></i> <span>動態跑壘演示</span>
+                        </button>
+                    </div>
+                    
+                    <div class="bg-amber-950/30 border border-amber-500/20 rounded-xl p-2.5">
+                        <p class="text-[11px] font-black text-amber-400">👦 小球員口訣：</p>
+                        <p id="sandboxRhymeText" class="text-xs font-black text-white mt-0.5 leading-snug">背後有人推＝強迫進壘，沒有回頭路，全力衝！</p>
+                    </div>
+
+                    <div class="bg-emerald-950/30 border border-emerald-500/20 rounded-xl p-2.5">
+                        <p class="text-[11px] font-black text-emerald-400">👨‍👩‍👧 家長3秒小百科：</p>
+                        <p id="sandboxParentText" class="text-xs font-medium text-slate-200 mt-0.5 leading-relaxed">因為擊球員打出滾地球一定得衝一壘，所以原本一壘的跑者被逼著一定要讓出壘包往前跑。防守方只要踩壘包就算出局！</p>
+                    </div>
+
+                    <div class="bg-blue-950/30 border border-blue-500/20 rounded-xl p-2.5">
+                        <p class="text-[11px] font-black text-blue-400">🧢 教練戰術指導：</p>
+                        <p id="sandboxCoachText" class="text-xs font-medium text-slate-200 mt-0.5 leading-relaxed">強迫進壘沒有猶豫空間！全速低頭衝刺，利用滑壘破壞防守雙殺傳球！</p>
+                    </div>
+                </div>
+            </div>
         </section>
     </main>
+
+    <!-- 864 SCENARIOS MATRIX EXPLORER MODAL -->
+    <div id="matrixExplorerModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-md hidden">
+        <div class="bg-slate-900 border-2 border-cyan-500 rounded-3xl max-w-5xl w-full max-h-[88vh] overflow-hidden flex flex-col p-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-3">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-table-cells text-cyan-400 text-2xl"></i>
+                    <div>
+                        <h3 class="text-lg font-black text-white">864 種條件跑壘矩陣全景速查透視鏡</h3>
+                        <p class="text-xs text-slate-400">依據出局數 × 壘包配置 × 跑者位置 × 擊球型態動態運算之少棒真理矩陣</p>
+                    </div>
+                </div>
+                <button onclick="toggleMatrixExplorerModal(false)" class="text-slate-400 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 font-bold mb-1">出局數篩選</label>
+                    <select id="matrixFilterOuts" onchange="filterMatrixExplorer()" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2 font-bold">
+                        <option value="all">全部出局數</option>
+                        <option value="0">0 出局</option>
+                        <option value="1">1 出局</option>
+                        <option value="2">2 出局</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-400 font-bold mb-1">擊球型態篩選</label>
+                    <select id="matrixFilterHit" onchange="filterMatrixExplorer()" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2 font-bold">
+                        <option value="all">全部擊球型態</option>
+                        <option value="grounder">滾地球</option>
+                        <option value="line_drive">平飛球</option>
+                        <option value="fly_ball">高飛球</option>
+                        <option value="clean_hit">安打</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-400 font-bold mb-1">策略正解篩選</label>
+                    <select id="matrixFilterAns" onchange="filterMatrixExplorer()" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2 font-bold">
+                        <option value="all">全部策略</option>
+                        <option value="A">衝壘 (A)</option>
+                        <option value="B">離壘 (B)</option>
+                        <option value="C">守壘 (C)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-400 font-bold mb-1">關鍵字搜尋</label>
+                    <input id="matrixFilterSearch" oninput="filterMatrixExplorer()" placeholder="搜尋情境/規則..." class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2 font-bold" />
+                </div>
+            </div>
+
+            <!-- Table content -->
+            <div class="overflow-y-auto flex-grow rounded-2xl border border-slate-800 bg-slate-950/80 p-2 text-xs">
+                <table class="w-full text-left border-collapse">
+                    <thead class="text-slate-400 border-b border-slate-800 sticky top-0 bg-slate-950">
+                        <tr>
+                            <th class="p-2">出局/壘包</th>
+                            <th class="p-2">你是誰</th>
+                            <th class="p-2">擊球狀況</th>
+                            <th class="p-2 text-center">正解策略</th>
+                            <th class="p-2">黃金口訣 / 規則依據</th>
+                            <th class="p-2 text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matrixExplorerTableBody" class="divide-y divide-slate-900">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-3 pt-3 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400">
+                <span id="matrixCountSummary">顯示 864 筆中的全部情境</span>
+                <button onclick="toggleMatrixExplorerModal(false)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold">
+                    關閉
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- 50 SCENARIOS AUTOMATIC LOGIC VALIDATOR MODAL -->
     <div id="validatorModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-md hidden">
@@ -2080,15 +2363,15 @@
                 shortFly: ["1B", "2B", "3B", "SS", "LF", "CF", "RF"]
             },
             fielders: {
-                "P": { name: "投手", x: 200, y: 214 },
-                "C": { name: "捕手", x: 200, y: 356 },
-                "1B": { name: "一壘手", x: 306, y: 166 },
-                "2B": { name: "二壘手", x: 260, y: 108 },
-                "3B": { name: "三壘手", x: 94, y: 166 },
-                "SS": { name: "游擊手", x: 140, y: 108 },
-                "LF": { name: "左外野手", x: 72, y: 96 },
-                "CF": { name: "中外野手", x: 200, y: 42 },
-                "RF": { name: "右外野手", x: 328, y: 96 }
+                "P": { name: "投手", x: 200, y: 210 },
+                "C": { name: "捕手", x: 200, y: 348 },
+                "1B": { name: "一壘手", x: 304, y: 164 },
+                "2B": { name: "二壘手", x: 258, y: 108 },
+                "3B": { name: "三壘手", x: 96, y: 164 },
+                "SS": { name: "游擊手", x: 142, y: 108 },
+                "LF": { name: "左外野手", x: 74, y: 96 },
+                "CF": { name: "中外野手", x: 200, y: 44 },
+                "RF": { name: "右外野手", x: 326, y: 96 }
             },
             decisions: {
                 A: {
@@ -2152,62 +2435,98 @@
                 twoOutsRun: {
                     correct: 'A',
                     level: 1,
-                    explanation: "兩出局時，球打出去就要衝。因為只要被接殺或形成第三個出局數，半局就結束，留在原壘沒有保留價值。"
+                    explanation: "兩出局時，球打出去就要衝。因為只要被接殺或形成第三個出局數，半局就結束，留在原壘沒有保留價值。",
+                    rhyme: "兩出局，催落去！球打出去閉著眼睛全力衝！",
+                    parentTip: "已經兩出局了，如果球被接殺或刺殺，這半局就直接結束換場；如果球落地沒出局，全力衝才能跑回本壘得分！所以留在壘上完全沒有好處，聽到打擊聲就要全速狂奔！",
+                    coachTip: "兩出局『聽棒聲起跑』！眼睛看著前方的壘包與指導員手勢，不要回頭看球，低頭加速催到極限！"
                 },
                 lineDriveReturn: {
                     correct: 'C',
                     level: 2,
-                    explanation: "平飛球最容易被直接接殺後形成雙殺。正確動作是先回到或踩住原本壘包，確保自己不被傳回原壘出局。"
+                    explanation: "平飛球最容易被直接接殺後形成雙殺。正確動作是先回到或踩住原本壘包，確保自己不被傳回原壘出局。",
+                    rhyme: "平飛球最危險，縮回壘包避雙殺！",
+                    parentTip: "平飛球飛行速度極快，內野防守員一伸手就能瞬間接殺。如果跑者離壘太遠，防守員輕輕傳回壘包，跑者來不及回踩就會被判雙殺（一次死兩個人）！",
+                    coachTip: "看到平飛球身體立刻『下沉縮回』！哪怕離壘只有一步也要迅速蹬回原壘，確認球落地穿出去才准前進！"
                 },
                 infieldFlyStay: {
                     correct: 'C',
                     level: 2,
-                    explanation: "內野高飛球成立時，打者自動出局，原本的強迫進壘壓力解除。跑者最穩定的動作是踩住原壘，不要亂衝。"
+                    explanation: "內野高飛球成立時，打者自動出局，原本的強迫進壘壓力解除。跑者最穩定的動作是踩住原壘，不要亂衝。",
+                    rhyme: "內野必死球打者已出局，踩穩壘包不用跑！",
+                    parentTip: "這是棒球專門保護進攻方的規則！在一二壘或滿壘、且小於兩出局時，打出內野高飛球，裁判會直接喊『Infield Fly 打者出局』，防止防守方故意漏球讓球落地做雙殺。所以跑者只要踩住壘包就是 100% 安全的！",
+                    coachTip: "耳朵聽主審喊聲『Infield Fly, Batter is Out!』，身體牢牢釘死在壘包上，不可冒險離壘！"
                 },
                 cleanHitRun: {
                     correct: 'A',
                     level: 3,
-                    explanation: "球已經落地成安打，沒有被空中接殺的風險。這時要直接衝，爭取推進到下一個壘包。"
+                    explanation: "球已經落地成安打，沒有被空中接殺的風險。這時要直接衝，爭取推進到下一個壘包。",
+                    rhyme: "球已穿過內野成安打，大膽加速往下一個壘包衝！",
+                    parentTip: "球已經越過內野手滾到外野草地上，沒有空中接殺的危險了！這時跑者的唯一任務就是全速推進，甚至有機會連衝兩個壘包！",
+                    coachTip: "確認球穿出防線後，過壘前要踩『壘包內側角落』加速繞壘，頭部迅速轉向三壘指導教練看手勢！"
                 },
                 forcedGrounderRun: {
                     correct: 'A',
                     level: 3,
-                    explanation: "這是強迫進壘：後方隊友把你往下一個壘包推。滾地球一出現，就要衝向下一個壘包，否則很容易被封殺。"
+                    explanation: "這是強迫進壘：後方隊友把你往下一個壘包推。滾地球一出現，就要衝向下一個壘包，否則很容易被封殺。",
+                    rhyme: "背後有人推＝強迫進壘，沒有回頭路，全力衝！",
+                    parentTip: "因為擊球員打出滾地球一定得衝一壘，所以原本一壘的跑者被逼著一定要讓出壘包往前跑（這叫強迫進壘 Force Play）。防守球員只要踩壘包就算出局，不必拿球去觸碰跑者，所以跑者絕對不能回頭，必須全速衝！",
+                    coachTip: "強迫進壘沒有猶豫空間！哪怕防守員正站在你面前，全速低頭衝刺，利用滑壘破壞防守雙殺傳球！"
                 },
                 leftSideGrounderStay: {
                     correct: 'C',
                     level: 3,
-                    explanation: "二壘跑者遇到打向游擊手或三壘手方向的滾地球，而且沒有被強迫進壘時，貿然衝三壘很容易被觸殺。先踩住二壘守住壘包。"
+                    explanation: "二壘跑者遇到打向游擊手或三壘手方向的滾地球，而且沒有被強迫進壘時，貿然衝三壘很容易被觸殺。先踩住二壘守住壘包。",
+                    rhyme: "二壘看球打三游，釘在二壘不要送死！",
+                    parentTip: "球打向三壘或游擊手（內野左側），距離三壘超級近！這時候二壘跑者一壘沒有隊友推他，如果硬要衝三壘，守備員接球一步就能碰殺他。待在二壘才是最安全的！",
+                    coachTip: "『打三游看球留在二壘，打一二壘趁傳推進』！球在眼前橫過直接回踩二壘包，不可盲目啟動！"
                 },
                 unforcedGrounderStay: {
                     correct: 'C',
                     level: 3,
-                    explanation: "這是非強迫進壘情境。內野滾地球時，如果你沒有被迫前進，先踩住原壘，避免自己跑進觸殺風險。"
+                    explanation: "這是非強迫進壘情境。內野滾地球時，如果你沒有被迫前進，先踩住原壘，避免自己跑進觸殺風險。",
+                    rhyme: "後面沒人推你，看清球在哪，守住壘包別送死！",
+                    parentTip: "這叫做『非強迫進壘』！因為你後面沒有隊友擠你，回到原壘包是安全的，防守方必須拿手套碰你（觸殺 Tag Out）才算你出局。滾地球在內野手面前時，踩穩壘包等下一棒是最佳策略！",
+                    coachTip: "非強迫進壘講究『Read the Ball 看球跑』！確認防守員傳向一壘的球離手瞬間，才能視情況往前離壘推進！"
                 },
                 deepFlyThirdTag: {
                     correct: 'C',
                     level: 4,
-                    explanation: "三壘跑者遇到深遠外野飛球，要先踩住三壘，等接殺完成瞬間再起跑攻本壘，這就是 Tag up。"
+                    explanation: "三壘跑者遇到深遠外野飛球，要先踩住三壘，等接殺完成瞬間再起跑攻本壘，這就是 Tag up。",
+                    rhyme: "三壘深遠飛球踩緊壘包，外野接殺瞬間 Tag-up 衝本壘！",
+                    parentTip: "這就是大名鼎鼎的『高飛犧牲打 (Sacrifice Fly)』！三壘跑者必須等到外野手手套接觸到球的那一瞬間，才能起跑衝本壘得分。提早起跑就算犯規出局！",
+                    coachTip: "右腳踩在三壘邊緣，身體壓低成短跑起跑姿態！雙眼盯著外野手的手套，手套一合攏瞬間蹬地爆發衝本壘！"
                 },
                 shortFlyThirdHold: {
                     correct: 'C',
                     level: 4,
-                    explanation: "三壘跑者遇到短淺飛球，通常不要離太遠。先踩住三壘，避免球被接殺後回壘不及；等球確定落地或教練指示再判斷是否衝本壘。"
+                    explanation: "三壘跑者遇到短淺飛球，通常不要離太遠。先踩住三壘，避免球被接殺後回壘不及；等球確定落地或教練指示再判斷是否衝本壘。",
+                    rhyme: "三壘遇到短淺飛球，踩住壘包不要冒險衝！",
+                    parentTip: "球打得不夠深遠，外野手接球後只要一個大跨步就能把球長傳回本壘！跑者如果硬要衝本壘幾乎必死無疑，所以踩穩三壘保命最明智。",
+                    coachTip: "外野短飛球不足以完成 Tag-up！踩穩三壘，保持冷靜，等待對方暴傳漏球再進壘！"
                 },
                 deepFlyHalfway: {
                     correct: 'B',
                     level: 4,
-                    explanation: "一、二壘跑者遇到深遠飛球，通常先離壘幾步看球。球落地就衝，球被接殺就回原壘。"
+                    explanation: "一、二壘跑者遇到深遠飛球，通常先離壘幾步看球。球落地就衝，球被接殺就回原壘。",
+                    rhyme: "深遠飛球離壘半路，落地就狂奔、接殺就回踩！",
+                    parentTip: "一二壘跑者離壘走到大約 1/3~1/2 的中間位置。如果外野手漏接落地，跑者可以迅速多搶一個壘包；如果外野手穩穩接殺，跑者也有足夠時間退回原本的壘包！",
+                    coachTip: "離壘步幅保持約 1/3 到 1/2，重心放低微屈膝，雙腳不可交叉，隨時準備雙向蹬地！"
                 },
                 shortFlyHalfway: {
                     correct: 'B',
                     level: 4,
-                    explanation: "短淺飛球落地與接殺都可能發生。先離壘幾步看球，保留往前衝與回原壘的彈性。"
+                    explanation: "短淺飛球落地機會較高。離壘兩步看球，保留前進與回壘彈性。",
+                    rhyme: "短淺飛球離壘兩步看，隨時準備退回原壘！",
+                    parentTip: "球落在內外野交界處，接殺速度很快。跑者只能離開壘包兩三步看球，球幸運落地就快跑，被接殺就立刻縮回壘包！",
+                    coachTip: "短淺飛球嚴格限制離壘 2~3 步！視線緊盯防守員手套，手套伸出接球瞬間身體立刻向後轉準備回壘！"
                 },
                 fallbackStay: {
                     correct: 'C',
                     level: 4,
-                    explanation: "先踩住原壘，確認可以跑再出發。"
+                    explanation: "尚未確認可以跑時，先守住原壘。",
+                    rhyme: "局勢未明看清球，踩穩壘包不衝動！",
+                    parentTip: "棒球最高原則：看不清楚球在哪裡時，永遠以保護壘包為第一優先！",
+                    coachTip: "球場上不確定的情況下，先保持安全站位，聽從壘指員指示！"
                 }
             }
         };
@@ -2759,6 +3078,10 @@
                 correct: resolvedRule.correct,
                 level: resolvedRule.level,
                 ruleKey: resolvedRule.ruleKey,
+                rhyme: (BASERUNNING_CONTENT.ruleResults[resolvedRule.ruleKey] && BASERUNNING_CONTENT.ruleResults[resolvedRule.ruleKey].rhyme) || "看清局勢，聽教練指示！",
+                parentTip: (BASERUNNING_CONTENT.ruleResults[resolvedRule.ruleKey] && BASERUNNING_CONTENT.ruleResults[resolvedRule.ruleKey].parentTip) || "這球要觀察防守傳球位置！",
+                coachTip: (BASERUNNING_CONTENT.ruleResults[resolvedRule.ruleKey] && BASERUNNING_CONTENT.ruleResults[resolvedRule.ruleKey].coachTip) || "保持重心，注意出局數！",
+                ruleLabel: resolvedRule.ruleLabel || "實戰規則", 
                 batType: hitType.id,
                 hitTypeText: hitType.text,
                 hitDirection: entry.direction,
@@ -2972,19 +3295,19 @@
         const canvas = document.getElementById('fieldCanvas');
         const ctx = canvas.getContext('2d');
         
-        const center = { x: 200, y: 214 }; 
-        const distance = 118;
+        const center = { x: 200, y: 210 }; 
+        const distance = 114;
 
         const bases = {
-            home: { x: 200, y: 332 },
-            first: { x: 200 + distance, y: 332 - distance }, 
-            second: { x: 200, y: 332 - distance * 2 },      
-            third: { x: 200 - distance, y: 332 - distance }  
+            home: { x: 200, y: 324 },
+            first: { x: 200 + distance, y: 324 - distance }, 
+            second: { x: 200, y: 324 - distance * 2 },      
+            third: { x: 200 - distance, y: 324 - distance }  
         };
 
         const foulLines = {
-            left: { x: 8, y: 142 },   
-            right: { x: 392, y: 142 }  
+            left: { x: 14, y: 138 },   
+            right: { x: 386, y: 138 }  
         };
 
         let ballAnim = {
@@ -3003,25 +3326,43 @@
         let currentVisualOccupiedBases = []; 
 
         function resizeCanvas() {
-            const size = canvas.parentElement.clientWidth;
-            canvas.width = size;
-            canvas.height = size;
+            const container = canvas.parentElement;
+            if (!container) return;
+            const rect = container.getBoundingClientRect();
+            const displaySize = Math.floor(rect.width);
+            if (displaySize <= 0) return;
+
+            // 視網膜高解析 DPR (Retina) 自適應：實體像素乘以 DPR，CSS 像素保持 100%
+            const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+            canvas.width = Math.round(displaySize * dpr);
+            canvas.height = Math.round(displaySize * dpr);
+            canvas.style.width = `${displaySize}px`;
+            canvas.style.height = `${displaySize}px`;
+
+            // 重置 Context Transform，由 drawStadium 的 scale = canvas.width / 400 直接渲染，杜絕雙重縮放破版
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
             drawStadium();
         }
+
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resizeCanvas, 150);
+        });
 
         window.addEventListener('resize', resizeCanvas);
 
         function drawStadium() {
             const w = canvas.width;
             const h = canvas.height;
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.clearRect(0, 0, w, h);
 
             const scale = w / 400;
             const scX = (v) => v * scale;
             const scY = (v) => v * scale;
 
-            const grassStart = nightMode ? "#064e3b" : "#15803d";
-            const grassEnd = nightMode ? "#022c22" : "#064e3b";
+            // 1. 自然沉穩的大聯盟級草皮底色（優雅低飽和，非刺眼螢光綠）
+            const grassStart = nightMode ? "#0d3322" : "#1b4d2e";
+            const grassEnd = nightMode ? "#061a11" : "#133820";
 
             const bgGradient = ctx.createRadialGradient(scX(200), scY(210), scX(30), scX(200), scY(210), scX(250));
             bgGradient.addColorStop(0, grassStart);
@@ -3029,23 +3370,56 @@
             ctx.fillStyle = bgGradient;
             ctx.fillRect(0, 0, w, h);
 
-            ctx.fillStyle = "rgba(15, 23, 42, 0.35)";
-            ctx.beginPath();
-            ctx.moveTo(scX(bases.home.x), scY(bases.home.y));
-            ctx.lineTo(scX(foulLines.left.x), scY(foulLines.left.y));
-            ctx.quadraticCurveTo(scX(200), scY(-92), scX(foulLines.right.x), scY(foulLines.right.y));
-            ctx.closePath();
-            ctx.fill();
+            // 2. 經典扇形割草紋理 (Subtle Lawn Mower Arcs - 極低透明度，典雅不花俏)
+            ctx.save();
+            const arcRadii = [60, 95, 130, 165, 200, 235, 270];
+            arcRadii.forEach((r, idx) => {
+                if (idx % 2 === 0) {
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.024)";
+                    ctx.beginPath();
+                    ctx.arc(scX(bases.home.x), scY(bases.home.y), scX(r), Math.PI * 1.15, Math.PI * 1.85);
+                    ctx.arc(scX(bases.home.x), scY(bases.home.y), scX(r - 35), Math.PI * 1.85, Math.PI * 1.15, true);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            });
+            ctx.restore();
 
-            ctx.strokeStyle = "#eab308";
-            ctx.lineWidth = scX(4);
+            // 3. 外野警戒區 (Warning Track - 典雅泥土褐弧帶)
+            ctx.strokeStyle = nightMode ? "rgba(124, 45, 18, 0.5)" : "rgba(180, 83, 9, 0.5)";
+            ctx.lineWidth = scX(14);
             ctx.beginPath();
             ctx.moveTo(scX(foulLines.left.x), scY(foulLines.left.y));
             ctx.quadraticCurveTo(scX(200), scY(-82), scX(foulLines.right.x), scY(foulLines.right.y));
             ctx.stroke();
 
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
-            ctx.lineWidth = scX(2.5);
+            // 4. 外野圍牆 (Outfield Wall - 深墨藍防撞墊 + 黃色標竿頂緣線)
+            ctx.strokeStyle = "#0f172a";
+            ctx.lineWidth = scX(4);
+            ctx.beginPath();
+            ctx.moveTo(scX(foulLines.left.x), scY(foulLines.left.y));
+            ctx.quadraticCurveTo(scX(200), scY(-88), scX(foulLines.right.x), scY(foulLines.right.y));
+            ctx.stroke();
+
+            ctx.strokeStyle = "#eab308";
+            ctx.lineWidth = scX(2);
+            ctx.beginPath();
+            ctx.moveTo(scX(foulLines.left.x), scY(foulLines.left.y));
+            ctx.quadraticCurveTo(scX(200), scY(-90), scX(foulLines.right.x), scY(foulLines.right.y));
+            ctx.stroke();
+
+            // 5. 左/右外野全壘打標竿 (Foul Poles)
+            [foulLines.left, foulLines.right].forEach(pole => {
+                ctx.fillStyle = "#facc15";
+                ctx.fillRect(scX(pole.x - 1.5), scY(pole.y - 14), scX(3), scY(16));
+                ctx.beginPath();
+                ctx.arc(scX(pole.x), scY(pole.y - 14), scX(3), 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // 6. 白堊界內/界外白線 (Foul Lines - 乾淨筆直純白線)
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
+            ctx.lineWidth = scX(2.2);
             ctx.beginPath();
             ctx.moveTo(scX(bases.home.x), scY(bases.home.y));
             ctx.lineTo(scX(foulLines.left.x), scY(foulLines.left.y));
@@ -3053,7 +3427,11 @@
             ctx.lineTo(scX(foulLines.right.x), scY(foulLines.right.y));
             ctx.stroke();
 
-            ctx.fillStyle = nightMode ? "#9a3412" : "#c2410c"; 
+            // 7. 內野紅土菱形 (Infield Dirt - 溫潤泥土漸層)
+            const dirtGrad = ctx.createRadialGradient(scX(center.x), scY(center.y), scX(10), scX(center.x), scY(center.y), scX(120));
+            dirtGrad.addColorStop(0, nightMode ? "#832d12" : "#a83e10");
+            dirtGrad.addColorStop(1, nightMode ? "#6b230d" : "#92340c");
+            ctx.fillStyle = dirtGrad;
             ctx.beginPath();
             ctx.moveTo(scX(bases.home.x), scY(bases.home.y + 12));
             ctx.lineTo(scX(bases.first.x + 22), scY(bases.first.y));
@@ -3062,17 +3440,19 @@
             ctx.closePath();
             ctx.fill();
 
-            ctx.fillStyle = nightMode ? "#0f766e" : "#16a34a";
+            // 8. 內野草皮島 (Infield Grass Island)
+            ctx.fillStyle = nightMode ? "#0f3d28" : "#205735";
             ctx.beginPath();
-            ctx.moveTo(scX(200), scY(292));
-            ctx.lineTo(scX(278), scY(214));
+            ctx.moveTo(scX(200), scY(284));
+            ctx.lineTo(scX(274), scY(210));
             ctx.lineTo(scX(200), scY(136));
-            ctx.lineTo(scX(122), scY(214));
+            ctx.lineTo(scX(126), scY(210));
             ctx.closePath();
             ctx.fill();
 
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
-            ctx.lineWidth = scX(1.5);
+            // 9. 壘線粉筆白線 (Chalk Baselines)
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.82)";
+            ctx.lineWidth = scX(1.4);
             ctx.beginPath();
             ctx.moveTo(scX(bases.home.x), scY(bases.home.y));
             ctx.lineTo(scX(bases.first.x), scY(bases.first.y));
@@ -3081,14 +3461,21 @@
             ctx.closePath();
             ctx.stroke();
 
+            // 10. 本壘打擊區 (Batter's Boxes)
             drawHomePlateArea(scale);
 
-            ctx.fillStyle = nightMode ? "#7c2d12" : "#9a3412";
+            // 11. 投手丘圓形高地與純白投手板 (Pitcher's Mound & Rubber)
+            ctx.fillStyle = nightMode ? "#6b230d" : "#8c320d";
             ctx.beginPath();
             ctx.arc(scX(center.x), scY(center.y), scX(15), 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = "#e2e8f0";
-            ctx.fillRect(scX(center.x - 7), scY(center.y - 1.5), scX(14), scY(3)); 
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+            ctx.lineWidth = scX(1);
+            ctx.stroke();
+
+            // 投手板 (Pitching Rubber)
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(scX(center.x - 7), scY(center.y - 1.5), scX(14), scY(3));
 
             drawBasePlate(bases.home, "home", scale);
             drawBasePlate(bases.first, "1B", scale);
@@ -3106,6 +3493,10 @@
 
             if (nightMode) {
                 drawStadiumLights(ctx, w, h, scale);
+            }
+
+            if (outcomeBanner && outcomeBanner.active) {
+                drawOutcomeBanner(ctx, w, h, scale);
             }
         }
 
@@ -3150,12 +3541,12 @@
             ctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
             ctx.fillStyle = nightMode ? "#7c2d12" : "#c2410c";
 
-            const batterBoxW = 20;
-            const batterBoxH = 54;
-            const gapToPlate = 12;
-            const boxTop = home.y - 37;
-            const leftBoxX = home.x - gapToPlate - batterBoxW - 10;
-            const rightBoxX = home.x + gapToPlate + 10;
+            const batterBoxW = 18;
+            const batterBoxH = 46;
+            const gapToPlate = 10;
+            const boxTop = home.y - 32;
+            const leftBoxX = home.x - gapToPlate - batterBoxW;
+            const rightBoxX = home.x + gapToPlate;
 
             // 左右打擊區：只保留乾淨的長方形框線，不加文字與其他輔助區塊。
             [leftBoxX, rightBoxX].forEach(x => {
@@ -3213,7 +3604,7 @@
             ctx.restore();
 
             const labels = {
-                home: { text: "本壘", ox: 0, oy: 56 },
+                home: { text: "本壘", ox: 0, oy: 44 },
                 "1B": { text: "一壘", ox: 28, oy: 4 },
                 "2B": { text: "二壘", ox: 0, oy: -20 },
                 "3B": { text: "三壘", ox: -28, oy: 4 }
@@ -3395,41 +3786,88 @@
                 const rX = (runner.startX + (runner.targetX - runner.startX) * runner.animProgress) * scale;
                 const rY = (runner.startY + (runner.targetY - runner.startY) * runner.animProgress) * scale;
 
+                // 地面柔和陰影
+                ctx.fillStyle = "rgba(15, 23, 42, 0.4)";
+                ctx.beginPath();
+                ctx.ellipse ? ctx.ellipse(rX, rY + 7 * scale, 7 * scale, 3 * scale, 0, 0, Math.PI * 2) : ctx.arc(rX, rY + 7 * scale, 5 * scale, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 玩家跑者：精緻柔和淡藍光圈（不刺眼）
                 if (runner.isPlayer) {
-                    const glowRadius = (15 + Math.sin(Date.now() / 120) * 4) * scale;
-                    ctx.fillStyle = "rgba(14, 165, 233, 0.45)"; 
+                    const glowRadius = (13 + Math.sin(Date.now() / 150) * 2.5) * scale;
+                    ctx.fillStyle = "rgba(56, 189, 248, 0.28)";
                     ctx.beginPath();
                     ctx.arc(rX, rY, glowRadius, 0, Math.PI * 2);
                     ctx.fill();
-                } else {
-                    ctx.fillStyle = "rgba(239, 68, 68, 0.25)"; 
-                    ctx.beginPath();
-                    ctx.arc(rX, rY, 11 * scale, 0, Math.PI * 2);
-                    ctx.fill();
                 }
 
-                ctx.fillStyle = runner.isPlayer ? "#0ea5e9" : "#ef4444"; 
+                // 球衣身體 (Jersey)
+                const bodyColor = runner.isPlayer ? "#0284c7" : "#b91c1c";
+                ctx.fillStyle = bodyColor;
                 ctx.beginPath();
                 ctx.arc(rX, rY, 8.5 * scale, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.strokeStyle = "#ffffff";
-                ctx.lineWidth = runner.isPlayer ? 2.5 * scale : 1.5 * scale;
+                ctx.lineWidth = 1.8 * scale;
                 ctx.stroke();
 
-                ctx.fillStyle = "#ffffff";
+                // 帽子與微凸帽簷 (Cap with Visor - 指向跑動方向)
+                ctx.fillStyle = runner.isPlayer ? "#0369a1" : "#991b1b";
                 ctx.beginPath();
-                ctx.arc(rX, rY - 2 * scale, 4 * scale, Math.PI, 2 * Math.PI);
+                ctx.arc(rX, rY - 3 * scale, 5.5 * scale, Math.PI, 2 * Math.PI);
                 ctx.fill();
+                // 帽簷小細節
+                ctx.fillRect(rX - 4 * scale, rY - 4 * scale, 8 * scale, 2 * scale);
 
+                // 背號 / 角色文字
                 ctx.fillStyle = "#ffffff";
-                ctx.font = `900 ${9 * scale}px Noto Sans TC`;
+                ctx.font = `900 ${8.5 * scale}px Inter, Noto Sans TC`;
                 ctx.textAlign = "center";
-                ctx.fillText(runner.label || (runner.isPlayer ? "我" : "隊"), rX, rY + 3 * scale);
+                ctx.fillText(runner.label || (runner.isPlayer ? "我" : "隊"), rX, rY + 3.2 * scale);
+
+                // 👦 小球員視角：清爽的「👉 我在此壘」微浮動指示牌
+                if (runner.isPlayer) {
+                    const bounceY = Math.sin(Date.now() / 160) * 2.5 * scale;
+                    ctx.save();
+                    ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
+                    ctx.strokeStyle = "#38bdf8";
+                    ctx.lineWidth = 1.2 * scale;
+
+                    const tagW = 56 * scale;
+                    const tagH = 15 * scale;
+                    let tagX = rX - tagW / 2;
+                    const tagY = rY - 24 * scale + bounceY;
+
+                    // 邊界防溢出夾取 (Clamping)：確保標籤永遠完整顯示於畫布內，絕不被邊框切斷
+                    const maxW = canvas.width;
+                    if (tagX + tagW > maxW - 6 * scale) {
+                        tagX = maxW - tagW - 6 * scale;
+                    }
+                    if (tagX < 6 * scale) {
+                        tagX = 6 * scale;
+                    }
+
+                    ctx.beginPath();
+                    if (ctx.roundRect) {
+                        ctx.roundRect(tagX, tagY, tagW, tagH, 4 * scale);
+                    } else {
+                        ctx.rect(tagX, tagY, tagW, tagH);
+                    }
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.fillStyle = "#38bdf8";
+                    ctx.font = `900 ${8 * scale}px Noto Sans TC`;
+                    ctx.textAlign = "center";
+                    ctx.fillText("👉 我在此壘", tagX + tagW / 2, tagY + 11 * scale);
+                    ctx.restore();
+                }
 
                 if (runner.taggedOut) {
                     ctx.fillStyle = "#ef4444";
-                    ctx.font = `900 ${12 * scale}px Inter`;
-                    ctx.fillText(runner.outLabel || "❌ OUT", rX, rY - 16 * scale);
+                    ctx.font = `900 ${11 * scale}px Inter`;
+                    ctx.textAlign = "center";
+                    ctx.fillText(runner.outLabel || "❌ OUT", rX, rY - 14 * scale);
                 }
             });
         }
@@ -3631,6 +4069,8 @@
 
             answered = false;
             currentQuestionIdx = idx;
+            const eduBox = document.getElementById('educationCardBox');
+            if (eduBox) eduBox.classList.add('hidden');
             const currentQ = generatedQuestions[idx];
             if (!currentQ) {
                 endGame();
@@ -3688,9 +4128,14 @@
                 const btn = document.createElement('button');
                 btn.className = 'option-btn runner-action text-center p-3 rounded-2xl border border-slate-800 bg-slate-900/60 hover:bg-slate-800/80 hover:border-slate-700 transition-all active:scale-95 relative overflow-hidden group min-h-[4.2rem] flex items-center justify-center';
                 btn.dataset.choiceId = opt.id;
-                btn.onclick = () => selectChoice(opt.id);
+                btn.onclick = () => {
+                    triggerHaptic(18);
+                    selectChoice(opt.id);
+                };
+                const keyNum = opt.id === 'A' ? '1' : (opt.id === 'B' ? '2' : '3');
                 btn.innerHTML = `
-                    <div class="flex flex-col items-center justify-center gap-1 w-full">
+                    <div class="flex flex-col items-center justify-center gap-1 w-full relative">
+                        <span class="key-badge absolute top-0 right-0">${keyNum}</span>
                         <span class="text-sm sm:text-lg font-black text-amber-500 leading-tight">${opt.title}</span>
                         <span class="text-xs sm:text-sm font-black text-slate-200 leading-snug">${opt.text}</span>
                     </div>
@@ -3893,13 +4338,20 @@
                 console.error('跑者動畫失敗，但已保留下一題按鈕：', error);
             }
 
-            setTimeout(() => {
-                try {
-                    showAnswerExplanationModal(choiceId, selectedOpt, isCorrect);
-                } catch (error) {
-                    console.error('解釋彈窗失敗，但已保留下一題按鈕：', error);
-                }
-            }, 450);
+            // 觸發場中大字動態判定（SAFE / OUT）與音效視覺打擊感
+            triggerOutcomeBanner(isCorrect ? "SAFE! 🟢" : "OUT! 🔴", selectedOpt.explain, isCorrect);
+
+            // 即時展開三合一教育卡片（小球員口訣 / 家長小百科 / 教練戰術）
+            const eduBox = document.getElementById('educationCardBox');
+            if (eduBox) {
+                const kidText = document.getElementById('eduKidText');
+                const parentText = document.getElementById('eduParentText');
+                const coachText = document.getElementById('eduCoachText');
+                if (kidText) kidText.innerText = currentQ.rhyme || selectedOpt.explain;
+                if (parentText) parentText.innerText = currentQ.parentTip || "注意觀察防守傳球方向與出局數！";
+                if (coachText) coachText.innerText = currentQ.coachTip || "身體保持重心，不可盲目衝刺！";
+                eduBox.classList.remove('hidden');
+            }
         }
 
         function insertNextButton() {
@@ -3950,6 +4402,9 @@
             document.getElementById('hitTypeBadge').className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-amber-500 text-slate-950 tracking-wider';
             
             document.getElementById('optionsContainer').innerHTML = `
+                <button onclick="copyLineShareCard()" class="full-row-action w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black py-4 rounded-2xl shadow-lg shadow-emerald-600/30 transition-all active:scale-95 flex justify-center items-center gap-2 text-sm sm:text-base h-[4.5rem] border border-emerald-400">
+                    複製 Line 群組戰報卡片 <i class="fa-solid fa-share-nodes"></i>
+                </button>
                 <button onclick="toggleScoreboardModal(true)" class="full-row-action w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-4 rounded-2xl shadow-lg shadow-emerald-600/20 transition-all active:scale-95 flex justify-center items-center gap-2 text-sm sm:text-base h-[4.5rem]">
                     查看成績紀錄 <i class="fa-solid fa-ranking-star"></i>
                 </button>
@@ -3985,6 +4440,497 @@
             updateHeaderPlayerRecordHint();
             renderLoop();
         };
-    </script>
+    
+        /* ==========================================================================
+           GAME MODES, TACTICS SANDBOX & 864 MATRIX EXPLORER ENGINE
+           ========================================================================== */
+        let currentGameMode = 'challenge'; // 'challenge' | 'sandbox'
+        let currentChallengeTheme = 'all'; // 'all' | 'forced' | 'fly' | 'twoOuts'
+        let currentEduTab = 'kid'; // 'kid' | 'parent' | 'coach'
+        let sandboxState = {
+            outs: 1,
+            runnerConfigId: '12',
+            playerBase: 2,
+            hitVariantId: 'grounder_infield',
+            fielderKey: 'ss'
+        };
+        let outcomeBanner = {
+            active: false,
+            text: '',
+            subText: '',
+            isSafe: true,
+            startTime: 0
+        };
+
+        function switchGameMode(mode) {
+            currentGameMode = mode;
+            const challengeTab = document.getElementById('modeChallengeTab');
+            const sandboxTab = document.getElementById('modeSandboxTab');
+            const coachPanel = document.getElementById('coachPanel');
+            const sandboxContainer = document.getElementById('sandboxContainer');
+
+            if (mode === 'challenge') {
+                if (challengeTab) challengeTab.className = "flex-1 py-2 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25";
+                if (sandboxTab) sandboxTab.className = "flex-1 py-2 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
+                if (coachPanel) coachPanel.classList.remove('hidden');
+                if (sandboxContainer) sandboxContainer.classList.add('hidden');
+                
+                if (generatedQuestions && generatedQuestions[currentQuestionIdx]) {
+                    loadQuestion(currentQuestionIdx);
+                }
+            } else {
+                if (sandboxTab) sandboxTab.className = "flex-1 py-2 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/25";
+                if (challengeTab) challengeTab.className = "flex-1 py-2 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
+                if (coachPanel) coachPanel.classList.add('hidden');
+                if (sandboxContainer) sandboxContainer.classList.remove('hidden');
+                
+                updateSandboxPlayerBaseButtons();
+                updateSandboxScenario();
+            }
+        }
+
+        function changeChallengeTheme(theme) {
+            currentChallengeTheme = theme;
+            currentQuestionIdx = 0;
+            currentCorrectCount = 0;
+            currentWrongCount = 0;
+            consecutiveStreak = 0;
+            score = 0;
+            gameResultSaved = false;
+            document.getElementById('scoreText').innerText = '000';
+            document.getElementById('streakText').innerText = '🔥 0';
+
+            generateGameScenariosByTheme(theme);
+            loadQuestion(0);
+        }
+
+        function generateGameScenariosByTheme(theme) {
+            const matrix = getScenarioMatrix();
+            let filtered = matrix;
+
+            if (theme === 'forced') {
+                filtered = matrix.filter(m => m.hitTypeId === 'grounder');
+            } else if (theme === 'fly') {
+                filtered = matrix.filter(m => m.hitTypeId === 'fly_ball' || m.hitTypeId === 'line_drive');
+            } else if (theme === 'twoOuts') {
+                filtered = matrix.filter(m => m.outs === 2);
+            }
+
+            if (!filtered || filtered.length < BASERUNNING_CONTENT.questionCount) {
+                filtered = matrix;
+            }
+
+            const shuffled = shuffleList([...filtered]);
+            generatedQuestions = [];
+            const count = Math.min(BASERUNNING_CONTENT.questionCount, shuffled.length);
+            for (let i = 0; i < count; i++) {
+                const sc = createScenarioFromMatrixEntry(shuffled[i], i + 1);
+                if (sc) generatedQuestions.push(sc);
+            }
+
+            const bar = document.getElementById('progressBar');
+            if (bar) {
+                bar.innerHTML = '';
+                for (let i = 0; i < generatedQuestions.length; i++) {
+                    const dot = document.createElement('span');
+                    dot.id = `dot-${i}`;
+                    dot.className = 'w-3 h-3 rounded-full bg-slate-800 border border-slate-700 block';
+                    bar.appendChild(dot);
+                }
+            }
+        }
+
+        function switchEduTab(tab) {
+            currentEduTab = tab;
+            const tabs = ['kid', 'parent', 'coach'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`eduTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                const content = document.getElementById(`eduContent${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                if (btn && content) {
+                    if (t === tab) {
+                        const borderCol = t === 'kid' ? 'border-amber-400 text-amber-300' : (t === 'parent' ? 'border-emerald-400 text-emerald-300' : 'border-blue-400 text-blue-300');
+                        btn.className = `flex-1 py-2 px-1 text-center border-b-2 ${borderCol} bg-slate-900/90 flex items-center justify-center gap-1`;
+                        content.classList.remove('hidden');
+                    } else {
+                        btn.className = "flex-1 py-2 px-1 text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center justify-center gap-1";
+                        content.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        // ================= SANDBOX CONTROLS =================
+        function setSandboxOuts(val) {
+            sandboxState.outs = parseInt(val, 10);
+            document.querySelectorAll('.sandbox-out-btn').forEach(btn => {
+                const isSel = parseInt(btn.dataset.val, 10) === sandboxState.outs;
+                btn.className = isSel ? 'sandbox-out-btn py-2 rounded-xl font-black border text-center transition-all bg-red-600 border-red-400 text-white shadow-md' : 'sandbox-out-btn py-2 rounded-xl font-black border text-center transition-all bg-slate-900 border-slate-700 text-slate-300';
+            });
+            updateSandboxScenario();
+        }
+
+        function setSandboxRunners(val) {
+            sandboxState.runnerConfigId = String(val);
+            const runnerCfg = BASERUNNING_CONTENT.runnerOptions.find(r => r.id === sandboxState.runnerConfigId);
+            if (runnerCfg && !runnerCfg.array.includes(sandboxState.playerBase)) {
+                sandboxState.playerBase = runnerCfg.array[0];
+            }
+            document.querySelectorAll('.sandbox-runner-btn').forEach(btn => {
+                const isSel = btn.dataset.val === sandboxState.runnerConfigId;
+                btn.className = isSel ? 'sandbox-runner-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] bg-amber-600 border-amber-400 text-white shadow-md' : 'sandbox-runner-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] bg-slate-900 border-slate-700 text-slate-300';
+            });
+            updateSandboxPlayerBaseButtons();
+            updateSandboxScenario();
+        }
+
+        function updateSandboxPlayerBaseButtons() {
+            const runnerCfg = BASERUNNING_CONTENT.runnerOptions.find(r => r.id === sandboxState.runnerConfigId);
+            const activeBases = runnerCfg ? runnerCfg.array : [1];
+            [1, 2, 3].forEach(b => {
+                const btn = document.getElementById(`sandboxBase${b}Btn`);
+                if (btn) {
+                    if (activeBases.includes(b)) {
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-25', 'cursor-not-allowed');
+                    } else {
+                        btn.disabled = true;
+                        btn.classList.add('opacity-25', 'cursor-not-allowed');
+                    }
+                }
+            });
+            document.querySelectorAll('.sandbox-pbase-btn').forEach(btn => {
+                const isSel = parseInt(btn.dataset.val, 10) === sandboxState.playerBase;
+                btn.className = isSel ? 'sandbox-pbase-btn py-2 rounded-xl font-black border text-center bg-cyan-600 border-cyan-400 text-white shadow-md' : 'sandbox-pbase-btn py-2 rounded-xl font-black border text-center bg-slate-900 border-slate-700 text-slate-300';
+            });
+        }
+
+        function setSandboxPlayerBase(val) {
+            sandboxState.playerBase = parseInt(val, 10);
+            document.querySelectorAll('.sandbox-pbase-btn').forEach(btn => {
+                const isSel = parseInt(btn.dataset.val, 10) === sandboxState.playerBase;
+                btn.className = isSel ? 'sandbox-pbase-btn py-2 rounded-xl font-black border text-center bg-cyan-600 border-cyan-400 text-white shadow-md' : 'sandbox-pbase-btn py-2 rounded-xl font-black border text-center bg-slate-900 border-slate-700 text-slate-300';
+            });
+            updateSandboxScenario();
+        }
+
+        function setSandboxHit(val) {
+            sandboxState.hitVariantId = String(val);
+            const hitVariant = BASERUNNING_CONTENT.hitVariants.find(h => h.id === sandboxState.hitVariantId);
+            if (hitVariant) {
+                const fieldersList = BASERUNNING_CONTENT.fielderGroups[hitVariant.fielderGroup] || ['ss'];
+                sandboxState.fielderKey = fieldersList[0];
+            }
+            document.querySelectorAll('.sandbox-hit-btn').forEach(btn => {
+                const isSel = btn.dataset.val === sandboxState.hitVariantId;
+                btn.className = isSel ? 'sandbox-hit-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] bg-emerald-600 border-emerald-400 text-white shadow-md' : 'sandbox-hit-btn py-2 px-1 rounded-xl font-black border text-center text-[11px] bg-slate-900 border-slate-700 text-slate-300';
+            });
+            updateSandboxScenario();
+        }
+
+        function updateSandboxScenario() {
+            const hitVariant = BASERUNNING_CONTENT.hitVariants.find(h => h.id === sandboxState.hitVariantId) || BASERUNNING_CONTENT.hitVariants[0];
+            const runnerCfg = BASERUNNING_CONTENT.runnerOptions.find(r => r.id === sandboxState.runnerConfigId) || BASERUNNING_CONTENT.runnerOptions[0];
+
+            const entry = {
+                matrixId: `SANDBOX_${sandboxState.outs}_${runnerCfg.id}_${sandboxState.playerBase}_${hitVariant.id}_${sandboxState.fielderKey}`,
+                outs: sandboxState.outs,
+                runnerConfigId: runnerCfg.id,
+                runners: [...runnerCfg.array],
+                playerBase: sandboxState.playerBase,
+                hitTypeId: hitVariant.hitTypeId,
+                hitVariantId: hitVariant.id,
+                direction: hitVariant.direction,
+                depth: hitVariant.depth,
+                fielderKey: sandboxState.fielderKey,
+                isDeepFly: hitVariant.isDeepFly
+            };
+
+            const sc = createScenarioFromMatrixEntry(entry, 9999);
+            if (!sc) return;
+
+            const badge = document.getElementById('sandboxStrategyBadge');
+            if (badge) {
+                if (sc.correct === 'A') {
+                    badge.className = "px-3 py-1 rounded-xl font-black text-xs bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20";
+                    badge.innerText = "🟢 直接衝壘 (A)";
+                } else if (sc.correct === 'B') {
+                    badge.className = "px-3 py-1 rounded-xl font-black text-xs bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20";
+                    badge.innerText = "🟡 離壘觀察 (B)";
+                } else {
+                    badge.className = "px-3 py-1 rounded-xl font-black text-xs bg-red-600 text-white shadow-md shadow-red-600/20";
+                    badge.innerText = "🔴 守住壘包 (C)";
+                }
+            }
+
+            const rhymeEl = document.getElementById('sandboxRhymeText');
+            const parentEl = document.getElementById('sandboxParentText');
+            const coachEl = document.getElementById('sandboxCoachText');
+            if (rhymeEl) rhymeEl.innerText = sc.rhyme || "看清局勢再行動！";
+            if (parentEl) parentEl.innerText = sc.parentTip || "觀察防守球員動作與出局數！";
+            if (coachEl) coachEl.innerText = sc.coachTip || "保持重心，注意指導員指令！";
+
+            loadSandboxQuestionToField(sc);
+        }
+
+        function loadSandboxQuestionToField(sc) {
+            const outTxt = document.getElementById('outCountText');
+            const baseTxt = document.getElementById('baseStatusText');
+            const hitBadge = document.getElementById('hitTypeBadge');
+
+            if (outTxt) outTxt.innerText = `${sc.outs} 出局`;
+            if (baseTxt) baseTxt.innerText = BASERUNNING_CONTENT.runnerOptions.find(r => r.id === sandboxState.runnerConfigId)?.text || '';
+            if (hitBadge) {
+                hitBadge.innerText = `${sc.hitTypeText} (${sc.hitDirection})`;
+                hitBadge.className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-blue-500 text-slate-950 tracking-wider";
+            }
+
+            currentVisualOccupiedBases = [...sc.runners];
+            setupRunnersForScenario(sc);
+            triggerBallFlight(sc.fielderKey, sc.batType);
+            drawStadium();
+        }
+
+        function playSandboxAction() {
+            const hitVariant = BASERUNNING_CONTENT.hitVariants.find(h => h.id === sandboxState.hitVariantId) || BASERUNNING_CONTENT.hitVariants[0];
+            const runnerCfg = BASERUNNING_CONTENT.runnerOptions.find(r => r.id === sandboxState.runnerConfigId) || BASERUNNING_CONTENT.runnerOptions[0];
+            const entry = {
+                matrixId: `SANDBOX_${sandboxState.outs}_${runnerCfg.id}_${sandboxState.playerBase}_${hitVariant.id}_${sandboxState.fielderKey}`,
+                outs: sandboxState.outs,
+                runnerConfigId: runnerCfg.id,
+                runners: [...runnerCfg.array],
+                playerBase: sandboxState.playerBase,
+                hitTypeId: hitVariant.hitTypeId,
+                hitVariantId: hitVariant.id,
+                direction: hitVariant.direction,
+                depth: hitVariant.depth,
+                fielderKey: sandboxState.fielderKey,
+                isDeepFly: hitVariant.isDeepFly
+            };
+            const sc = createScenarioFromMatrixEntry(entry, 9999);
+            if (!sc) return;
+
+            playHitSound();
+            playSuccessSound();
+            triggerOutcomeBanner("SAFE! 🟢", "完美依照規則跑壘！", true);
+            animateRunners(sc.correct, true);
+        }
+
+        function resetSandboxConditions() {
+            setSandboxOuts(1);
+            setSandboxRunners('12');
+            setSandboxPlayerBase(2);
+            setSandboxHit('grounder_infield');
+        }
+
+        // ================= 864 MATRIX EXPLORER MODAL =================
+        function openMatrixExplorerModal() {
+            toggleMatrixExplorerModal(true);
+            filterMatrixExplorer();
+        }
+
+        function toggleMatrixExplorerModal(show) {
+            const modal = document.getElementById('matrixExplorerModal');
+            if (modal) {
+                modal.classList.toggle('hidden', !show);
+            }
+        }
+
+        function filterMatrixExplorer() {
+            const outsFilter = document.getElementById('matrixFilterOuts')?.value || 'all';
+            const hitFilter = document.getElementById('matrixFilterHit')?.value || 'all';
+            const ansFilter = document.getElementById('matrixFilterAns')?.value || 'all';
+            const keyword = (document.getElementById('matrixFilterSearch')?.value || '').trim().toLowerCase();
+
+            const matrix = getScenarioMatrix();
+            const filtered = matrix.filter(item => {
+                if (outsFilter !== 'all' && item.outs !== parseInt(outsFilter, 10)) return false;
+                if (hitFilter !== 'all' && item.hitTypeId !== hitFilter) return false;
+                if (ansFilter !== 'all' && item.correct !== ansFilter) return false;
+                if (keyword) {
+                    const ruleData = BASERUNNING_CONTENT.ruleResults[item.ruleKey] || {};
+                    const textCorpus = `${item.matrixId} ${item.direction} ${item.depth} ${ruleData.rhyme || ''} ${ruleData.explanation || ''}`.toLowerCase();
+                    if (!textCorpus.includes(keyword)) return false;
+                }
+                return true;
+            });
+
+            renderMatrixExplorerList(filtered);
+        }
+
+        function renderMatrixExplorerList(list) {
+            const tbody = document.getElementById('matrixExplorerTableBody');
+            const summary = document.getElementById('matrixCountSummary');
+            if (!tbody) return;
+
+            if (summary) summary.innerText = `符合條件：${list.length} / 864 筆情境`;
+
+            const displayList = list.slice(0, 100); // 性能保護：最多渲染前 100 筆
+            tbody.innerHTML = displayList.map(item => {
+                const ruleData = BASERUNNING_CONTENT.ruleResults[item.ruleKey] || {};
+                const runnerCfg = BASERUNNING_CONTENT.runnerOptions.find(r => r.id === item.runnerConfigId);
+                const badgeColor = item.correct === 'A' ? 'bg-emerald-600 text-white' : (item.correct === 'B' ? 'bg-amber-500 text-slate-950' : 'bg-red-600 text-white');
+                const badgeText = item.correct === 'A' ? '衝壘 (A)' : (item.correct === 'B' ? '離壘 (B)' : '守壘 (C)');
+
+                return `
+                    <tr class="hover:bg-slate-800/60 transition-colors">
+                        <td class="p-2 font-bold text-slate-300">${item.outs}出局 / ${runnerCfg ? runnerCfg.text : ''}</td>
+                        <td class="p-2 font-black text-cyan-400">${item.playerBase}壘跑者</td>
+                        <td class="p-2 text-slate-300 font-bold">${item.direction}${item.depth}</td>
+                        <td class="p-2 text-center"><span class="px-2 py-0.5 rounded-lg text-[10px] font-black ${badgeColor}">${badgeText}</span></td>
+                        <td class="p-2 text-slate-300"><span class="text-amber-400 font-black">「${ruleData.rhyme || ''}」</span></td>
+                        <td class="p-2 text-center">
+                            <button onclick="loadScenarioFromMatrixRow('${item.matrixId}')" class="px-2 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-black text-[10px]">
+                                帶入白板
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function loadScenarioFromMatrixRow(matrixId) {
+            const matrix = getScenarioMatrix();
+            const item = matrix.find(m => m.matrixId === matrixId);
+            if (!item) return;
+
+            toggleMatrixExplorerModal(false);
+            switchGameMode('sandbox');
+
+            sandboxState.outs = item.outs;
+            sandboxState.runnerConfigId = item.runnerConfigId;
+            sandboxState.playerBase = item.playerBase;
+            sandboxState.hitVariantId = item.hitVariantId;
+            sandboxState.fielderKey = item.fielderKey;
+
+            setSandboxOuts(item.outs);
+            setSandboxRunners(item.runnerConfigId);
+            setSandboxPlayerBase(item.playerBase);
+            setSandboxHit(item.hitVariantId);
+        }
+
+        // ================= CANVAS OUTCOME BANNER =================
+        function triggerOutcomeBanner(text, subText, isSafe) {
+            outcomeBanner = {
+                active: true,
+                text: text,
+                subText: subText || "",
+                isSafe: isSafe,
+                startTime: Date.now()
+            };
+            setTimeout(() => {
+                outcomeBanner.active = false;
+            }, 2300);
+        }
+
+        function drawOutcomeBanner(ctx, w, h, scale) {
+            const elapsed = Date.now() - outcomeBanner.startTime;
+            if (elapsed > 2000) return;
+
+            // 柔和淡入淡出，絕不閃爍
+            const alpha = Math.min(1, Math.sin((elapsed / 2000) * Math.PI) * 1.25);
+            const cx = w / 2;
+            const cy = h / 2 - 12 * scale;
+
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+
+            // 優雅高級毛玻璃底盒 (Pill Badge)
+            const bannerW = 180 * scale;
+            const bannerH = 46 * scale;
+            const bgFill = outcomeBanner.isSafe ? "rgba(6, 78, 59, 0.92)" : "rgba(153, 27, 27, 0.92)";
+            const borderCol = outcomeBanner.isSafe ? "#34d399" : "#f87171";
+
+            ctx.fillStyle = bgFill;
+            ctx.strokeStyle = borderCol;
+            ctx.lineWidth = 2 * scale;
+
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(cx - bannerW / 2, cy - bannerH / 2, bannerW, bannerH, 23 * scale);
+            } else {
+                ctx.rect(cx - bannerW / 2, cy - bannerH / 2, bannerW, bannerH);
+            }
+            ctx.fill();
+            ctx.stroke();
+
+            // 裁決文字（白字端莊銳利）
+            ctx.fillStyle = "#ffffff";
+            ctx.font = `900 ${20 * scale}px Noto Sans TC, sans-serif`;
+            ctx.textAlign = "center";
+            ctx.fillText(outcomeBanner.text, cx, cy + 6.5 * scale);
+
+            ctx.restore();
+        }
+
+        // ================= LINE SHARE CARD =================
+        function copyLineShareCard() {
+            const totalQ = (generatedQuestions && generatedQuestions.length) || BASERUNNING_CONTENT.questionCount;
+            const acc = totalQ ? Math.round((currentCorrectCount / totalQ) * 100) : 0;
+            const honor = getHonorTitle(score);
+
+            const shareText = 
+`⚾【敦化少棒跑壘大師・訓練戰報】⚾
+👦 球員：#${playerJersey || '18'} ${playerName || '少棒球員'}
+🏆 獲得稱號：${honor}
+📊 測驗成果：答對 ${currentCorrectCount}/${totalQ} 題 (勝率 ${acc}%) | 總分 ${score} 分
+🔥 最高連勝：${maxStreakThisGame} 題
+---------------------------------
+🎯 跑壘三大核心意識診斷：
+✅ 強迫進壘意識：${acc >= 80 ? '⭐⭐⭐ 精準果斷（不猶豫）' : '⭐⭐ 需再加強'}
+✅ 飛球Tag-up意識：${acc >= 80 ? '⭐⭐⭐ 沉著冷靜（踩穩壘包）' : '⭐⭐ 偶有衝動'}
+✅ 兩出局衝刺直覺：${acc >= 90 ? '⭐⭐⭐ 瞬間反射（全速推進）' : '⭐⭐ 表現穩定'}
+---------------------------------
+🧢 教練寄語：
+記熟少棒跑壘黃金口訣，兩出局催落去，強迫進壘閉眼衝！
+🎮 免費線上特訓遊戲：https://bddgtw-tw.github.io/baserunner.game/`;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    alert("✅ 戰報已成功複製！\n可以立即貼到球隊 Line 群組與教練、家長分享！");
+                }).catch(() => {
+                    prompt("請複製以下戰報內容：", shareText);
+                });
+            } else {
+                prompt("請複製以下戰報內容：", shareText);
+            }
+        }
+
+        // ================= KEYBOARD & HAPTIC ERGONOMICS =================
+        // 觸控微震動 (Haptic Feedback) - 媲美手遊手把質感
+        function triggerHaptic(duration = 15) {
+            if (navigator.vibrate) {
+                try { navigator.vibrate(duration); } catch (e) {}
+            }
+        }
+
+        // 電腦端鍵盤快捷鍵 (1/2/3 或 A/B/C 選擇，Space/Enter 下一題)
+        window.addEventListener('keydown', function(e) {
+            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) {
+                return;
+            }
+
+            const key = e.key.toUpperCase();
+
+            // 若目前在答題且尚未作答
+            if (!answered && currentGameMode === 'challenge') {
+                if (key === '1' || key === 'A') {
+                    selectChoice('A');
+                } else if (key === '2' || key === 'B') {
+                    selectChoice('B');
+                } else if (key === '3' || key === 'C') {
+                    selectChoice('C');
+                }
+            } else if (answered && currentGameMode === 'challenge') {
+                // 已作答時按空白鍵或 Enter 直接前進下一題
+                if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    const nextBtn = document.getElementById('nextQuestionButton');
+                    if (nextBtn) {
+                        nextBtn.click();
+                    }
+                }
+            }
+        });
+</script>
 </body>
 </html>
