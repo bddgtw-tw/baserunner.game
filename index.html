@@ -4853,12 +4853,24 @@
                         if (nextBaseNumber) moveRunnerToBase(runner, nextBaseNumber);
                     });
                 } else if (currentQ.runTarget === "lead_off") {
+                    // B: 離壘觀察，向前小跑步 3 步到中途觀察點
                     fieldRunners.forEach(runner => {
-                        if (runner.isPlayer) moveRunnerTowardNextBase(runner, 0.32);
+                        if (runner.isPlayer) moveRunnerTowardNextBase(runner, 0.35);
                     });
                 } else if (currentQ.runTarget === "tag_up_3toH") {
                     fieldRunners.forEach(runner => {
                         if (runner.isPlayer && runner.base === 3) moveRunnerToBase(runner, 4);
+                    });
+                } else {
+                    // C: 守住原壘 / 回踩原壘 (Tag up 站穩或縮回原壘安全踩壘)
+                    fieldRunners.forEach(runner => {
+                        if (runner.isPlayer) {
+                            const basePos = getBasePosition(runner.base);
+                            if (basePos) {
+                                runner.targetX = basePos.x;
+                                runner.targetY = basePos.y;
+                            }
+                        }
                     });
                 }
             } else {
@@ -4875,7 +4887,7 @@
             document.getElementById('baseStatusText').innerText = `${currentQ.outs}出局 - 選擇後：${describeOccupiedBases(currentVisualOccupiedBases)}`;
 
             let start = null;
-            const duration = 1200;
+            const duration = 1600; // 跑者動作時長延長到 1.6 秒，動作清楚完整
 
             function step(timestamp) {
                 if (!start) start = timestamp;
@@ -5251,10 +5263,10 @@
                 eduBox.classList.remove('hidden');
             }
 
-            // 🌟 先在畫面上演出完整的 SAFE / OUT 大字、音效、衝壘/滑壘動畫（完整 1.8~2.0 秒），演出完畢才跳出前因後果剖析彈窗
+            // 🌟 先在畫面上演出完整的 SAFE / OUT 大字、音效、衝壘/滑壘/回踩動作（完整 2.5 秒），演出完畢才跳出前因後果剖析彈窗
             setTimeout(() => {
                 showAnswerExplanationModal(choiceId, selectedOpt, isCorrect);
-            }, 1950);
+            }, 2500);
         }
 
         function insertNextButton() {
