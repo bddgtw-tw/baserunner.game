@@ -1355,6 +1355,98 @@
                 border-radius: 0.95rem !important;
             }
         }
+        /* 16-BIT RETRO RETRO PIXEL & BEVEL STYLING (SFC / 熱血野球風) */
+        #fieldCanvas {
+            image-rendering: pixelated !important;
+            image-rendering: crisp-edges !important;
+        }
+        #fieldStage {
+            border: 3px solid #0f2e24 !important;
+            box-shadow: 
+                inset 2px 2px 0px rgba(255,255,255,0.6),
+                inset -2px -2px 0px rgba(0,0,0,0.35),
+                4px 4px 0px #0c1a16 !important;
+            border-radius: 1rem !important;
+        }
+        .glass-panel,
+        #coachPanel {
+            border: 2px solid #0f2e24 !important;
+            box-shadow: 
+                inset 2px 2px 0px rgba(255,255,255,0.7),
+                inset -2px -2px 0px rgba(0,0,0,0.18),
+                3px 3px 0px rgba(15,46,36,0.35) !important;
+            border-radius: 1rem !important;
+        }
+        .option-btn {
+            border: 2px solid #13382c !important;
+            box-shadow: 
+                inset 2px 2px 0px rgba(255,255,255,0.9),
+                inset -2px -2px 0px rgba(19,56,44,0.3),
+                2px 3px 0px #13382c !important;
+            border-radius: 0.85rem !important;
+            transition: transform 0.08s ease, box-shadow 0.08s ease !important;
+        }
+        .option-btn:hover {
+            background: #e6f6ee !important;
+            border-color: #0d2920 !important;
+        }
+        .option-btn:active {
+            transform: translate(2px, 2px) !important;
+            box-shadow: 
+                inset 2px 2px 0px rgba(0,0,0,0.35),
+                inset -1px -1px 0px rgba(255,255,255,0.6),
+                0px 0px 0px #13382c !important;
+        }
+        #reviewExplanationBtn {
+            border: 2px solid #78350f !important;
+            box-shadow: 
+                inset 2px 2px 0px rgba(255,255,255,0.8),
+                inset -2px -2px 0px rgba(0,0,0,0.25),
+                2px 3px 0px #78350f !important;
+            border-radius: 0.85rem !important;
+        }
+        #reviewExplanationBtn:active {
+            transform: translate(2px, 2px) !important;
+            box-shadow: 
+                inset 2px 2px 0px rgba(0,0,0,0.35),
+                0px 0px 0px #78350f !important;
+        }
+        #nextQuestionButton {
+            border: 2px solid #1e3a8a !important;
+            box-shadow: 
+                inset 2px 2px 0px rgba(255,255,255,0.7),
+                inset -2px -2px 0px rgba(0,0,0,0.3),
+                2px 3px 0px #1e3a8a !important;
+            border-radius: 0.85rem !important;
+        }
+        #nextQuestionButton:active {
+            transform: translate(2px, 2px) !important;
+            box-shadow: 
+                inset 2px 2px 0px rgba(0,0,0,0.35),
+                0px 0px 0px #1e3a8a !important;
+        }
+        #answerModal > div {
+            border: 3px solid #0f2e24 !important;
+            box-shadow: 
+                inset 2px 2px 0px rgba(255,255,255,0.75),
+                inset -2px -2px 0px rgba(0,0,0,0.3),
+                6px 6px 0px rgba(15,46,36,0.5) !important;
+            border-radius: 1.15rem !important;
+        }
+        #answerModalFooter button {
+            border: 2px solid #1e293b !important;
+            box-shadow: 
+                inset 1.5px 1.5px 0px rgba(255,255,255,0.7),
+                inset -1.5px -1.5px 0px rgba(0,0,0,0.25),
+                2px 2px 0px #0f172a !important;
+            border-radius: 0.85rem !important;
+        }
+        #answerModalFooter button:active {
+            transform: translate(2px, 2px) !important;
+            box-shadow: 
+                inset 2px 2px 0px rgba(0,0,0,0.35),
+                0px 0px 0px #0f172a !important;
+        }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden pb-4">
@@ -3407,6 +3499,272 @@
 
         window.addEventListener('resize', resizeCanvas);
 
+        // 16-BIT RETRO PIXEL PATTERNS & SPRITE RENDERER (SFC / 熱血高校野球風格)
+        let pixelPatterns = {
+            grass: null,
+            grassNight: null,
+            dirt: null,
+            dirtNight: null,
+            infieldGrass: null,
+            infieldGrassNight: null
+        };
+
+        function create16BitPatterns() {
+            function makeTile(w, h, drawFn) {
+                const c = document.createElement('canvas');
+                c.width = w;
+                c.height = h;
+                const pctx = c.getContext('2d');
+                drawFn(pctx, w, h);
+                return ctx.createPattern(c, 'repeat');
+            }
+
+            // 草地像素平鋪貼圖 (Dithered Retro Grass Pattern)
+            pixelPatterns.grass = makeTile(16, 16, (pctx) => {
+                pctx.fillStyle = "#1e5333";
+                pctx.fillRect(0, 0, 16, 16);
+                pctx.fillStyle = "#184529";
+                for (let y = 0; y < 16; y += 4) {
+                    for (let x = 0; x < 16; x += 4) {
+                        if ((x + y) % 8 === 0) pctx.fillRect(x, y, 2, 2);
+                    }
+                }
+                pctx.fillStyle = "#276840";
+                pctx.fillRect(2, 2, 2, 2);
+                pctx.fillRect(10, 6, 2, 2);
+                pctx.fillRect(6, 12, 2, 2);
+                pctx.fillRect(14, 14, 2, 2);
+            });
+
+            pixelPatterns.grassNight = makeTile(16, 16, (pctx) => {
+                pctx.fillStyle = "#0d3322";
+                pctx.fillRect(0, 0, 16, 16);
+                pctx.fillStyle = "#071e14";
+                for (let y = 0; y < 16; y += 4) {
+                    for (let x = 0; x < 16; x += 4) {
+                        if ((x + y) % 8 === 0) pctx.fillRect(x, y, 2, 2);
+                    }
+                }
+                pctx.fillStyle = "#12422c";
+                pctx.fillRect(2, 2, 2, 2);
+                pctx.fillRect(10, 6, 2, 2);
+                pctx.fillRect(6, 12, 2, 2);
+            });
+
+            // 內野草皮島像素貼圖
+            pixelPatterns.infieldGrass = makeTile(16, 16, (pctx) => {
+                pctx.fillStyle = "#235e39";
+                pctx.fillRect(0, 0, 16, 16);
+                pctx.fillStyle = "#1c4e2f";
+                for (let y = 0; y < 16; y += 4) {
+                    for (let x = 0; x < 16; x += 4) {
+                        if ((x + y) % 8 === 0) pctx.fillRect(x, y, 2, 2);
+                    }
+                }
+                pctx.fillStyle = "#2b7346";
+                pctx.fillRect(1, 1, 2, 2);
+                pctx.fillRect(9, 9, 2, 2);
+            });
+
+            pixelPatterns.infieldGrassNight = makeTile(16, 16, (pctx) => {
+                pctx.fillStyle = "#10402a";
+                pctx.fillRect(0, 0, 16, 16);
+                pctx.fillStyle = "#092418";
+                for (let y = 0; y < 16; y += 4) {
+                    for (let x = 0; x < 16; x += 4) {
+                        if ((x + y) % 8 === 0) pctx.fillRect(x, y, 2, 2);
+                    }
+                }
+            });
+
+            // 紅土像素顆粒貼圖 (Speckled Dirt Tilemap)
+            pixelPatterns.dirt = makeTile(16, 16, (pctx) => {
+                pctx.fillStyle = "#a24213";
+                pctx.fillRect(0, 0, 16, 16);
+                pctx.fillStyle = "#8a340b";
+                for (let y = 0; y < 16; y += 4) {
+                    for (let x = 0; x < 16; x += 4) {
+                        if ((x + y) % 8 === 0) pctx.fillRect(x, y, 2, 2);
+                    }
+                }
+                pctx.fillStyle = "#bc4f1a";
+                pctx.fillRect(4, 2, 2, 2);
+                pctx.fillRect(12, 10, 2, 2);
+                pctx.fillStyle = "#692506";
+                pctx.fillRect(2, 12, 2, 2);
+                pctx.fillRect(10, 4, 2, 2);
+            });
+
+            pixelPatterns.dirtNight = makeTile(16, 16, (pctx) => {
+                pctx.fillStyle = "#79290f";
+                pctx.fillRect(0, 0, 16, 16);
+                pctx.fillStyle = "#5c1d09";
+                for (let y = 0; y < 16; y += 4) {
+                    for (let x = 0; x < 16; x += 4) {
+                        if ((x + y) % 8 === 0) pctx.fillRect(x, y, 2, 2);
+                    }
+                }
+                pctx.fillStyle = "#8f3315";
+                pctx.fillRect(4, 2, 2, 2);
+                pctx.fillRect(12, 10, 2, 2);
+            });
+        }
+
+        // 24×24 像素 Q 版小球員渲染器 (SFC / 熱血野球風)
+        function drawPixelPlayer(ctx, cx, cy, opts) {
+            const scale = opts.scale || 1;
+            const px = scale * 0.95; // 每個虛擬像素的大小
+            const isPlayer = !!opts.isPlayer;
+            const isFielder = !!opts.isFielder;
+            const isHandling = !!opts.isHandling;
+            const state = opts.state || 'idle'; // 'idle' | 'run' | 'slide' | 'out' | 'safe'
+            const frame = opts.frame || 0; // 0, 1, 2
+            const badge = opts.badge || "";
+
+            ctx.save();
+            ctx.imageSmoothingEnabled = false;
+
+            // 配色方案：玩家 (亮藍+青)、隊友跑者 (紅+暗紅)、守備員 (深海軍藍+深藍，持球金色)
+            let capColor = isPlayer ? "#0284c7" : (isFielder ? (isHandling ? "#d97706" : "#1e293b") : "#dc2626");
+            let capVisorColor = isPlayer ? "#0369a1" : (isFielder ? (isHandling ? "#b45309" : "#0f172a") : "#b91c1c");
+            let skinColor = "#ffdfba";
+            let eyeColor = "#0f172a";
+            let eyeGlint = "#ffffff";
+            let jerseyColor = isPlayer ? "#38bdf8" : (isFielder ? (isHandling ? "#facc15" : "#334155") : "#ef4444");
+            let beltColor = "#0f172a";
+            let pantsColor = "#f8fafc";
+            let shoesColor = "#0f172a";
+
+            // 腳底微陰影
+            ctx.fillStyle = "rgba(15, 23, 42, 0.4)";
+            ctx.beginPath();
+            ctx.ellipse ? ctx.ellipse(cx, cy + 10 * scale, 8 * scale, 3.5 * scale, 0, 0, Math.PI * 2) : ctx.arc(cx, cy + 10 * scale, 6 * scale, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 滑壘姿態 (Sliding Pose)
+            if (state === 'slide') {
+                const ox = cx - 12 * px;
+                const oy = cy - 4 * px;
+                function p(x, y, w, h, col) {
+                    ctx.fillStyle = col;
+                    ctx.fillRect(ox + x * px, oy + y * px, w * px, h * px);
+                }
+                // 滑壘身體橫臥
+                p(2, 6, 8, 5, pantsColor);
+                p(0, 7, 3, 4, shoesColor);
+                p(9, 5, 8, 6, jerseyColor);
+                p(16, 2, 7, 7, capColor);
+                p(18, 5, 5, 4, skinColor);
+                p(21, 6, 2, 2, eyeColor);
+                p(22, 2, 4, 3, capVisorColor); // 帽簷向前衝
+                p(16, 9, 6, 3, skinColor);    // 手向前伸觸壘
+            } else {
+                // 站立或跑步姿態 (Idle or Running 3-frame stride)
+                const ox = cx - 12 * px;
+                const bobY = (state === 'run') ? (frame === 1 ? -2 : 0) : Math.sin(Date.now() / 200) * 0.8;
+                const oy = cy - 13 * px + bobY * px;
+
+                function p(x, y, w, h, col) {
+                    ctx.fillStyle = col;
+                    ctx.fillRect(ox + x * px, oy + y * px, w * px, h * px);
+                }
+
+                // 1. 帽子與大頭 (Cap & Big Chibi Head)
+                p(7, 0, 10, 3, capColor);
+                p(5, 3, 14, 4, capColor);
+                p(17, 4, 4, 2, capVisorColor); // 右側微凸帽簷
+
+                // 2. 臉龐與表情 (Face & Big Chibi Eyes)
+                p(6, 7, 12, 6, skinColor);
+                p(18, 7, 2, 3, skinColor); // 耳朵
+
+                if (state === 'out') {
+                    // 出局：打叉眼 > <
+                    p(9, 8, 2, 2, eyeColor);
+                    p(10, 9, 2, 2, eyeColor);
+                    p(14, 8, 2, 2, eyeColor);
+                    p(13, 9, 2, 2, eyeColor);
+                    p(11, 11, 2, 1, "#ef4444"); // 難過的嘴
+                } else {
+                    // 經典豆豆眼與亮點
+                    p(9, 8, 3, 3, eyeColor);
+                    p(14, 8, 3, 3, eyeColor);
+                    p(9, 8, 1, 1, eyeGlint);
+                    p(14, 8, 1, 1, eyeGlint);
+                    // 微笑嘴
+                    p(11, 11, 2, 1, "#b91c1c");
+                }
+
+                // 3. 球衣軀幹 (Jersey Body)
+                p(7, 13, 10, 6, jerseyColor);
+                p(7, 18, 10, 1, beltColor);
+
+                // 4. 手臂與裝備 (Arms / Glove / Bat)
+                if (isFielder) {
+                    // 守備員：右手手套
+                    p(4, 13, 3, 4, skinColor);
+                    p(17, 13, 4, 4, isHandling ? "#f59e0b" : "#b45309"); // 棕色/金色手套
+                } else {
+                    // 跑者揮臂動畫
+                    if (state === 'run') {
+                        if (frame === 0) {
+                            p(4, 12, 3, 4, skinColor);
+                            p(17, 14, 3, 4, skinColor);
+                        } else if (frame === 1) {
+                            p(4, 14, 3, 4, skinColor);
+                            p(17, 12, 3, 4, skinColor);
+                        } else {
+                            p(5, 13, 3, 4, skinColor);
+                            p(16, 13, 3, 4, skinColor);
+                        }
+                    } else {
+                        p(4, 13, 3, 5, skinColor);
+                        p(17, 13, 3, 5, skinColor);
+                    }
+                }
+
+                // 5. 球褲與雙腿 (Pants & Legs with 3-frame running stride)
+                if (state === 'run') {
+                    if (frame === 0) {
+                        // 左腳前衝、右腳後蹬
+                        p(6, 19, 4, 3, pantsColor);
+                        p(5, 22, 4, 2, shoesColor);
+                        p(14, 19, 4, 2, pantsColor);
+                        p(16, 21, 4, 2, shoesColor);
+                    } else if (frame === 1) {
+                        // 騰空步
+                        p(8, 19, 4, 3, pantsColor);
+                        p(8, 22, 4, 2, shoesColor);
+                        p(12, 19, 4, 3, pantsColor);
+                        p(12, 22, 4, 2, shoesColor);
+                    } else {
+                        // 右腳前衝、左腳後蹬
+                        p(14, 19, 4, 3, pantsColor);
+                        p(15, 22, 4, 2, shoesColor);
+                        p(6, 19, 4, 2, pantsColor);
+                        p(4, 21, 4, 2, shoesColor);
+                    }
+                } else {
+                    // 靜止站立
+                    p(7, 19, 4, 3, pantsColor);
+                    p(13, 19, 4, 3, pantsColor);
+                    p(6, 22, 5, 2, shoesColor);
+                    p(13, 22, 5, 2, shoesColor);
+                }
+            }
+
+            // 6. 胸前背號或守備代號（精準對齊軀幹位置）
+            if (badge) {
+                ctx.fillStyle = isHandling ? "#0f172a" : "#ffffff";
+                ctx.font = `900 ${7.5 * scale}px Inter, Noto Sans TC`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(badge, cx, cy + 2.5 * px);
+            }
+
+            ctx.restore();
+        }
+
         function drawStadium() {
             const w = canvas.width;
             const h = canvas.height;
@@ -3417,14 +3775,16 @@
             const scX = (v) => v * scale;
             const scY = (v) => v * scale;
 
-            // 1. 自然沉穩的大聯盟級草皮底色（優雅低飽和，非刺眼螢光綠）
-            const grassStart = nightMode ? "#0d3322" : "#1b4d2e";
-            const grassEnd = nightMode ? "#061a11" : "#133820";
+            // 1. 自然沉穩的大聯盟級草皮底色（16-bit 像素平鋪貼圖 + 優雅漸層烘托）
+            if (!pixelPatterns.grass) create16BitPatterns();
+            ctx.fillStyle = nightMode ? (pixelPatterns.grassNight || "#0d3322") : (pixelPatterns.grass || "#1b4d2e");
+            ctx.fillRect(0, 0, w, h);
 
-            const bgGradient = ctx.createRadialGradient(scX(200), scY(210), scX(30), scX(200), scY(210), scX(250));
-            bgGradient.addColorStop(0, grassStart);
-            bgGradient.addColorStop(1, grassEnd);
-            ctx.fillStyle = bgGradient;
+            // 疊加微光暈漸層，加強球場向心景深感
+            const grassVignette = ctx.createRadialGradient(scX(200), scY(210), scX(40), scX(200), scY(210), scX(260));
+            grassVignette.addColorStop(0, "rgba(255, 255, 255, 0.04)");
+            grassVignette.addColorStop(1, "rgba(0, 0, 0, 0.35)");
+            ctx.fillStyle = grassVignette;
             ctx.fillRect(0, 0, w, h);
 
             // 2. 經典扇形割草紋理 (Subtle Lawn Mower Arcs - 極低透明度，典雅不花俏)
@@ -3484,11 +3844,8 @@
             ctx.lineTo(scX(foulLines.right.x), scY(foulLines.right.y));
             ctx.stroke();
 
-            // 7. 內野紅土菱形 (Infield Dirt - 溫潤泥土漸層)
-            const dirtGrad = ctx.createRadialGradient(scX(center.x), scY(center.y), scX(10), scX(center.x), scY(center.y), scX(120));
-            dirtGrad.addColorStop(0, nightMode ? "#832d12" : "#a83e10");
-            dirtGrad.addColorStop(1, nightMode ? "#6b230d" : "#92340c");
-            ctx.fillStyle = dirtGrad;
+            // 7. 內野紅土菱形 (Infield Dirt - 16-bit 像素紅土平鋪貼圖)
+            ctx.fillStyle = nightMode ? (pixelPatterns.dirtNight || "#79290f") : (pixelPatterns.dirt || "#a24213");
             ctx.beginPath();
             ctx.moveTo(scX(bases.home.x), scY(bases.home.y + 12));
             ctx.lineTo(scX(bases.first.x + 22), scY(bases.first.y));
@@ -3497,8 +3854,8 @@
             ctx.closePath();
             ctx.fill();
 
-            // 8. 內野草皮島 (Infield Grass Island)
-            ctx.fillStyle = nightMode ? "#0f3d28" : "#205735";
+            // 8. 內野草皮島 (Infield Grass Island - 16-bit 像素內野草皮貼圖)
+            ctx.fillStyle = nightMode ? (pixelPatterns.infieldGrassNight || "#0f3d28") : (pixelPatterns.infieldGrass || "#235e39");
             ctx.beginPath();
             ctx.moveTo(scX(200), scY(284));
             ctx.lineTo(scX(274), scY(210));
@@ -3691,31 +4048,28 @@
                 const isHandling = (key === targetFielderKey);
                 
                 if (isHandling) {
-                    ctx.fillStyle = "rgba(234, 179, 8, 0.4)";
+                    ctx.save();
+                    // 16-bit 像素感亮金黃選取光圈
+                    const haloR = (16 + Math.sin(Date.now() / 150) * 2.5) * scale;
+                    ctx.fillStyle = "rgba(234, 179, 8, 0.28)";
                     ctx.beginPath();
-                    ctx.arc(pos.x * scale, pos.y * scale, 15 * scale, 0, Math.PI * 2);
+                    ctx.arc(pos.x * scale, pos.y * scale, haloR, 0, Math.PI * 2);
                     ctx.fill();
-                    
                     ctx.strokeStyle = "#eab308";
                     ctx.lineWidth = 2 * scale;
-                    ctx.beginPath();
-                    ctx.arc(pos.x * scale, pos.y * scale, (15 + Math.sin(Date.now() / 150) * 3) * scale, 0, Math.PI * 2);
                     ctx.stroke();
+                    ctx.restore();
                 }
 
-                ctx.fillStyle = isHandling ? "#eab308" : "rgba(30, 41, 59, 0.9)";
-                ctx.beginPath();
-                ctx.arc(pos.x * scale, pos.y * scale, 10 * scale, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = isHandling ? "#ffffff" : "rgba(255,255,255,0.3)";
-                ctx.lineWidth = 1.2 * scale;
-                ctx.stroke();
-
-                ctx.fillStyle = isHandling ? "#0f172a" : "#cbd5e1";
-                ctx.font = `900 ${9 * scale}px Inter`;
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText(key, pos.x * scale, pos.y * scale);
+                // 24×24 像素 Q 版守備員
+                drawPixelPlayer(ctx, pos.x * scale, pos.y * scale, {
+                    scale: scale,
+                    isPlayer: false,
+                    isFielder: true,
+                    isHandling: isHandling,
+                    state: isHandling ? 'idle' : 'idle',
+                    badge: key
+                });
             }
         }
 
@@ -3843,44 +4197,41 @@
                 const rX = (runner.startX + (runner.targetX - runner.startX) * runner.animProgress) * scale;
                 const rY = (runner.startY + (runner.targetY - runner.startY) * runner.animProgress) * scale;
 
-                // 地面柔和陰影
-                ctx.fillStyle = "rgba(15, 23, 42, 0.4)";
-                ctx.beginPath();
-                ctx.ellipse ? ctx.ellipse(rX, rY + 7 * scale, 7 * scale, 3 * scale, 0, 0, Math.PI * 2) : ctx.arc(rX, rY + 7 * scale, 5 * scale, 0, Math.PI * 2);
-                ctx.fill();
+                // 判斷動作狀態 (state: idle | run | slide | out)
+                let runnerState = 'idle';
+                let runFrame = 0;
+                const isMoving = runner.animProgress > 0 && runner.animProgress < 1;
+
+                if (runner.taggedOut) {
+                    runnerState = 'out';
+                } else if (isMoving) {
+                    // 近壘包滑壘 (最後 15% 行程)
+                    if (runner.animProgress > 0.85) {
+                        runnerState = 'slide';
+                    } else {
+                        runnerState = 'run';
+                        runFrame = Math.floor(Date.now() / 140) % 3;
+                    }
+                }
 
                 // 玩家跑者：精緻柔和淡藍光圈（不刺眼）
                 if (runner.isPlayer) {
-                    const glowRadius = (13 + Math.sin(Date.now() / 150) * 2.5) * scale;
+                    const glowRadius = (15 + Math.sin(Date.now() / 150) * 2.5) * scale;
                     ctx.fillStyle = "rgba(56, 189, 248, 0.28)";
                     ctx.beginPath();
                     ctx.arc(rX, rY, glowRadius, 0, Math.PI * 2);
                     ctx.fill();
                 }
 
-                // 球衣身體 (Jersey)
-                const bodyColor = runner.isPlayer ? "#0284c7" : "#b91c1c";
-                ctx.fillStyle = bodyColor;
-                ctx.beginPath();
-                ctx.arc(rX, rY, 8.5 * scale, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = "#ffffff";
-                ctx.lineWidth = 1.8 * scale;
-                ctx.stroke();
-
-                // 帽子與微凸帽簷 (Cap with Visor - 指向跑動方向)
-                ctx.fillStyle = runner.isPlayer ? "#0369a1" : "#991b1b";
-                ctx.beginPath();
-                ctx.arc(rX, rY - 3 * scale, 5.5 * scale, Math.PI, 2 * Math.PI);
-                ctx.fill();
-                // 帽簷小細節
-                ctx.fillRect(rX - 4 * scale, rY - 4 * scale, 8 * scale, 2 * scale);
-
-                // 背號 / 角色文字
-                ctx.fillStyle = "#ffffff";
-                ctx.font = `900 ${8.5 * scale}px Inter, Noto Sans TC`;
-                ctx.textAlign = "center";
-                ctx.fillText(runner.label || (runner.isPlayer ? "我" : "隊"), rX, rY + 3.2 * scale);
+                // 24×24 像素 Q 版跑者
+                drawPixelPlayer(ctx, rX, rY, {
+                    scale: scale,
+                    isPlayer: runner.isPlayer,
+                    isFielder: false,
+                    state: runnerState,
+                    frame: runFrame,
+                    badge: runner.label || (runner.isPlayer ? "我" : "隊")
+                });
 
                 // 👦 小球員視角：清爽的「👉 我在此壘」微浮動指示牌
                 if (runner.isPlayer) {
@@ -3893,7 +4244,7 @@
                     const tagW = 56 * scale;
                     const tagH = 15 * scale;
                     let tagX = rX - tagW / 2;
-                    const tagY = rY - 24 * scale + bounceY;
+                    const tagY = rY - 26 * scale + bounceY;
 
                     // 邊界防溢出夾取 (Clamping)：確保標籤永遠完整顯示於畫布內，絕不被邊框切斷
                     const maxW = canvas.width;
