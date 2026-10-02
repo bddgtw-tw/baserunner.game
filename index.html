@@ -4239,7 +4239,13 @@
                 let heightRatio = 0;
 
                 if (isGrounder) {
-                    heightRatio = Math.abs(Math.sin(progress * Math.PI * ballAnim.bounceCount)) * 0.1;
+                    // 滾地球真實彈跳物理：次數 4~5 次，每次彈跳隨進度衰減，拋物線 Math.sin 清楚彈起
+                    const cycle = progress * ballAnim.bounceCount;
+                    const bouncePhase = cycle % 1; // 0 ~ 1 當前彈跳弧度
+                    // 彈跳高度隨時間遞減 (1 -> 0.4)
+                    const decay = Math.max(0.35, 1 - progress * 0.7);
+                    // 清楚半圓拋物線彈跳
+                    heightRatio = Math.sin(bouncePhase * Math.PI) * decay;
                 }
 
                 return { x, y, height: heightRatio * ballAnim.arcHeight * scale };
@@ -4247,9 +4253,9 @@
 
             function getFlySeriesControlPoint() {
                 const arcRatioByType = {
-                    line_drive: 0.24,
-                    clean_hit: 0.42,
-                    fly_ball: 0.95
+                    line_drive: 0.28,
+                    clean_hit: 0.48,
+                    fly_ball: 0.98
                 };
                 const arcRatio = arcRatioByType[ballAnim.type] || 0.7;
                 return {
@@ -4269,15 +4275,15 @@
             // Draw the full planned ball path first; the ball then travels along it.
             ctx.save();
             ctx.strokeStyle = ballAnim.trailColor;
-            ctx.lineWidth = Math.max(1.2, 2.4 * scale);
-            ctx.setLineDash(isGrounder ? [4 * scale, 5 * scale] : []);
+            ctx.lineWidth = Math.max(1.2, 2.2 * scale);
+            ctx.setLineDash(isGrounder ? [3 * scale, 4 * scale] : []);
             ctx.beginPath();
             ctx.moveTo(startX, startY);
             if (isFlySeries) {
                 const controlPoint = getFlySeriesControlPoint();
                 ctx.quadraticCurveTo(controlPoint.x, controlPoint.y, endX, endY);
             } else {
-                const segments = 28;
+                const segments = 48;
                 for (let i = 1; i <= segments; i++) {
                     const point = getBallPathPoint(i / segments);
                     ctx.lineTo(point.x, point.y - point.height);
@@ -4286,12 +4292,16 @@
             ctx.stroke();
             ctx.setLineDash([]);
 
+            // 滾地球落地彈跳點 (Bounce Impact Marks)
             if (isGrounder) {
-                ctx.fillStyle = "rgba(245, 158, 11, 0.38)";
-                for (let i = 1; i <= 5; i++) {
-                    const point = getBallPathPoint(i / 6);
+                ctx.fillStyle = "rgba(180, 83, 9, 0.55)";
+                for (let b = 1; b < ballAnim.bounceCount; b++) {
+                    const bProg = b / ballAnim.bounceCount;
+                    const bpX = (ballAnim.x + (ballAnim.targetX - ballAnim.x) * bProg) * scale;
+                    const bpY = (ballAnim.y + (ballAnim.targetY - ballAnim.y) * bProg) * scale;
+                    // 落地小土塵光斑
                     ctx.beginPath();
-                    ctx.arc(point.x, point.y, 2.2 * scale, 0, Math.PI * 2);
+                    ctx.ellipse ? ctx.ellipse(bpX, bpY, 3.5 * scale, 1.8 * scale, 0, 0, Math.PI * 2) : ctx.arc(bpX, bpY, 2.5 * scale, 0, Math.PI * 2);
                     ctx.fill();
                 }
             }
@@ -4305,8 +4315,9 @@
             const h = isFlySeries ? 0 : currentPoint.height;
 
             if (isGrounder) {
-                ballRadius = 4.2;
-                shadowRadius = 4.4;
+                ballRadius = 4.5;
+                // 陰影隨球離地高度放大縮小，加強 3D 彈跳感
+                shadowRadius = Math.max(2, 4.5 - (h / (10 * scale)));
             } else if (ballAnim.type === "line_drive") {
                 ballRadius = 4.6;
                 shadowRadius = 3.8;
@@ -4318,26 +4329,33 @@
                 shadowRadius = 3.5;
             }
 
-            ctx.fillStyle = "rgba(15, 23, 42, 0.4)";
+            // 地面本體陰影 (Ground Shadow - 永遠留在地面 curY)
+            ctx.fillStyle = "rgba(15, 23, 42, 0.45)";
             ctx.beginPath();
-            ctx.arc(curX, curY, shadowRadius * scale, 0, Math.PI * 2);
+            ctx.ellipse ? ctx.ellipse(curX, curY, shadowRadius * scale, shadowRadius * 0.55 * scale, 0, 0, Math.PI * 2) : ctx.arc(curX, curY, shadowRadius * scale, 0, Math.PI * 2);
             ctx.fill();
 
-            if (isGrounder && p > 0.12 && p < 0.92) {
-                ctx.fillStyle = "rgba(180, 83, 9, 0.42)";
-                ctx.beginPath();
-                ctx.arc(curX - 4 * scale, curY + 1 * scale, 5 * scale, 0, Math.PI * 2);
-                ctx.fill();
+            // 滾地球落地瞬間小塵煙
+            if (isGrounder) {
+                const bouncePhase = (p * ballAnim.bounceCount) % 1;
+                if (bouncePhase < 0.15 || bouncePhase > 0.88) {
+                    ctx.fillStyle = "rgba(217, 119, 6, 0.45)";
+                    ctx.beginPath();
+                    ctx.arc(curX - 3 * scale, curY, 3 * scale, 0, Math.PI * 2);
+                    ctx.arc(curX + 3 * scale, curY, 2.5 * scale, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             }
 
+            // 空中實體球 (Ball in the Air - 高度為 curY - h)
             ctx.fillStyle = "#ffffff";
             ctx.beginPath();
             ctx.arc(curX, curY - h, ballRadius * scale, 0, Math.PI * 2);
             ctx.fill();
-            ctx.strokeStyle = "rgba(220, 38, 38, 0.7)";
-            ctx.lineWidth = 1 * scale;
+            ctx.strokeStyle = "rgba(220, 38, 38, 0.85)";
+            ctx.lineWidth = 1.2 * scale;
             ctx.beginPath();
-            ctx.arc(curX, curY - h, (ballRadius - 1.4) * scale, 0.2, Math.PI - 0.2);
+            ctx.arc(curX, curY - h, (ballRadius - 1.2) * scale, 0.2, Math.PI - 0.2);
             ctx.stroke();
         }
 
@@ -4789,28 +4807,30 @@
             ballAnim.targetY = fielderPos.y;
 
             if (batType === "fly_ball") {
-                ballAnim.arcHeight = 130;
+                ballAnim.arcHeight = 140;
                 ballAnim.bounceCount = 0;
                 ballAnim.trailColor = "rgba(255, 255, 255, 0.48)";
             } else if (batType === "clean_hit") {
-                ballAnim.arcHeight = 58;
+                ballAnim.arcHeight = 65;
                 ballAnim.bounceCount = 1;
                 ballAnim.trailColor = "rgba(250, 204, 21, 0.45)";
             } else if (batType === "line_drive") {
-                ballAnim.arcHeight = 34;
+                ballAnim.arcHeight = 38;
                 ballAnim.bounceCount = 0;
                 ballAnim.trailColor = "rgba(248, 250, 252, 0.6)";
             } else { 
-                ballAnim.arcHeight = 24;
-                ballAnim.bounceCount = 7;
-                ballAnim.trailColor = "rgba(245, 158, 11, 0.45)";
+                // 滾地球：彈跳高度增加到 36，彈跳次數設為 4 次（每次彈跳節奏分明清晰），落塵有勁
+                ballAnim.arcHeight = 36;
+                ballAnim.bounceCount = 4;
+                ballAnim.trailColor = "rgba(245, 158, 11, 0.55)";
             }
 
             if (window.ballInterval) clearInterval(window.ballInterval);
             if (window.ballTimeout) clearTimeout(window.ballTimeout);
             
             const fps = 60;
-            const duration = batType === "grounder" ? 1.25 : (batType === "fly_ball" ? 1.8 : 1.35); 
+            // 飛行速度放慢：滾地球由 1.25s 放慢至 2.1s；高飛球放慢至 2.5s；平飛球放慢至 1.85s
+            const duration = batType === "grounder" ? 2.1 : (batType === "fly_ball" ? 2.5 : 1.85); 
             const totalSteps = fps * duration;
             let step = 0;
 
