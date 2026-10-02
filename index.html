@@ -1450,6 +1450,62 @@
                 inset 2px 2px 0px rgba(0,0,0,0.35),
                 0px 0px 0px #0f172a !important;
         }
+
+        /* 16-BIT 像素風計分板與球場 HUD 統一 (Out Overlay & Status Badges) */
+        #outCounterOverlay {
+            background: #ffffff !important;
+            border: 2px solid #0f172a !important;
+            border-radius: 4px !important; /* 像素風直角微圓角 */
+            box-shadow: 
+                inset 1px 1px 0px #ffffff,
+                inset -1px -1px 0px #cbd5e1,
+                2px 2px 0px #0f172a !important;
+            padding: 0.35rem 0.65rem !important;
+        }
+        #outCountText {
+            font-family: 'Press Start 2P', monospace, sans-serif !important;
+            font-size: 0.72rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.5px !important;
+            color: #dc2626 !important;
+            text-shadow: 1px 1px 0px #fecaca !important;
+        }
+        #outDots span {
+            border-radius: 2px !important; /* 像素方塊指示燈 (Pixel Out LED) */
+            width: 0.85rem !important;
+            height: 0.85rem !important;
+            border: 1.5px solid #0f172a !important;
+            box-shadow: inset 1px 1px 0px rgba(255,255,255,0.4) !important;
+        }
+        #outDots span.bg-red-600 {
+            background: #ef4444 !important;
+            box-shadow: 
+                inset 1px 1px 0px #fca5a5,
+                0 0 4px #ef4444 !important;
+        }
+        #hitTypeBadge {
+            border: 2px solid #0f172a !important;
+            border-radius: 4px !important;
+            box-shadow: 
+                inset 1px 1px 0px rgba(255,255,255,0.6),
+                inset -1px -1px 0px rgba(0,0,0,0.3),
+                2px 2px 0px #0f172a !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.5px !important;
+        }
+        #scorePanel {
+            border: 2px solid #0f2e24 !important;
+            border-radius: 6px !important;
+            box-shadow: 
+                inset 2px 2px 0px #ffffff,
+                inset -2px -2px 0px #cbd5e1,
+                3px 3px 0px #0f2e24 !important;
+        }
+        #scoreText, #streakText {
+            font-family: monospace, sans-serif !important;
+            font-weight: 900 !important;
+            letter-spacing: 1px !important;
+        }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden pb-4">
@@ -3771,6 +3827,92 @@
             ctx.restore();
         }
 
+        /**
+         * 16-bit 像素風右打者 (Right-handed Batter)
+         * 站立於本壘板左側打擊框 (Left Batter Box, 面對投手丘)
+         * 具備 16-bit SFC / 熱血高校風格之頭盔、側身站姿、球衣、雙手握棒蓄力準備微動態
+         */
+        function drawPixelBatter(ctx, scale) {
+            const home = bases.home;
+            // 右打者位於本壘板左側框 (leftBoxX = home.x - 10 - 18 = 172, boxTop = home.y - 32)
+            // 打擊框寬 18, 高 46；打者中心取 X: 181, Y: home.y - 8 = 316
+            const bx = 181 * scale;
+            const by = (home.y - 8) * scale;
+            const px = scale * 0.95;
+
+            ctx.save();
+            ctx.imageSmoothingEnabled = false;
+
+            // 腳底微陰影 (打擊區地面)
+            ctx.fillStyle = "rgba(15, 23, 42, 0.4)";
+            ctx.beginPath();
+            ctx.ellipse ? ctx.ellipse(bx, by + 10 * scale, 8 * scale, 3.5 * scale, 0, 0, Math.PI * 2) : ctx.arc(bx, by + 10 * scale, 6 * scale, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 準備打擊之微動態 (蓄力呼吸晃動 + 球棒輕微晃動)
+            const stanceSway = Math.sin(Date.now() / 220);
+            const batWiggle = Math.sin(Date.now() / 160);
+            const ox = bx - 12 * px;
+            const oy = by - 13 * px + stanceSway * 0.6 * px;
+
+            function p(x, y, w, h, col) {
+                ctx.fillStyle = col;
+                ctx.fillRect(ox + x * px, oy + y * px, w * px, h * px);
+            }
+
+            // 配色方案：打擊頭盔（深藍）、球衣（進攻方標準亮藍/青）、球棒（經典木質褐金色）
+            const helmColor = "#1e3a8a";     // 打擊頭盔主體
+            const helmVisor = "#172554";     // 頭盔帽簷（護耳面向投手）
+            const skinColor = "#ffdfba";     // 膚色
+            const eyeColor = "#0f172a";      // 眼神專注
+            const jerseyColor = "#38bdf8";   // 進攻方球衣
+            const beltColor = "#0f172a";     // 腰帶
+            const pantsColor = "#f8fafc";    // 球褲
+            const shoesColor = "#0f172a";    // 釘鞋
+            const batWood = "#f59e0b";       // 木棒主體
+            const batDark = "#b45309";       // 木棒陰影/握把
+            const batGrip = "#78350f";       // 握把帶
+
+            // 1. 球棒 (Baseball Bat - 側後方高舉斜靠肩上準備揮擊)
+            // 隨時間微晃動 (batWiggle)
+            const batOffX = Math.round(batWiggle * 0.8);
+            p(3 + batOffX, -4, 3, 5, batWood);        // 球棒厚棒頭
+            p(4 + batOffX, -4, 1, 5, "#fde68a");      // 球棒高光
+            p(4 + batOffX, 1, 2, 5, batWood);         // 棒身中段
+            p(5 + batOffX, 6, 2, 4, batDark);         // 棒身過渡
+            p(6 + batOffX, 10, 2, 3, batGrip);        // 棒尾握把處
+
+            // 2. 打擊頭盔與護耳 (Batting Helmet with Ear Flap facing pitcher)
+            p(7, 0, 10, 3, helmColor);
+            p(5, 3, 13, 5, helmColor);
+            p(17, 3, 3, 3, helmVisor);                // 頭盔前簷 (朝向右方投手)
+            p(11, 7, 5, 2, helmVisor);                // 打擊頭盔右側護耳
+
+            // 3. 臉龐、側臉專注目光 (Face looking towards pitcher/mound)
+            p(6, 7, 7, 5, skinColor);
+            p(13, 7, 3, 3, skinColor);                // 面頰
+            p(13, 7, 2, 2, eyeColor);                 // 專注盯著投手的眼神
+            p(14, 7, 1, 1, "#ffffff");                // 眼神高光
+
+            // 4. 側身軀幹與進攻方球衣 (Torso in batting stance)
+            p(7, 12, 9, 6, jerseyColor);
+            p(7, 18, 9, 1, beltColor);
+
+            // 5. 雙手緊握球棒 (Hands gripping the bat)
+            p(5 + batOffX, 10, 3, 3, skinColor);      // 上方右手
+            p(6 + batOffX, 12, 3, 3, skinColor);      // 下方左手
+            p(7, 13, 3, 3, jerseyColor);              // 右肩膀抬起
+
+            // 6. 打擊開腿蓄力站姿 (Batting Stance Legs)
+            // 雙腿微彎、重心微偏後腳
+            p(6, 19, 4, 3, pantsColor);               // 後腳 (左腿)
+            p(5, 22, 5, 2, shoesColor);
+            p(13, 19, 4, 3, pantsColor);              // 前腳微點地面 (右腿)
+            p(13, 22, 5, 2, shoesColor);
+
+            ctx.restore();
+        }
+
         function drawStadium() {
             const w = canvas.width;
             const h = canvas.height;
@@ -3883,6 +4025,7 @@
 
             // 10. 本壘打擊區 (Batter's Boxes)
             drawHomePlateArea(scale);
+            drawPixelBatter(ctx, scale);
 
             // 11. 投手丘圓形高地與純白投手板 (Pitcher's Mound & Rubber)
             ctx.fillStyle = nightMode ? "#6b230d" : "#8c320d";
@@ -4200,8 +4343,8 @@
 
         function drawRunners(scale) {
             fieldRunners.forEach(runner => {
-                const rX = (runner.startX + (runner.targetX - runner.startX) * runner.animProgress) * scale;
-                const rY = (runner.startY + (runner.targetY - runner.startY) * runner.animProgress) * scale;
+                let baseX = (runner.startX + (runner.targetX - runner.startX) * runner.animProgress);
+                let baseY = (runner.startY + (runner.targetY - runner.startY) * runner.animProgress);
 
                 // 判斷動作狀態 (state: idle | run | slide | out)
                 let runnerState = 'idle';
@@ -4218,7 +4361,40 @@
                         runnerState = 'run';
                         runFrame = Math.floor(Date.now() / 140) % 3;
                     }
+                } else {
+                    // 靜止待機時：在跑壘線上「前後稍微移動（要跑要跑的感覺）」- 經典棒球離壘微動態 (Lead Shuffle)
+                    // 一壘往二壘跑方向：向量 (-1, -1) / 二壘往三壘：向量 (-1, 1) / 三壘往本壘：向量 (1, 1)
+                    let dirX = 0;
+                    let dirY = 0;
+                    if (runner.base === 1) {
+                        dirX = -0.707;
+                        dirY = -0.707;
+                    } else if (runner.base === 2) {
+                        dirX = -0.707;
+                        dirY = 0.707;
+                    } else if (runner.base === 3) {
+                        dirX = 0.707;
+                        dirY = 0.707;
+                    }
+
+                    if (dirX !== 0 || dirY !== 0) {
+                        // 雙重頻率模擬重心轉移：緩慢假動作前傾 + 急促蓄力微探步
+                        const now = Date.now();
+                        const seed = (runner.base * 777) + (runner.isPlayer ? 100 : 0);
+                        const t = (now + seed) / 220;
+                        const leadDist = Math.sin(t) * 2.8 + Math.sin(t * 2.3) * 1.2; // 沿跑壘線前後位移約 ±4px
+                        baseX += dirX * leadDist;
+                        baseY += dirY * leadDist;
+
+                        // 腳步呈現要跑要跑的小踏步微動態 (1 / 0 交替)
+                        if (Math.abs(leadDist) > 1.8) {
+                            runFrame = Math.floor((now + seed) / 160) % 2;
+                        }
+                    }
                 }
+
+                const rX = baseX * scale;
+                const rY = baseY * scale;
 
                 // 玩家跑者：精緻柔和淡藍光圈（不刺眼）
                 if (runner.isPlayer) {
@@ -4239,12 +4415,12 @@
                     badge: runner.label || (runner.isPlayer ? "我" : "隊")
                 });
 
-                // 👦 小球員視角：16-bit 像素風「👇」往下指的手動態指標
+                // 👦 小球員視角：經典 16-bit 像素風「👇」往下指的手動態指標
                 if (runner.isPlayer) {
                     const bounceY = Math.sin(Date.now() / 140) * 3 * scale;
                     const hx = rX;
-                    const hy = rY - 26 * scale + bounceY;
-                    const pS = scale * 1.15; // 像素單位尺寸放大，辨識度極高
+                    const hy = rY - 28 * scale + bounceY;
+                    const pS = scale * 1.0; // 每個像素單元
 
                     ctx.save();
                     ctx.imageSmoothingEnabled = false;
@@ -4254,27 +4430,55 @@
                         ctx.fillRect(hx + rx * pS, hy + ry * pS, rw * pS, rh * pS);
                     }
 
-                    // 16-bit 像素手勢專屬調色（金黃手套 + 亮眼食指）
-                    const cOutline = "#0f172a"; // 墨黑外框
-                    const cGlove   = "#f59e0b"; // 經典棒球手套暖黃金
-                    const cGloveSh = "#b45309"; // 拳頭暗部陰影
-                    const cFinger  = "#ffffff"; // 擊球打擊手套純白食指
-                    const cPoint   = "#38bdf8"; // 指尖微藍亮光
+                    // 經典 16-bit SFC 遊戲指針 (Standard Pointing Down Hand 👇)
+                    // 配色：黑邊框 #0f172a, 肉色主體 #fcd34d / #fde047 (或暖肉色 #fbb771 / #fde047), 陰影 #ea580c / #c2410c, 高光 #ffffff
+                    const cOut = "#111827";   // 墨黑外框
+                    const cSkin = "#fde047";  // 經典黃色手套/手掌 (如Emoji/熱血風醒目黃手套)
+                    const cShad = "#f59e0b";  // 陰影/關節分隔色
+                    const cDeep = "#b45309";  // 深處陰影
+                    const cHigh = "#ffffff";  // 高光
 
-                    // 1. 拳頭主體 (Glove / Fist)
-                    pxBox(-4, -6, 8, 6, cOutline);
-                    pxBox(-3, -5, 6, 4, cGlove);
-                    pxBox(-3, -3, 2, 2, cGloveSh);
-                    pxBox(1, -3, 2, 2, cGloveSh);
+                    // 手掌結構 (約 12寬 x 15高 像素圖形)
+                    // 上方手背與手腕
+                    pxBox(-3, -8, 6, 1, cOut);
+                    pxBox(-3, -7, 6, 2, cSkin);
+                    pxBox(-4, -7, 1, 2, cOut);
+                    pxBox(3, -7, 1, 2, cOut);
 
-                    // 2. 往下直指的食指 (Straight Pointing Down Finger)
-                    pxBox(-2, 0, 4, 6, cOutline);
-                    pxBox(-1, -1, 2, 6, cFinger);
-                    pxBox(-1, 4, 2, 1, cPoint); // 指尖醒目高光
+                    // 手背主體
+                    pxBox(-5, -5, 10, 1, cOut);
+                    pxBox(-5, -4, 10, 4, cSkin);
+                    pxBox(-6, -4, 1, 4, cOut);
+                    pxBox(5, -4, 1, 4, cOut);
 
-                    // 3. 雙側小箭頭光芒提醒 (Pixel Chevrons)
-                    pxBox(-6, 1, 1, 2, "#38bdf8");
-                    pxBox(5, 1, 1, 2, "#38bdf8");
+                    // 捲曲的手指關節 (左側手指握拳細節：中指、無名指、小指)
+                    pxBox(-5, -3, 2, 1, cHigh); // 握拳受光高光
+                    pxBox(-5, -1, 4, 1, cShad); // 手指間縫隙陰影
+                    pxBox(-5, 1, 4, 1, cShad);  // 握拳下沿關節
+                    pxBox(-6, 2, 6, 1, cOut);   // 握拳底部外框
+
+                    // 大拇指 (內側彎曲扣住)
+                    pxBox(1, -2, 3, 3, cSkin);
+                    pxBox(2, -1, 2, 1, cDeep);  // 大拇指凹陷陰影
+                    pxBox(4, -1, 1, 2, cOut);
+
+                    // 往下伸出的食指 (Index Finger Pointing Down)
+                    // 食指外框
+                    pxBox(-2, 0, 1, 6, cOut);   // 食指左框線
+                    pxBox(1, 0, 1, 6, cOut);    // 食指右框線
+                    pxBox(-1, 6, 2, 1, cOut);   // 食指底部指尖框線
+
+                    // 食指內部肉色與立體感
+                    pxBox(-1, 0, 2, 6, cSkin);
+                    pxBox(-1, 1, 1, 4, cHigh);  // 食指左緣亮部高光
+                    pxBox(0, 2, 1, 3, cShad);   // 食指右緣暗部陰影
+                    pxBox(-1, 5, 2, 1, cSkin);  // 指尖平滑
+
+                    // 雙側動態像素光芒 (Pulse Sparkles)
+                    const pAlpha = 0.5 + Math.sin(Date.now() / 140) * 0.4;
+                    ctx.fillStyle = `rgba(56, 189, 248, ${pAlpha})`;
+                    ctx.fillRect(hx - 8 * pS, hy + 2 * pS, 2 * pS, 2 * pS);
+                    ctx.fillRect(hx + 7 * pS, hy + 2 * pS, 2 * pS, 2 * pS);
 
                     ctx.restore();
                 }
