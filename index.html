@@ -1397,15 +1397,18 @@
                 inset -1px -1px 0px rgba(255,255,255,0.6),
                 0px 0px 0px #13382c !important;
         }
-        #reviewExplanationBtn {
+        #reviewExplanationBtn,
+        #randomChallengeBtn {
             border: 2px solid #78350f !important;
             box-shadow: 
                 inset 2px 2px 0px rgba(255,255,255,0.8),
                 inset -2px -2px 0px rgba(0,0,0,0.25),
                 2px 3px 0px #78350f !important;
             border-radius: 0.85rem !important;
+            transition: transform 0.08s ease, box-shadow 0.08s ease !important;
         }
-        #reviewExplanationBtn:active {
+        #reviewExplanationBtn:active,
+        #randomChallengeBtn:active {
             transform: translate(2px, 2px) !important;
             box-shadow: 
                 inset 2px 2px 0px rgba(0,0,0,0.35),
@@ -1524,21 +1527,24 @@
             </div>
         </div>
     </header>
-    <!-- MODE NAVIGATION SWITCHER (實戰闖關 vs 教練戰術白板 vs 864矩陣全覽) -->
+    <!-- MODE NAVIGATION SWITCHER (實戰闖關 vs 產生隨機挑戰 vs 教練戰術白板 vs 864矩陣全覽) -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-3 pb-1">
-        <div class="glass-panel p-1.5 rounded-2xl flex gap-2 border border-slate-800 shadow-xl">
-            <button id="modeChallengeTab" onclick="switchGameMode('challenge')" class="flex-1 py-2 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25">
+        <div class="glass-panel p-1.5 rounded-2xl grid grid-cols-2 md:grid-cols-4 gap-2 border border-slate-800 shadow-xl">
+            <button id="modeChallengeTab" onclick="switchGameMode('challenge')" class="py-2.5 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25">
                 <i class="fa-solid fa-trophy text-amber-400"></i>
                 <span>實戰挑戰闖關</span>
             </button>
-            <button id="modeSandboxTab" onclick="switchGameMode('sandbox')" class="flex-1 py-2 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
-                <i class="fa-solid fa-chalkboard-user text-cyan-400"></i>
-                <span>教練戰術白板 (自由條件產生器)</span>
+            <button id="randomChallengeBtn" onclick="generateRandomChallenge()" class="py-2.5 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md active:scale-95">
+                <i class="fa-solid fa-dice text-slate-950"></i>
+                <span>產生隨機挑戰</span>
             </button>
-            <button id="modeMatrixTab" onclick="openMatrixExplorerModal()" class="py-2 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+            <button id="modeSandboxTab" onclick="switchGameMode('sandbox')" class="py-2.5 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+                <i class="fa-solid fa-chalkboard-user text-cyan-400"></i>
+                <span>教練戰術白板</span>
+            </button>
+            <button id="modeMatrixTab" onclick="openMatrixExplorerModal()" class="py-2.5 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
                 <i class="fa-solid fa-table-cells text-emerald-400"></i>
-                <span class="hidden sm:inline">864矩陣全覽</span>
-                <span class="sm:hidden">矩陣</span>
+                <span>864矩陣全覽</span>
             </button>
         </div>
     </div>
@@ -4856,6 +4862,38 @@
             loadQuestion(0);
         }
 
+        // 🎲 產生隨機挑戰：從 864 矩陣中立即隨機抽取 1 題嶄新情境並載入
+        function generateRandomChallenge() {
+            if (currentGameMode !== 'challenge') {
+                switchGameMode('challenge');
+            }
+
+            // 隨機抽選目標決策 A, B, C 之一
+            const targetKeys = ['A', 'B', 'C'];
+            const randomTarget = targetKeys[Math.floor(Math.random() * targetKeys.length)];
+            const usedMatrixIds = new Set();
+            
+            // 隨機產生一個新題目
+            const scenario = generateScenarioWithTarget(randomTarget, currentQuestionIdx + 1, usedMatrixIds);
+            if (scenario) {
+                generatedQuestions[currentQuestionIdx] = scenario;
+                answered = false;
+                loadQuestion(currentQuestionIdx);
+                
+                // 輕微音效或回饋提示
+                if (typeof playSuccessSound === 'function') {
+                    playSuccessSound();
+                }
+
+                // 標題短暫閃爍提示已更新
+                const titleEl = document.getElementById('situationTitle');
+                if (titleEl) {
+                    titleEl.classList.add('animate-bounce');
+                    setTimeout(() => titleEl.classList.remove('animate-bounce'), 800);
+                }
+            }
+        }
+
         window.onload = function() {
             renderContentMetadata();
             renderTeachingContent();
@@ -4895,8 +4933,8 @@
             const sandboxContainer = document.getElementById('sandboxContainer');
 
             if (mode === 'challenge') {
-                if (challengeTab) challengeTab.className = "flex-1 py-2 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25";
-                if (sandboxTab) sandboxTab.className = "flex-1 py-2 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
+                if (challengeTab) challengeTab.className = "py-2.5 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25";
+                if (sandboxTab) sandboxTab.className = "py-2.5 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
                 if (coachPanel) coachPanel.classList.remove('hidden');
                 if (sandboxContainer) sandboxContainer.classList.add('hidden');
                 
@@ -4904,8 +4942,8 @@
                     loadQuestion(currentQuestionIdx);
                 }
             } else {
-                if (sandboxTab) sandboxTab.className = "flex-1 py-2 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/25";
-                if (challengeTab) challengeTab.className = "flex-1 py-2 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
+                if (sandboxTab) sandboxTab.className = "py-2.5 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/25";
+                if (challengeTab) challengeTab.className = "py-2.5 px-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
                 if (coachPanel) coachPanel.classList.add('hidden');
                 if (sandboxContainer) sandboxContainer.classList.remove('hidden');
                 
