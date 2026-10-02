@@ -2203,12 +2203,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20260527-12</span>
+        <span id="footerVersionText">版本：v20260527-13</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20260527-12";
+        const APP_VERSION = "v20260527-13";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -5305,7 +5305,8 @@
             const endX = ballAnim.targetX * scale;
             const endY = ballAnim.targetY * scale;
             const isGrounder = ballAnim.type === "grounder";
-            const isFlySeries = !isGrounder;
+            const isCleanHit = ballAnim.type === "clean_hit";
+            const isFlySeries = ballAnim.type === "fly_ball" || ballAnim.type === "line_drive";
             let ballRadius = 5;
             let shadowRadius = 3.5;
 
@@ -5322,6 +5323,20 @@
                     const decay = Math.max(0.35, 1 - progress * 0.7);
                     // 清楚半圓拋物線彈跳
                     heightRatio = Math.sin(bouncePhase * Math.PI) * decay;
+                } else if (isCleanHit) {
+                    // ⚾ 外野落地安打球物理 (Clean Hit Realistic Physics)：
+                    // 階段 1 (progress 0.0 ~ 0.58)：過頂平飛穿過內野，至進度 0.58 處於外野草皮精準「碰！落地 (First Bounce)」
+                    // 階段 2 (progress 0.58 ~ 0.85)：草皮第一次彈跳小跳躍 (高度 22px)
+                    // 階段 3 (progress 0.85 ~ 1.0)：貼地滑順滾動，最後減速滾入外野手手套！
+                    if (progress <= 0.58) {
+                        const flightP = progress / 0.58; // 0 -> 1
+                        heightRatio = Math.sin(flightP * Math.PI) * 1.0;
+                    } else if (progress <= 0.85) {
+                        const bounceP = (progress - 0.58) / 0.27; // 0 -> 1
+                        heightRatio = Math.sin(bounceP * Math.PI) * 0.28; // 草皮微彈跳
+                    } else {
+                        heightRatio = 0; // 貼地滾動進手套
+                    }
                 }
 
                 return { x, y, height: heightRatio * ballAnim.arcHeight * scale };
@@ -5330,11 +5345,9 @@
             function getFlySeriesControlPoint() {
                 // 根據球種精細微調飛行控制點 (Control Point)：
                 // 1. 強勁平飛球 (line_drive)：帶有輕微側向漂移與低空弧度 (微微下墜/側旋，弧高適中)
-                // 2. 落地安打 (clean_hit)：流暢中度過頂弧線
-                // 3. 高飛球 (fly_ball)：彎很多、高高飛起 (高達 150px 頂點)
+                // 2. 高飛球 (fly_ball)：彎很多、高高飛起 (高達 150px 頂點)
                 const arcRatioByType = {
                     line_drive: 0.38,
-                    clean_hit: 0.60,
                     fly_ball: 1.15
                 };
                 const arcRatio = arcRatioByType[ballAnim.type] || 0.7;
@@ -5366,7 +5379,7 @@
 
             const segments = 40;
             const currentSeg = Math.floor(p * segments);
-            const tailLength = isGrounder ? 12 : 20; // 拖尾長度 (滾地球短俐落，飛球流暢悠長)
+            const tailLength = isGrounder ? 12 : (isCleanHit ? 16 : 20); // 拖尾長度 (滾地球短俐落，飛球流暢悠長)
             const startSeg = Math.max(0, currentSeg - tailLength);
 
             function getTrajectoryCoord(prog) {
@@ -5392,7 +5405,7 @@
 
                 ctx.strokeStyle = isGrounder 
                     ? `rgba(245, 158, 11, ${alpha})` 
-                    : (ballAnim.type === "fly_ball" ? `rgba(255, 255, 255, ${alpha})` : `rgba(56, 189, 248, ${alpha})`);
+                    : (isCleanHit ? `rgba(250, 204, 21, ${alpha})` : (ballAnim.type === "fly_ball" ? `rgba(255, 255, 255, ${alpha})` : `rgba(56, 189, 248, ${alpha})`));
 
                 ctx.beginPath();
                 ctx.moveTo(pt1.x, pt1.y);
@@ -5401,7 +5414,7 @@
             }
             ctx.setLineDash([]);
 
-            // 滾地球落地彈跳點 (Bounce Impact Marks - 隨球經過才浮現)
+            // 滾地球與外野落地安打的落地彈跳點標記 (Bounce Impact Marks - 隨球經過浮現)
             if (isGrounder) {
                 ctx.fillStyle = "rgba(180, 83, 9, 0.55)";
                 for (let b = 1; b < ballAnim.bounceCount; b++) {
@@ -5409,11 +5422,20 @@
                     if (p >= bProg) {
                         const bpX = (ballAnim.x + (ballAnim.targetX - ballAnim.x) * bProg) * scale;
                         const bpY = (ballAnim.y + (ballAnim.targetY - ballAnim.y) * bProg) * scale;
-                        // 落地衝擊點
                         ctx.beginPath();
                         ctx.ellipse ? ctx.ellipse(bpX, bpY, 3.2 * scale, 1.6 * scale, 0, 0, Math.PI * 2) : ctx.arc(bpX, bpY, 2.2 * scale, 0, Math.PI * 2);
                         ctx.fill();
                     }
+                }
+            } else if (isCleanHit) {
+                // 外野草皮落地點 (0.58 處草皮衝擊圈)
+                if (p >= 0.58) {
+                    const bpX = (ballAnim.x + (ballAnim.targetX - ballAnim.x) * 0.58) * scale;
+                    const bpY = (ballAnim.y + (ballAnim.targetY - ballAnim.y) * 0.58) * scale;
+                    ctx.fillStyle = "rgba(16, 185, 129, 0.45)"; // 草綠色彈跳草屑印
+                    ctx.beginPath();
+                    ctx.ellipse ? ctx.ellipse(bpX, bpY, 4.5 * scale, 2.2 * scale, 0, 0, Math.PI * 2) : ctx.arc(bpX, bpY, 3 * scale, 0, Math.PI * 2);
+                    ctx.fill();
                 }
             }
             ctx.restore();
@@ -5427,14 +5449,14 @@
 
             if (isGrounder) {
                 ballRadius = 4.5;
-                // 陰影隨球離地高度放大縮小，加強 3D 彈跳感
                 shadowRadius = Math.max(2, 4.5 - (h / (10 * scale)));
+            } else if (isCleanHit) {
+                ballRadius = 4.8;
+                // 落地安打在空中時陰影較小，落地與滾動時陰影實體化
+                shadowRadius = (p <= 0.58) ? Math.max(2.2, 4.6 - (h / (14 * scale))) : 4.2;
             } else if (ballAnim.type === "line_drive") {
                 ballRadius = 4.6;
                 shadowRadius = 3.8;
-            } else if (ballAnim.type === "clean_hit") {
-                ballRadius = 4.8;
-                shadowRadius = 4;
             } else {
                 ballRadius = 5.2;
                 shadowRadius = 3.5;
@@ -5446,7 +5468,7 @@
             ctx.ellipse ? ctx.ellipse(curX, curY, shadowRadius * scale, shadowRadius * 0.55 * scale, 0, 0, Math.PI * 2) : ctx.arc(curX, curY, shadowRadius * scale, 0, Math.PI * 2);
             ctx.fill();
 
-            // 滾地球落地瞬間小塵煙
+            // 落地瞬間小塵煙 / 草屑特效
             if (isGrounder) {
                 const bouncePhase = (p * ballAnim.bounceCount) % 1;
                 if (bouncePhase < 0.15 || bouncePhase > 0.88) {
@@ -5454,6 +5476,15 @@
                     ctx.beginPath();
                     ctx.arc(curX - 3 * scale, curY, 3 * scale, 0, Math.PI * 2);
                     ctx.arc(curX + 3 * scale, curY, 2.5 * scale, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else if (isCleanHit) {
+                // 在 0.58 剛好落地瞬間激起草皮綠草花 (Grass Splash)
+                if (p >= 0.57 && p <= 0.61) {
+                    ctx.fillStyle = "rgba(52, 211, 153, 0.65)";
+                    ctx.beginPath();
+                    ctx.arc(curX - 2.5 * scale, curY - 1 * scale, 2.5 * scale, 0, Math.PI * 2);
+                    ctx.arc(curX + 2.5 * scale, curY - 1 * scale, 2.2 * scale, 0, Math.PI * 2);
                     ctx.fill();
                 }
             }
@@ -6028,11 +6059,22 @@
             };
             const duration = durationMap[batType] || 2.0; 
             const totalSteps = fps * duration;
-            let step = 0;
+            let hasTriggeredBounce = false;
 
             window.ballInterval = setInterval(() => {
                 step++;
-                ballAnim.progress = step / totalSteps;
+                const currentProgress = step / totalSteps;
+                ballAnim.progress = currentProgress;
+
+                // 落地安打在進度 0.58 第一次外野草皮落地瞬間，觸發綠色草屑噴濺與彈跳音效！
+                if (batType === 'clean_hit' && !hasTriggeredBounce && currentProgress >= 0.58) {
+                    hasTriggeredBounce = true;
+                    const bounceX = ballAnim.x + (ballAnim.targetX - ballAnim.x) * 0.58;
+                    const bounceY = ballAnim.y + (ballAnim.targetY - ballAnim.y) * 0.58;
+                    createGrassSplash(bounceX, bounceY, 12);
+                    playWarningSound ? playWarningSound() : null; // 落地彈跳聲
+                }
+
                 drawStadium();
 
                 if (step >= totalSteps) {
