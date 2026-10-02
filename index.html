@@ -3204,11 +3204,15 @@
         // ⚾ 回到球場演示不同答案的結果 (跑壘會出局、滑壘推進等互動戰術演示)
         function startFieldSimulationMode() {
             toggleAnswerModal(false);
+            isSimulationActive = true; // 進入自由演示狀態
             const currentQ = generatedQuestions[currentQuestionIdx];
             if (!currentQ) return;
 
             // 重設跑者回初始位置
             setupRunnersForScenario(currentQ);
+            
+            // ⚾ 關鍵：球的動向持續循環飛行！讓玩家一邊看球打去哪，一邊看跑者該怎麼跑
+            triggerBallFlight(currentQ.fielderKey, currentQ.batType);
             drawStadium();
 
             const container = document.getElementById('optionsContainer');
@@ -3223,7 +3227,7 @@
                     <span class="text-base">🎮</span>
                     <div>
                         <p class="text-xs font-black text-amber-400">自由戰術演示模式</p>
-                        <p class="text-[11px] text-slate-300 font-bold">點選下方 3 個按鈕，實況觀看選不同走法的後果！</p>
+                        <p class="text-[11px] text-slate-300 font-bold">球的軌跡持續飛行中！點選按鈕實況看跑壘後果：</p>
                     </div>
                 </div>
                 <div class="flex gap-2 flex-shrink-0">
@@ -3268,8 +3272,11 @@
             const currentQ = generatedQuestions[currentQuestionIdx];
             if (!currentQ) return;
 
-            // 先重置跑者位置
+            // 1. 重置跑者初始位置
             setupRunnersForScenario(currentQ);
+            
+            // 2. ⚾ 擊球軌跡重置同步飛出！球飛向野手的同時，跑者動作同步展開
+            triggerBallFlight(currentQ.fielderKey, currentQ.batType);
             drawStadium();
 
             const isCorrect = choiceId === currentQ.correct;
@@ -3652,6 +3659,7 @@
         let gameResultSaved = false;
         let generatedQuestions = [];
         let answered = false;
+        let isSimulationActive = false; // 是否處於「回到球場演示不同走法」的自由戰術模式
 
         const canvas = document.getElementById('fieldCanvas');
         const ctx = canvas.getContext('2d');
@@ -5040,6 +5048,7 @@
             }
 
             answered = false;
+            isSimulationActive = false; // 換題時重置演示狀態
             catcherShoutText = null; // 換題時清除上一題捕手氣泡
             currentQuestionIdx = idx;
             const eduBox = document.getElementById('educationCardBox');
@@ -5196,9 +5205,9 @@
                     clearInterval(window.ballInterval);
                     createGrassSplash(ballAnim.targetX, ballAnim.targetY, 15);
 
-                    if (!answered) {
+                    if (!answered || isSimulationActive) {
                         window.ballTimeout = setTimeout(() => {
-                            if (!answered) {
+                            if (!answered || isSimulationActive) {
                                 triggerBallFlight(fielderKey, batType, true);
                             }
                         }, 600); 
