@@ -1932,16 +1932,16 @@
     </div>
 
     <!-- ANSWER EXPLANATION MODAL -->
-    <div id="answerModal" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
-        <div class="w-full max-w-2xl rounded-3xl bg-white border border-emerald-100 shadow-2xl overflow-hidden">
-            <div id="answerModalHeader" class="px-5 py-4 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between gap-3">
+    <div id="answerModal" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md">
+        <div class="w-full max-w-2xl max-h-[90vh] rounded-3xl bg-white border border-slate-200 shadow-2xl flex flex-col overflow-hidden">
+            <div id="answerModalHeader" class="px-5 py-4 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between gap-3 flex-shrink-0">
                 <div>
                     <p id="answerModalEyebrow" class="text-xs font-black tracking-wider text-emerald-600">判定結果</p>
                     <h3 id="answerModalTitle" class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">答對了！</h3>
                 </div>
                 <span id="answerModalBadge" class="px-3 py-1 rounded-full text-xs font-black bg-emerald-600 text-white">SAFE</span>
             </div>
-            <div id="answerModalBody" class="p-5 space-y-4 text-slate-800">
+            <div id="answerModalBody" class="p-5 space-y-4 text-slate-800 overflow-y-auto flex-1">
                 <div class="grid sm:grid-cols-2 gap-3">
                     <div class="rounded-2xl bg-slate-50 border border-slate-200 p-3">
                         <p class="text-xs font-black text-slate-500 mb-1">你的選擇</p>
@@ -1953,27 +1953,58 @@
                     </div>
                 </div>
 
-                <div class="rounded-2xl bg-white border border-slate-200 p-4">
-                    <h4 class="text-sm font-black text-slate-900 mb-2">為什麼這題這樣判斷？</h4>
-                    <p id="answerModalReason" class="text-sm leading-relaxed font-bold text-slate-700"></p>
+                <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
+                    <h4 class="text-sm font-black text-slate-900 mb-1.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-chalkboard text-emerald-600"></i> 為什麼這題這樣判斷？（前因後果剖析）
+                    </h4>
+                    <p id="answerModalReason" class="text-xs sm:text-sm leading-relaxed font-bold text-slate-700"></p>
                 </div>
 
-                <div id="answerModalMistakeBox" class="rounded-2xl bg-rose-50 border border-rose-100 p-4 hidden">
-                    <h4 class="text-sm font-black text-rose-700 mb-2">如果選錯，錯在哪裡？</h4>
-                    <p id="answerModalMistake" class="text-sm leading-relaxed font-bold text-rose-800"></p>
+                <div id="answerModalMistakeBox" class="rounded-2xl bg-rose-50 border border-rose-100 p-4 hidden shadow-sm">
+                    <h4 class="text-sm font-black text-rose-700 mb-1.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> 選錯後果剖析（錯在哪裡？）
+                    </h4>
+                    <p id="answerModalMistake" class="text-xs sm:text-sm leading-relaxed font-bold text-rose-800"></p>
                 </div>
 
-                <div class="rounded-2xl bg-sky-50 border border-sky-100 p-4">
-                    <h4 class="text-sm font-black text-sky-700 mb-2">相關棒球規則</h4>
-                    <p id="answerModalRule" class="text-sm leading-relaxed font-bold text-slate-700"></p>
+                <!-- 3D TIPS SECTION -->
+                <div class="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 space-y-2.5">
+                    <div class="flex items-start gap-2">
+                        <span class="text-base flex-shrink-0">👦</span>
+                        <div>
+                            <span class="text-xs font-black text-amber-800">小球員黃金口訣：</span>
+                            <span id="answerModalRhyme" class="text-xs sm:text-sm font-black text-slate-900 ml-1"></span>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2 pt-2 border-t border-amber-200/60">
+                        <span class="text-base flex-shrink-0">👨‍👩‍👧</span>
+                        <div>
+                            <span class="text-xs font-black text-emerald-800">家長 3 秒小百科：</span>
+                            <span id="answerModalParentTip" class="text-xs sm:text-sm font-medium text-slate-700 ml-1 leading-relaxed"></span>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2 pt-2 border-t border-amber-200/60">
+                        <span class="text-base flex-shrink-0">🧢</span>
+                        <div>
+                            <span class="text-xs font-black text-blue-800">教練實戰心法：</span>
+                            <span id="answerModalCoachTip" class="text-xs sm:text-sm font-medium text-slate-700 ml-1 leading-relaxed"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl bg-sky-50 border border-sky-100 p-4 shadow-sm">
+                    <h4 class="text-sm font-black text-sky-700 mb-1.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-book-bookmark text-sky-600"></i> 相關棒球規則依據
+                    </h4>
+                    <p id="answerModalRule" class="text-xs sm:text-sm leading-relaxed font-bold text-slate-700"></p>
                 </div>
             </div>
-            <div id="answerModalFooter" class="px-5 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row gap-2 sm:justify-end">
-                <button onclick="toggleAnswerModal(false)" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-black text-sm hover:bg-slate-100 transition-all">
-                    回到題目
+            <div id="answerModalFooter" class="px-5 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row gap-2.5 sm:justify-end flex-shrink-0">
+                <button onclick="toggleAnswerModal(false)" class="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-black text-sm hover:bg-slate-100 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass"></i> 回到球場複習走位
                 </button>
-                <button onclick="goNextQuestionFromModal()" class="px-5 py-3 rounded-2xl bg-blue-600 text-white font-black text-sm hover:bg-blue-500 transition-all">
-                    下一題 <i class="fa-solid fa-arrow-right ml-1"></i>
+                <button onclick="goNextQuestionFromModal()" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-sm hover:from-blue-500 hover:to-indigo-500 shadow-md transition-all flex items-center justify-center gap-2">
+                    進入下一題 <i class="fa-solid fa-arrow-right ml-1"></i>
                 </button>
             </div>
         </div>
@@ -2897,8 +2928,14 @@
             }
         }
 
+        let lastAnsweredExplanation = null;
+
         function showAnswerExplanationModal(choiceId, selectedOpt, isCorrect) {
             const currentQ = generatedQuestions[currentQuestionIdx];
+            if (!currentQ) return;
+
+            lastAnsweredExplanation = { choiceId, selectedOpt, isCorrect };
+
             const correctOpt = currentQ.options.find(o => o.id === currentQ.correct);
             const ruleTeaching = getRuleTeachingByLevel(currentQ.level);
             const rulePrinciple = getRulePrincipleByLevel(currentQ.level);
@@ -2908,25 +2945,35 @@
             const mistakeBox = document.getElementById('answerModalMistakeBox');
 
             if (isCorrect) {
-                modalHeader.className = "px-5 py-4 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between gap-3";
-                modalTitle.innerText = "答對了，這球判斷漂亮！";
-                modalBadge.className = "px-3 py-1 rounded-full text-xs font-black bg-emerald-600 text-white";
+                modalHeader.className = "px-5 py-4 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between gap-3 flex-shrink-0";
+                modalTitle.innerText = "答對了，這球判斷漂亮！ 🟢";
+                modalBadge.className = "px-3.5 py-1 rounded-full text-xs font-black bg-emerald-600 text-white shadow-sm";
                 modalBadge.innerText = "SAFE";
                 mistakeBox.classList.add('hidden');
             } else {
-                modalHeader.className = "px-5 py-4 bg-rose-50 border-b border-rose-100 flex items-center justify-between gap-3";
-                modalTitle.innerText = "這題出局了，再看一次規則";
-                modalBadge.className = "px-3 py-1 rounded-full text-xs font-black bg-rose-600 text-white";
+                modalHeader.className = "px-5 py-4 bg-rose-50 border-b border-rose-100 flex items-center justify-between gap-3 flex-shrink-0";
+                modalTitle.innerText = "這題出局了，再看一次規則！ 🔴";
+                modalBadge.className = "px-3.5 py-1 rounded-full text-xs font-black bg-rose-600 text-white shadow-sm";
                 modalBadge.innerText = "OUT";
                 mistakeBox.classList.remove('hidden');
             }
 
-            document.getElementById('answerModalEyebrow').innerText = `第 ${currentQ.level} 位階規則`;
+            document.getElementById('answerModalEyebrow').innerText = `位階規則：${currentQ.ruleKey || currentQ.level}`;
             document.getElementById('answerModalYourChoice').innerText = getDecisionLabel(choiceId);
             document.getElementById('answerModalCorrectChoice').innerText = `${getDecisionLabel(currentQ.correct)}：${BASERUNNING_CONTENT.decisions[currentQ.correct].text}`;
+            
             const answerFacts = currentQ.baseFactsText || describeBaseFactsForDisplay(currentQ);
             document.getElementById('answerModalReason').innerText = `${answerFacts}。${correctOpt ? correctOpt.explain : selectedOpt.explain}`;
             document.getElementById('answerModalMistake').innerText = selectedOpt.explain;
+
+            // 3D 技巧與教育卡片
+            const rhymeEl = document.getElementById('answerModalRhyme');
+            const parentEl = document.getElementById('answerModalParentTip');
+            const coachEl = document.getElementById('answerModalCoachTip');
+            if (rhymeEl) rhymeEl.innerText = currentQ.rhyme || selectedOpt.explain;
+            if (parentEl) parentEl.innerText = currentQ.parentTip || "強迫進壘時身後有隊友必須全力推進，其餘情況優先回壘防守。";
+            if (coachEl) coachEl.innerText = currentQ.coachTip || "身體保持重心，不可盲目衝刺，隨時準備回壘！";
+
             document.getElementById('answerModalRule').innerText = rulePrinciple
                 ? `${rulePrinciple.title}：${rulePrinciple.text}`
                 : ruleTeaching
@@ -2934,6 +2981,16 @@
                 : "依照本題的出局數、跑者是否被強迫進壘、擊球型態與球的深淺位置判斷跑壘策略。";
 
             toggleAnswerModal(true);
+        }
+
+        function reopenAnswerExplanationModal() {
+            if (lastAnsweredExplanation) {
+                showAnswerExplanationModal(
+                    lastAnsweredExplanation.choiceId,
+                    lastAnsweredExplanation.selectedOpt,
+                    lastAnsweredExplanation.isCorrect
+                );
+            }
         }
 
         function goNextQuestionFromModal() {
@@ -4225,19 +4282,31 @@
         function ensureNextButtonVisible() {
             const container = document.getElementById('optionsContainer');
             if (!container) return null;
-            const existing = document.getElementById('nextQuestionButton');
+            const existing = document.getElementById('postDecisionActionGroup');
             if (existing) return existing;
+
+            const actionGroup = document.createElement('div');
+            actionGroup.id = 'postDecisionActionGroup';
+            actionGroup.className = 'w-full flex flex-col sm:flex-row gap-2.5';
+
+            const reviewBtn = document.createElement('button');
+            reviewBtn.id = 'reviewExplanationBtn';
+            reviewBtn.className = 'flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3.5 px-3 rounded-2xl shadow-md transition-all active:scale-95 flex justify-center items-center gap-1.5 text-xs sm:text-sm';
+            reviewBtn.innerHTML = `<i class="fa-solid fa-lightbulb"></i> 觀看前因後果詳解`;
+            reviewBtn.onclick = reopenAnswerExplanationModal;
 
             const nextBtn = document.createElement('button');
             nextBtn.id = 'nextQuestionButton';
-            nextBtn.className = 'full-row-action w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-500/20 transition-all active:scale-95 flex justify-center items-center gap-2 text-sm sm:text-base min-h-[4.2rem] border-2 border-blue-400';
-            nextBtn.innerHTML = `下一題 <i class="fa-solid fa-arrow-right"></i>`;
+            nextBtn.className = 'flex-1 bg-blue-600 hover:bg-blue-500 text-white font-black py-3.5 px-3 rounded-2xl shadow-lg shadow-blue-500/20 transition-all active:scale-95 flex justify-center items-center gap-1.5 text-xs sm:text-sm border-2 border-blue-400';
+            nextBtn.innerHTML = `進入下一題 <i class="fa-solid fa-arrow-right ml-1"></i>`;
             nextBtn.onclick = () => loadQuestion(currentQuestionIdx + 1);
 
-            // 放在選項最上方，手機版不用往下滑才找得到。
-            container.prepend(nextBtn);
+            actionGroup.appendChild(reviewBtn);
+            actionGroup.appendChild(nextBtn);
+
+            container.prepend(actionGroup);
             setTimeout(() => {
-                try { nextBtn.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+                try { actionGroup.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
             }, 120);
             return nextBtn;
         }
@@ -4352,6 +4421,11 @@
                 if (coachText) coachText.innerText = currentQ.coachTip || "身體保持重心，不可盲目衝刺！";
                 eduBox.classList.remove('hidden');
             }
+
+            // 🌟 做出決定後自動彈出前因後果剖析視窗（延遲 650ms，先讓跑者滑壘與判決大字呈現，隨後平滑展開）
+            setTimeout(() => {
+                showAnswerExplanationModal(choiceId, selectedOpt, isCorrect);
+            }, 650);
         }
 
         function insertNextButton() {
