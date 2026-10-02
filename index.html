@@ -4220,6 +4220,77 @@
                     badge: key
                 });
             }
+
+            // 📢 捕手 16-Bit 像素風大喊對話框 (Catcher Shout Bubble: 平飛球！/ 高飛球！/ 滾地球！)
+            // 當擊球飛出時 (ballAnim.active 且前半段行程)，捕手頭頂跳出經典復古對話氣泡提示球種
+            if (ballAnim.active && ballAnim.progress < 0.85) {
+                const cPos = fielders["C"];
+                if (cPos) {
+                    const cx = cPos.x * scale;
+                    const cy = (cPos.y - 20) * scale;
+                    const pS = scale * 0.95;
+
+                    const shoutTexts = {
+                        grounder: "滾地球！",
+                        line_drive: "平飛球！",
+                        fly_ball: "高飛球！",
+                        clean_hit: "安打球！"
+                    };
+                    const shoutText = shoutTexts[ballAnim.type] || "打擊出去！";
+
+                    // 對話框微浮動呼吸/驚呼彈跳效果
+                    const popY = Math.sin(ballAnim.progress * Math.PI * 4) * 1.5 * scale;
+                    const bx = cx;
+                    const by = cy + popY;
+
+                    ctx.save();
+                    ctx.imageSmoothingEnabled = false;
+
+                    // 測量文字寬度以自適應像素氣泡
+                    ctx.font = `900 ${10.5 * scale}px 'Noto Sans TC', sans-serif`;
+                    const textMetrics = ctx.measureText(shoutText);
+                    const padX = 7 * scale;
+                    const bW = Math.max(54 * scale, textMetrics.width + padX * 2);
+                    const bH = 19 * scale;
+                    const left = bx - bW / 2;
+                    const top = by - bH;
+
+                    // 16-bit 像素框體 (雙層描邊 + 經典亮黃/純白底色 + 下方小箭頭)
+                    // 1. 外層墨黑陰影外框
+                    ctx.fillStyle = "#0f172a";
+                    ctx.fillRect(left - 2 * pS, top - 2 * pS, bW + 4 * pS, bH + 4 * pS);
+                    // 氣泡尾巴 (Pointing Down to Catcher)
+                    ctx.beginPath();
+                    ctx.moveTo(bx - 4 * pS, top + bH);
+                    ctx.lineTo(bx + 4 * pS, top + bH);
+                    ctx.lineTo(bx, top + bH + 6 * pS);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // 2. 氣泡底色 (高對比醒目亮黃 #fef08a，帶復古街機立體陰影)
+                    ctx.fillStyle = "#fef08a";
+                    ctx.fillRect(left, top, bW, bH);
+                    ctx.fillStyle = "#fde047";
+                    ctx.fillRect(left, top + bH - 3 * pS, bW, 3 * pS); // 下方陰影條
+
+                    // 氣泡內尾巴
+                    ctx.beginPath();
+                    ctx.fillStyle = "#fef08a";
+                    ctx.moveTo(bx - 3 * pS, top + bH - 1 * pS);
+                    ctx.lineTo(bx + 3 * pS, top + bH - 1 * pS);
+                    ctx.lineTo(bx, top + bH + 4 * pS);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // 3. 驚呼文字與小驚嘆號 (Punchy Text)
+                    ctx.fillStyle = (ballAnim.type === "line_drive") ? "#dc2626" : (ballAnim.type === "fly_ball" ? "#2563eb" : "#d97706");
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(`📢 ${shoutText}`, bx, top + bH / 2);
+
+                    ctx.restore();
+                }
+            }
         }
 
         function drawBallFlight(scale) {
