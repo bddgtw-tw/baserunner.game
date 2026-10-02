@@ -2203,12 +2203,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20260527-15</span>
+        <span id="footerVersionText">版本：v20260527-16</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20260527-15";
+        const APP_VERSION = "v20260527-16";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -2553,6 +2553,17 @@
         function playCheerSound() {
             if (!soundEnabled || !toneInitialized || !cheerNoise) return;
             try { cheerNoise.triggerAttackRelease("1.5s"); } catch (e) {}
+        }
+
+        function playSlideSound() {
+            if (!soundEnabled || !toneInitialized) return;
+            try {
+                if (cheerNoise) {
+                    cheerNoise.triggerAttackRelease("0.18s");
+                } else if (failSynth) {
+                    failSynth.triggerAttackRelease("D2", "16n");
+                }
+            } catch (e) {}
         }
 
         window.addEventListener('click', initAudio);
@@ -4669,6 +4680,15 @@
                     p(14, 8, 2, 2, eyeColor);
                     p(13, 9, 2, 2, eyeColor);
                     p(11, 11, 2, 1, "#ef4444"); // 難過的嘴
+                } else if (state === 'blocked') {
+                    // 塞壘卡住/驚愕眼：圓瞪驚恐大白眼 + 小黑瞳孔 + 震驚 O 型嘴
+                    p(8, 7, 4, 4, "#ffffff");
+                    p(13, 7, 4, 4, "#ffffff");
+                    p(9, 8, 2, 2, eyeColor);
+                    p(14, 8, 2, 2, eyeColor);
+                    p(10, 11, 3, 2, "#450a0a"); // 驚愕大張嘴 O
+                    // 額頭冷汗滴
+                    p(17, 6, 2, 2, "#38bdf8");
                 } else {
                     // 經典豆豆眼與亮點
                     p(9, 8, 3, 3, eyeColor);
@@ -4690,7 +4710,11 @@
                     p(17, 13, 4, 4, isHandling ? "#f59e0b" : "#b45309"); // 棕色/金色手套
                 } else {
                     // 跑者揮臂動畫
-                    if (state === 'run') {
+                    if (state === 'blocked') {
+                        // 塞壘緊急煞車急停：雙手向兩側張開平衡 / 做出「怎麼停住了?!」的肢體動作
+                        p(2, 12, 4, 3, skinColor);
+                        p(18, 12, 4, 3, skinColor);
+                    } else if (state === 'run') {
                         if (frame === 0) {
                             p(4, 12, 3, 4, skinColor);
                             p(17, 14, 3, 4, skinColor);
@@ -4708,7 +4732,13 @@
                 }
 
                 // 5. 球褲與雙腿 (Pants & Legs with 3-frame running stride)
-                if (state === 'run') {
+                if (state === 'blocked') {
+                    // 塞壘煞車摩擦站姿：雙腳大八字開立，重心下沉抓地煞車
+                    p(5, 19, 4, 3, pantsColor);
+                    p(15, 19, 4, 3, pantsColor);
+                    p(3, 22, 5, 2, shoesColor);
+                    p(16, 22, 5, 2, shoesColor);
+                } else if (state === 'run') {
                     if (frame === 0) {
                         // 左腳前衝、右腳後蹬
                         p(6, 19, 4, 3, pantsColor);
@@ -5513,6 +5543,9 @@
 
                 if (runner.taggedOut) {
                     runnerState = 'out';
+                } else if (runner.statusLabel && runner.statusLabel.includes("塞壘")) {
+                    // 塞壘卡住隊友：動作與表情皆進入 blocked 震驚煞車狀態
+                    runnerState = 'blocked';
                 } else if (isMoving) {
                     // 近壘包滑壘 (最後 15% 行程)
                     if (runner.animProgress > 0.85) {
@@ -5661,16 +5694,55 @@
                     ctx.restore();
                 }
 
+                // 跑者動態狀態氣泡標籤 (Status Badges)
                 if (runner.taggedOut) {
+                    ctx.save();
+                    const text = runner.outLabel || "❌ OUT";
+                    ctx.font = `900 ${11 * scale}px 'Noto Sans TC', Inter, sans-serif`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    const tW = ctx.measureText(text).width + 10 * scale;
+                    const tH = 16 * scale;
+                    const tX = rX - tW / 2;
+                    const tY = rY - 24 * scale;
+
+                    ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+                    ctx.fillRect(tX + 1 * scale, tY + 1 * scale, tW, tH);
                     ctx.fillStyle = "#ef4444";
-                    ctx.font = `900 ${11 * scale}px 'Noto Sans TC', Inter, sans-serif`;
-                    ctx.textAlign = "center";
-                    ctx.fillText(runner.outLabel || "❌ OUT", rX, rY - 14 * scale);
+                    ctx.fillRect(tX, tY, tW, tH);
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillText(text, rX, tY + tH / 2);
+                    ctx.restore();
                 } else if (runner.statusLabel) {
-                    ctx.fillStyle = runner.statusColor || "#f59e0b";
-                    ctx.font = `900 ${11 * scale}px 'Noto Sans TC', Inter, sans-serif`;
+                    ctx.save();
+                    const text = runner.statusLabel;
+                    const isWarning = text.includes("塞壘") || text.includes("卡住") || text.includes("佔用");
+                    const bounce = isWarning ? Math.sin(Date.now() / 100) * 2 * scale : 0;
+                    ctx.font = `900 ${10.5 * scale}px 'Noto Sans TC', Inter, sans-serif`;
                     ctx.textAlign = "center";
-                    ctx.fillText(runner.statusLabel, rX, rY - 14 * scale);
+                    ctx.textBaseline = "middle";
+                    const tW = ctx.measureText(text).width + 10 * scale;
+                    const tH = 16 * scale;
+                    const tX = rX - tW / 2;
+                    const tY = rY - (runner.isPlayer ? 42 : 24) * scale + bounce;
+
+                    // 像素泡泡陰影
+                    ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+                    ctx.fillRect(tX + 1.5 * scale, tY + 1.5 * scale, tW, tH);
+
+                    // 泡泡本體背景
+                    ctx.fillStyle = isWarning ? (runner.statusColor || "#f59e0b") : (runner.statusColor || "#10b981");
+                    ctx.fillRect(tX, tY, tW, tH);
+
+                    // 邊框亮線
+                    ctx.strokeStyle = isWarning ? "#fef08a" : "#a7f3d0";
+                    ctx.lineWidth = 1 * scale;
+                    ctx.strokeRect(tX, tY, tW, tH);
+
+                    // 文字
+                    ctx.fillStyle = isWarning ? "#0f172a" : "#ffffff";
+                    ctx.fillText(text, rX, tY + tH / 2);
+                    ctx.restore();
                 }
             });
         }
@@ -5936,7 +6008,14 @@
                     runner.x = runner.startX + (runner.targetX - runner.startX) * progress;
                     runner.y = runner.startY + (runner.targetY - runner.startY) * progress;
 
-                    if (progress < 0.9 && Math.random() > 0.4) {
+                    if (runner.statusLabel && runner.statusLabel.includes("塞壘") && progress > 0.65) {
+                        // 急煞車輪/球鞋摩擦泥土白煙與飛濺砂石 (Skid dust)
+                        createDust(runner.x, runner.y, 4);
+                        if (!runner.hasPlayedBrakeSound) {
+                            runner.hasPlayedBrakeSound = true;
+                            playSlideSound();
+                        }
+                    } else if (progress < 0.9 && Math.random() > 0.4) {
                         createDust(runner.x, runner.y, 2);
                     }
                 });
