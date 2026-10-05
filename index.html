@@ -1667,7 +1667,7 @@
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
                         <span>你是跑壘王!!!</span> 
                         <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">少棒跑壘判斷</span>
-                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20261005-05</span>
+                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20261005-06</span>
                     </h1>
                     <p class="text-xs text-slate-400 font-medium">跑壘指導員互動出題版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
@@ -2329,12 +2329,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20261005-05</span>
+        <span id="footerVersionText">版本：v20261005-06</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20261005-05";
+        const APP_VERSION = "v20261005-06";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -6039,11 +6039,26 @@
             });
         }
 
-        function moveRunnerToBase(runner, nextBaseNumber) {
-            const nextPos = getRunnerStartPosition(nextBaseNumber);
-            runner.targetX = nextPos.x;
-            runner.targetY = nextPos.y;
-            runner.base = nextBaseNumber === 4 ? 4 : nextBaseNumber;
+        function moveRunnerToBase(runner, targetBaseNumber) {
+            const currentBaseNum = runner.base;
+            const waypoints = [];
+
+            // 構建沿跑壘線行進之過路壘包點 (Waypoints)
+            if (targetBaseNumber > currentBaseNum) {
+                for (let b = currentBaseNum + 1; b <= targetBaseNumber; b++) {
+                    const bPos = getRunnerStartPosition(b);
+                    waypoints.push({ base: b, x: bPos.x, y: bPos.y });
+                }
+            } else {
+                const bPos = getRunnerStartPosition(targetBaseNumber);
+                waypoints.push({ base: targetBaseNumber, x: bPos.x, y: bPos.y });
+            }
+
+            runner.waypoints = waypoints;
+            const finalPos = waypoints[waypoints.length - 1];
+            runner.targetX = finalPos.x;
+            runner.targetY = finalPos.y;
+            runner.base = targetBaseNumber === 4 ? 4 : targetBaseNumber;
         }
 
         function moveRunnerTowardNextBase(runner, ratio = 0.32) {
@@ -6317,6 +6332,23 @@
                             const retY = traj.midY + (traj.origY - traj.midY) * 0.45;
                             runner.x = traj.midX + (retX - traj.midX) * subP;
                             runner.y = traj.midY + (retY - traj.midY) * subP;
+                        }
+                    } else if (runner.waypoints && runner.waypoints.length > 0) {
+                        // 多壘包過路路徑插值 (Multi-base waypoints pathing):
+                        // 確保跑者嚴格沿著 1壘 ➔ 2壘 ➔ 3壘 ➔ 本壘 的壘線移動，在壘包處轉彎踩壘！
+                        const wps = [{ x: runner.startX, y: runner.startY }, ...runner.waypoints];
+                        const totalSegs = wps.length - 1;
+                        if (totalSegs === 1) {
+                            runner.x = wps[0].x + (wps[1].x - wps[0].x) * progress;
+                            runner.y = wps[0].y + (wps[1].y - wps[0].y) * progress;
+                        } else {
+                            const segProgress = progress * totalSegs;
+                            const segIdx = Math.min(Math.floor(segProgress), totalSegs - 1);
+                            const subP = segProgress - segIdx;
+                            const p1 = wps[segIdx];
+                            const p2 = wps[segIdx + 1];
+                            runner.x = p1.x + (p2.x - p1.x) * subP;
+                            runner.y = p1.y + (p2.y - p1.y) * subP;
                         }
                     } else {
                         runner.x = runner.startX + (runner.targetX - runner.startX) * progress;
