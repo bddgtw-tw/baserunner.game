@@ -1559,7 +1559,7 @@
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
                         <span>你是跑壘王!!!</span> 
                         <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">少棒跑壘判斷</span>
-                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20260527-19</span>
+                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20260527-20</span>
                     </h1>
                     <p class="text-xs text-slate-400 font-medium">跑壘指導員互動出題版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
@@ -2221,12 +2221,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20260527-19</span>
+        <span id="footerVersionText">版本：v20260527-20</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20260527-19";
+        const APP_VERSION = "v20260527-20";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -3076,7 +3076,7 @@
 
                     setTimeout(() => {
                         const fromPos = fieldersState[fielderKey] || originFielder;
-                        // 根據外野到內野距離設定長傳動畫時間
+                        // 根據外野到內野距離設定長傳動畫時間 (520ms)
                         triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 520, () => {
                             const coverF = fieldersState[coveringKey];
                             if (coverF) {
@@ -3085,6 +3085,9 @@
                                 coverF.state = 'catch';
                             }
                             playCatchSound();
+                            // 球先一步抵達原壘包踩壘！震撼彈出判定與音效：
+                            playFailSound();
+                            triggerOutcomeBanner(consequence.bannerText, consequence.bannerSub, consequence.outcome);
                         });
                     }, 140);
                 }, catchWaitMs);
@@ -5912,6 +5915,7 @@
             runner.statusLabel = consequence.runnerLabel;
             runner.statusColor = consequence.outcome === 'SAFE' ? '#10b981' : (consequence.outcome === 'WASTED' ? '#f59e0b' : '#ef4444');
             runner.outLabel = consequence.runnerLabel;
+            runner.customTrajectory = null; // 重置自訂路徑
 
             const animAction = consequence.runnerAnimAction;
             if (animAction === 'advance' || animAction === 'tag_up_home') {
@@ -5920,7 +5924,27 @@
             } else if (animAction === 'lead_off' || animAction === 'wasted_leadoff') {
                 moveRunnerTowardNextBase(runner, 0.35);
             } else if (animAction === 'out_advancing') {
-                moveRunnerTowardNextBase(runner, 0.68); // 衝到半路被刺殺/雙殺
+                // 棒球真實演出（接殺前盲目狂奔 -> 驚覺被接殺緊急折返撲回原壘 -> 來不及回壘遭促請裁決刺殺）：
+                const nextBasePos = getNextBasePosition(runner.base);
+                const origBasePos = getRunnerStartPosition(runner.base);
+                if (nextBasePos && origBasePos) {
+                    const apexX = origBasePos.x + (nextBasePos.x - origBasePos.x) * 0.62;
+                    const apexY = origBasePos.y + (nextBasePos.y - origBasePos.y) * 0.62;
+                    // 回撲至距離原壘包約 22% 處停住（已被補位野手接球踩壘判出局）
+                    const finalX = origBasePos.x + (nextBasePos.x - origBasePos.x) * 0.22;
+                    const finalY = origBasePos.y + (nextBasePos.y - origBasePos.y) * 0.22;
+                    runner.targetX = finalX;
+                    runner.targetY = finalY;
+                    runner.customTrajectory = {
+                        type: 'scramble_back',
+                        apexX: apexX,
+                        apexY: apexY,
+                        finalX: finalX,
+                        finalY: finalY
+                    };
+                } else {
+                    moveRunnerTowardNextBase(runner, 0.68);
+                }
             } else if (animAction === 'out_leadoff') {
                 moveRunnerTowardNextBase(runner, 0.35); // 離壘處被回傳刺殺/夾殺
             } else {
@@ -6053,7 +6077,9 @@
             document.getElementById('baseStatusText').innerText = `${currentQ.outs}出局 - 選擇後：${describeOccupiedBases(currentVisualOccupiedBases)}`;
 
             let start = null;
-            const duration = 1600; // 跑者動作時長延長到 1.6 秒，動作清楚完整
+            // 雙殺折返跑情境動作更豐富，延長動作時長至 3.4 秒以完美對齊外野接殺與二段長傳
+            const hasScramble = fieldRunners.some(r => r.customTrajectory && r.customTrajectory.type === 'scramble_back');
+            const duration = hasScramble ? 3400 : 1600;
 
             function step(timestamp) {
                 if (!start) start = timestamp;
@@ -6062,8 +6088,35 @@
 
                 fieldRunners.forEach(runner => {
                     runner.animProgress = progress;
-                    runner.x = runner.startX + (runner.targetX - runner.startX) * progress;
-                    runner.y = runner.startY + (runner.targetY - runner.startY) * progress;
+
+                    if (runner.customTrajectory && runner.customTrajectory.type === 'scramble_back') {
+                        // 雙階段折返路徑 (U-Turn Scramble):
+                        // 0.00 ~ 0.50: 打擊出去離壘狂奔（往前衝刺至 apex 點）
+                        // 0.50 ~ 0.58: 外野手接殺瞬間驚慌煞車掉頭（Skid dust）
+                        // 0.58 ~ 1.00: 轉身拼命回撲原壘，但防守方雷射肩先傳到，停在距原壘 22% 處遭刺殺！
+                        const traj = runner.customTrajectory;
+                        if (progress <= 0.50) {
+                            const subP = progress / 0.50;
+                            runner.x = runner.startX + (traj.apexX - runner.startX) * subP;
+                            runner.y = runner.startY + (traj.apexY - runner.startY) * subP;
+                        } else if (progress <= 0.58) {
+                            // 急煞車與轉向
+                            runner.x = traj.apexX;
+                            runner.y = traj.apexY;
+                            createDust(runner.x, runner.y, 5);
+                            if (!runner.hasPlayedBrakeSound) {
+                                runner.hasPlayedBrakeSound = true;
+                                playSlideSound();
+                            }
+                        } else {
+                            const subP = (progress - 0.58) / 0.42;
+                            runner.x = traj.apexX + (traj.finalX - traj.apexX) * subP;
+                            runner.y = traj.apexY + (traj.finalY - traj.apexY) * subP;
+                        }
+                    } else {
+                        runner.x = runner.startX + (runner.targetX - runner.startX) * progress;
+                        runner.y = runner.startY + (runner.targetY - runner.startY) * progress;
+                    }
 
                     if (runner.statusLabel && runner.statusLabel.includes("塞壘") && progress > 0.65) {
                         // 急煞車輪/球鞋摩擦泥土白煙與飛濺砂石 (Skid dust)
@@ -6452,8 +6505,15 @@
 
                 document.getElementById('hitTypeBadge').innerText = consequence.bannerText;
                 document.getElementById('hitTypeBadge').className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-amber-500 text-slate-950 tracking-wider";
-            } else {
-                playFailSound();
+            }
+
+            // 判斷是否為「接殺後回傳原壘促請裁決」的延遲判定題型：
+            const isDelayedAppealPlay = (currentQ.ruleKey === 'deepFlyThirdTag' || currentQ.ruleKey === 'deepFlyHalfway' || currentQ.ruleKey === 'shortFlyHalfway') && choiceId === 'A';
+
+            if (!isCorrect && consequence.outcome !== 'WASTED') {
+                if (!isDelayedAppealPlay) {
+                    playFailSound();
+                }
                 currentWrongCount++;
                 consecutiveStreak = 0;
                 
@@ -6483,7 +6543,10 @@
             }
 
             // 觸發場中大字動態判定（SAFE / OUT / MISSED）與音效視覺打擊感
-            triggerOutcomeBanner(consequence.bannerText, consequence.bannerSub, consequence.outcome);
+            // 若為外野接殺長傳促請裁決題，由傳球到達壘包 callback 觸發，此處不提前跳出
+            if (!isDelayedAppealPlay) {
+                triggerOutcomeBanner(consequence.bannerText, consequence.bannerSub, consequence.outcome);
+            }
 
             // 即時展開三合一教育卡片（小球員口訣 / 家長小百科 / 教練戰術）
             const eduBox = document.getElementById('educationCardBox');
@@ -6504,7 +6567,9 @@
                 grounder: 2100,
                 line_drive: 1650
             };
-            const modalDelay = (durationMapMs[currentQ.batType] || 2000) + 1000; // 接球 + 傳球踩壘 + 緩衝 1 秒
+            const baseWait = durationMapMs[currentQ.batType] || 2000;
+            // 促請裁決折返跑情境演出約 3.4 秒，給予充足的 4.2 秒觀賞時間後再彈出解析
+            const modalDelay = isDelayedAppealPlay ? 4200 : (baseWait + 1000);
 
             // 顯示跳過動畫按鈕（方便小球員快速進入解析）
             const skipBtn = document.getElementById('skipAnimBtn');
