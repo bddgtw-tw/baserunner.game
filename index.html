@@ -6152,6 +6152,8 @@
                 runner.taggedOut = false;
                 runner.statusLabel = null;
                 runner.outLabel = "❌ OUT";
+                runner.waypoints = null;
+                runner.customTrajectory = null;
             });
 
             if (isCorrect) {
@@ -6360,6 +6362,7 @@
                         runner.y = runner.startY + (runner.targetY - runner.startY) * progress;
                     }
 
+                    const isTargetMoving = (Math.abs(runner.targetX - runner.startX) > 1 || Math.abs(runner.targetY - runner.startY) > 1);
                     if (runner.statusLabel && runner.statusLabel.includes("塞壘") && progress > 0.65) {
                         // 急煞車輪/球鞋摩擦泥土白煙與飛濺砂石 (Skid dust)
                         createDust(runner.x, runner.y, 4);
@@ -6367,7 +6370,7 @@
                             runner.hasPlayedBrakeSound = true;
                             playSlideSound();
                         }
-                    } else if (progress < 0.9 && Math.random() > 0.4) {
+                    } else if (isTargetMoving && progress < 0.9 && Math.random() > 0.4) {
                         createDust(runner.x, runner.y, 2);
                     }
                 });
