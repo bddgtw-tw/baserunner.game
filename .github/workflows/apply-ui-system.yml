@@ -1,0 +1,51 @@
+name: Apply UI System
+
+on:
+  push:
+    branches:
+      - ui-accessibility-v20261005-03
+    paths:
+      - '.github/workflows/apply-ui-system.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ui-accessibility-v20261005-03
+      - name: Integrate accessibility UI system
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          marker = '<link rel="stylesheet" href="ui-system.css?v=20261005-03">'
+          if marker not in s:
+              if '</head>' not in s:
+                  raise SystemExit('index.html missing </head>')
+              s = s.replace('</head>', f'    <!-- Accessibility-first visual system; intentionally loaded last -->\n    {marker}\n</head>', 1)
+          s = s.replace('v20261005-02', 'v20261005-03')
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Sanity checks
+        run: |
+          grep -q 'ui-system.css?v=20261005-03' index.html
+          grep -q 'v20261005-03' index.html
+          test "$(grep -o '</style>' index.html | wc -l)" -ge 1
+          test "$(grep -o '</script>' index.html | wc -l)" -ge 1
+      - name: Commit integration
+        run: |
+          if git diff --quiet; then
+            echo 'No changes needed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'fix(ui): load accessibility visual system v20261005-03 [skip ci]'
+          git push origin HEAD:ui-accessibility-v20261005-03
