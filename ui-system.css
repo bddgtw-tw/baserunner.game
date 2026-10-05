@@ -1,6 +1,6 @@
 /* RUNNER KING UI SYSTEM v20261005-03
- * Accessibility-first visual guard for the light mint + 16-bit theme.
- * Keep semantic colors centralized here instead of overriding .text-white globally.
+ * Player-first visual system for the light mint + 16-bit theme.
+ * Old visual rules are treated as compatibility debt, not design truth.
  */
 :root {
   --rk-ink: #102a24;
@@ -17,49 +17,36 @@
   --rk-focus: #0369a1;
 }
 
-/* Typography: Traditional Chinese first; Inter is reserved for Latin/numbers. */
 html, body, button, input, select, textarea {
   font-family: 'Noto Sans TC', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
 }
-body { color: var(--rk-ink) !important; }
 
-/* Never globally turn white text into dark text: white is semantic "on color". */
+body {
+  color: var(--rk-ink) !important;
+  background: #edf8f4 !important;
+}
+
+/* Preserve semantic white-on-color; never globally reinterpret Tailwind text utilities. */
 .text-white { color: var(--rk-on-color) !important; }
-.text-slate-100, .text-slate-200 { color: var(--rk-ink) !important; }
-.text-slate-300, .text-slate-400 { color: var(--rk-muted) !important; }
 
-/* Colored controls always get a deliberate foreground. */
-.bg-blue-600, .bg-blue-500, .bg-cyan-600, .bg-cyan-500,
-.bg-emerald-600, .bg-emerald-500, .bg-teal-600, .bg-red-600,
-.bg-rose-600, .bg-gradient-to-r.from-blue-600, .bg-gradient-to-r.from-emerald-600 {
-  color: var(--rk-on-color) !important;
-}
-.bg-amber-500, .bg-amber-400 { color: #3b2200 !important; }
-
-/* Navigation: selected blue/green tabs must remain white-on-color. */
-#modeChallengeTab.bg-gradient-to-r,
-#modeSandboxTab.bg-gradient-to-r,
-#submitRegistryBtn,
-#nextQuestionButton,
-.primary-score-button {
-  color: var(--rk-on-color) !important;
-}
-
-/* Main question hierarchy. */
+/* Player-facing main hierarchy. */
 #situationTitle { color: #7c4a00 !important; }
 #situationDesc {
   color: var(--rk-ink) !important;
   font-weight: 700 !important;
   line-height: 1.7 !important;
 }
-#targetRunnerText { color: #075985 !important; }
+#targetRunnerText {
+  color: #075985 !important;
+  font-size: clamp(1rem, 1.8vw, 1.2rem) !important;
+}
 #playerRoleBadge {
   color: #075985 !important;
   background: #e0f2fe !important;
   border-color: #7dd3fc !important;
 }
 
-/* Keyword chips: high contrast on the light question card. */
+/* Keyword chips on the question card. */
 #situationDesc .text-amber-400 {
   color: #78350f !important;
   background: #fef3c7 !important;
@@ -76,14 +63,20 @@ body { color: var(--rk-ink) !important; }
   border-color: #059669 !important;
 }
 
-/* Decision buttons: title and helper text stay readable regardless of old Tailwind classes. */
-.option-btn { color: var(--rk-ink) !important; background: var(--rk-surface) !important; }
+/* Decision buttons: child-facing choices must remain obvious and readable. */
+.option-btn {
+  color: var(--rk-ink) !important;
+  background: var(--rk-surface) !important;
+  min-height: 4.25rem !important;
+}
 .option-btn span.text-amber-300,
 .option-btn span.text-amber-400,
 .option-btn span.text-amber-500 { color: #78350f !important; }
 .option-btn span.text-slate-100,
 .option-btn span.text-slate-200,
 .option-btn span.text-slate-300 { color: var(--rk-ink) !important; }
+
+/* Focus is always visible. */
 .option-btn:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -92,7 +85,12 @@ select:focus-visible {
   outline-offset: 3px !important;
 }
 
-/* Post-decision controls. */
+/* Primary controls. */
+#submitRegistryBtn,
+#nextQuestionButton,
+.primary-score-button {
+  color: var(--rk-on-color) !important;
+}
 #replayAnimBtn {
   background: #f1f5f9 !important;
   color: #1e293b !important;
@@ -109,7 +107,22 @@ select:focus-visible {
   border-color: #1e3a8a !important;
 }
 
-/* Light-theme forms and matrix controls. */
+/* Player registration should feel like game start, not an admin form. */
+#registryModal > div {
+  background: #ffffff !important;
+  color: var(--rk-ink) !important;
+  border-color: #7dd3fc !important;
+}
+#registryModal h2 { color: #7c4a00 !important; }
+#registryModal p,
+#registryModal label { color: var(--rk-muted) !important; }
+#registryModal input {
+  background: #ffffff !important;
+  color: var(--rk-ink) !important;
+  border-color: var(--rk-line) !important;
+}
+
+/* Forms are readable by default. */
 input, select, textarea {
   background: #ffffff !important;
   color: var(--rk-ink) !important;
@@ -117,7 +130,7 @@ input, select, textarea {
 }
 select option { color: #111827; background: #ffffff; }
 
-/* Tables/modals that still carry dark-theme utility classes. */
+/* Secondary knowledge/admin modals are light but visually subordinate. */
 #matrixExplorerModal > div,
 #validatorModal > div,
 #helpModal > div,
@@ -130,12 +143,16 @@ select option { color: #111827; background: #ffffff; }
 #helpModal .text-white,
 #scoreboardModal .text-white { color: var(--rk-ink) !important; }
 
-/* Minimum readable sizing for the primary child-facing flow. */
-#targetRunnerText { font-size: clamp(1rem, 1.8vw, 1.2rem) !important; }
-.option-btn { min-height: 4.25rem !important; }
-@media (max-width: 480px) {
-  #situationDesc { font-size: 0.95rem !important; line-height: 1.65 !important; }
-  .option-btn { min-height: 3.75rem !important; }
+/* Header utility tools are not part of the child's primary loop. */
+#validatorButtonText { opacity: 0.72; }
+
+@media (max-width: 900px) {
+  #validatorButtonText { display: none !important; }
+}
+
+@media (max-width: 640px) {
+  #situationDesc { font-size: 0.98rem !important; line-height: 1.7 !important; }
+  .option-btn { min-height: 3.9rem !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
