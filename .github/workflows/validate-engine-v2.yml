@@ -1,0 +1,26 @@
+name: Validate Engine V2
+on:
+  push:
+    branches: [ui-accessibility-v20261005-03]
+    paths:
+      - 'engine/v2/**'
+      - '.github/workflows/validate-engine-v2.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check
+        run: |
+          node --check engine/v2/baseball-decision-engine.js
+          node --check engine/v2/scenarios-alpha2.js
+          node --check engine/v2/invariants.js
+          node --check engine/v2/run-alpha2-validation.js
+      - name: Run deterministic validation
+        run: node engine/v2/run-node-validation.js
