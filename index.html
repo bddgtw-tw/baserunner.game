@@ -1667,7 +1667,7 @@
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
                         <span>你是跑壘王!!!</span> 
                         <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">少棒跑壘判斷</span>
-                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20261005-04</span>
+                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20261005-05</span>
                     </h1>
                     <p class="text-xs text-slate-400 font-medium">跑壘指導員互動出題版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
@@ -2329,12 +2329,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20261005-04</span>
+        <span id="footerVersionText">版本：v20261005-05</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20261005-04";
+        const APP_VERSION = "v20261005-05";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -6248,9 +6248,17 @@
             document.getElementById('baseStatusText').innerText = `${currentQ.outs}出局 - 選擇後：${describeOccupiedBases(currentVisualOccupiedBases)}`;
 
             let start = null;
-            // 雙殺折返跑情境動作更豐富，延長動作時長至 3.4 秒以完美對齊外野接殺與二段長傳
+            // 物理移動速度調整：全力衝刺 (100% 距離) 動畫時間縮短至 1200ms 表現極速狂飆；離壘觀察 (35% 距離) 維持 1600ms 小步探步；折返雙殺 3400ms
             const hasScramble = fieldRunners.some(r => r.customTrajectory && r.customTrajectory.type === 'scramble_back');
-            const duration = hasScramble ? 3400 : 1600;
+            const hasRundown = fieldRunners.some(r => r.customTrajectory && r.customTrajectory.type === 'rundown_trap');
+            let duration = 1200; // 預設衝刺極速
+            if (hasScramble) {
+                duration = 3400;
+            } else if (hasRundown) {
+                duration = 2400;
+            } else if (action === 'B' || action === 'C') {
+                duration = 1600; // 離壘觀察與守壘小步探步步調
+            }
 
             function step(timestamp) {
                 if (!start) start = timestamp;
