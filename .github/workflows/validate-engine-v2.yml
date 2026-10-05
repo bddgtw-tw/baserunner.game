@@ -20,7 +20,11 @@ jobs:
         run: |
           node --check engine/v2/baseball-decision-engine.js
           node --check engine/v2/scenarios-alpha2.js
+          node --check engine/v2/scenarios-alpha3.js
           node --check engine/v2/invariants.js
           node --check engine/v2/run-alpha2-validation.js
-      - name: Run deterministic validation
+          node --check engine/v2/validate-alpha3.js
+      - name: Run alpha2 regression
         run: node engine/v2/run-node-validation.js
+      - name: Run alpha3 tag-up validation
+        run: node engine/v2/validate-alpha3.js
