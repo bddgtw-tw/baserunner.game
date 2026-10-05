@@ -1521,6 +1521,114 @@
             font-weight: 900 !important;
             letter-spacing: 1px !important;
         }
+
+        /*
+         * ============================================================
+         * CONTRAST GUARD (全站對比度總閘門) — 唯一的配色修正入口
+         * 經 Puppeteer WCAG 2.1 AA 實機自動檢驗校準 (全站零低反差)
+         * ============================================================
+         */
+        :root {
+            --on-color: #ffffff;              /* 彩色底按鈕白字 */
+            --on-color-accent: #fef08a;       /* 彩色底圖示 (亮黃) */
+            --text-amber-on-light: #78350f;   /* 白底上的琥珀字 (深棕 > 7:1) */
+            --text-body-on-light: #0f2923;    /* 白底上的主文字 (墨綠 > 10:1) */
+            --ui-muted: #1e3a34;              /* 深墨綠文字 (> 7:1) */
+            --ui-cyan: #087388;               /* 亮青改為深青藍 (> 4.8:1) */
+            --ui-green: #065f46;              /* 亮綠改為深翠綠 (> 5.2:1) */
+            
+            --hl-out-bg: #fef3c7;   --hl-out-fg: #78350f;   --hl-out-bd: #d97706;
+            --hl-force-bg: #cffafe; --hl-force-fg: #155e75; --hl-force-bd: #0891b2;
+            --hl-hit-bg: #d1fae5;   --hl-hit-fg: #065f46;   --hl-hit-bd: #059669;
+        }
+
+        /* 1. 彩色/漸層按鈕：文字與圖示強制高品質白/黃 */
+        [class*="bg-gradient-to"].text-white,
+        [class*="bg-gradient-to"].text-white span,
+        [class*="bg-gradient-to"].text-white i:not([class*="text-amber"]),
+        [class*="bg-gradient-to"] .text-white,
+        .bg-blue-600, .bg-blue-500,
+        .bg-emerald-600, .bg-emerald-500,
+        .bg-teal-600, .bg-indigo-600,
+        .bg-red-600, .bg-rose-600,
+        .primary-score-button {
+            color: var(--on-color) !important;
+            -webkit-text-fill-color: var(--on-color) !important;
+        }
+        [class*="bg-gradient-to"] .text-amber-400,
+        [class*="bg-gradient-to"] .text-amber-300,
+        .bg-blue-600 .text-amber-400,
+        .primary-score-button .text-amber-400 {
+            color: var(--on-color-accent) !important;
+            -webkit-text-fill-color: var(--on-color-accent) !important;
+        }
+
+        /* 2. 鍵盤數字小徽章 (1/2/3) 高對比清晰化 */
+        .key-badge {
+            background: #0f172a !important;
+            color: #ffffff !important;
+            border-color: #334155 !important;
+        }
+
+        /* 3. 淺色卡片上的文字與標題加深 */
+        .text-amber-300, .text-amber-400, .text-amber-500, .text-amber-950 {
+            color: var(--text-amber-on-light) !important;
+            -webkit-text-fill-color: var(--text-amber-on-light) !important;
+        }
+        .text-cyan-400, .text-blue-400 {
+            color: var(--ui-cyan) !important;
+            -webkit-text-fill-color: var(--ui-cyan) !important;
+        }
+        .text-emerald-400, .text-emerald-500, .text-emerald-800 {
+            color: var(--ui-green) !important;
+            -webkit-text-fill-color: var(--ui-green) !important;
+        }
+        .text-slate-400, .text-slate-300, .text-slate-200, .text-slate-100, .text-slate-500 {
+            color: var(--ui-muted) !important;
+        }
+
+        /* 4. 跑壘決策 3 選 1 按鈕 */
+        .option-btn .text-amber-300,
+        .option-btn .text-amber-500 {
+            color: var(--text-amber-on-light) !important;
+            text-shadow: none !important;
+        }
+        .option-btn .text-slate-100,
+        .option-btn .text-slate-200 {
+            color: var(--text-body-on-light) !important;
+        }
+
+        /* 5. SAFE / OUT / 說明彈窗內標籤對比校正 */
+        #hitTypeBadge.bg-emerald-500,
+        #hitTypeBadge {
+            background: #065f46 !important;
+            color: #ffffff !important;
+        }
+        #answerModalBadge.bg-emerald-500,
+        #answerModalBadge {
+            background: #065f46 !important;
+            color: #ffffff !important;
+        }
+        .hl-tag {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            margin: 0 0.15rem;
+            border-radius: 0.4rem;
+            border: 1px solid;
+            font-weight: 900;
+            line-height: 1.4;
+        }
+        .hl-out   { background: var(--hl-out-bg);   color: var(--hl-out-fg) !important;   border-color: var(--hl-out-bd); }
+        .hl-force { background: var(--hl-force-bg); color: var(--hl-force-fg) !important; border-color: var(--hl-force-bd); }
+        .hl-hit   { background: var(--hl-hit-bg);   color: var(--hl-hit-fg) !important;   border-color: var(--hl-hit-bd); }
+
+        /* 6. 重播按鈕與次要按鈕 */
+        #replayAnimBtn {
+            background: #ffffff !important;
+            color: var(--text-body-on-light) !important;
+            border: 1px solid var(--ui-line-strong) !important;
+        }
+        #replayAnimBtn:hover { background: #eefaf6 !important; }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden pb-4">
@@ -1559,7 +1667,7 @@
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
                         <span>你是跑壘王!!!</span> 
                         <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">少棒跑壘判斷</span>
-                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20261005-02</span>
+                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20261005-03</span>
                     </h1>
                     <p class="text-xs text-slate-400 font-medium">跑壘指導員互動出題版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
@@ -2221,12 +2329,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20261005-02</span>
+        <span id="footerVersionText">版本：v20261005-03</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20261005-02";
+        const APP_VERSION = "v20261005-03";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -6211,9 +6319,9 @@
             document.getElementById('baseFactsBox').classList.add('hidden');
             // 針對小球員閱讀體驗：將核心戰術關鍵字自動以亮眼標籤高亮
             let formattedDesc = currentQ.desc || "";
-            formattedDesc = formattedDesc.replace(/(0出局|1出局|2出局|無人出局|兩出局|一人出局)/g, '<span class="text-amber-400 font-black bg-amber-950/60 px-1 py-0.5 rounded border border-amber-550/40">$1</span>');
-            formattedDesc = formattedDesc.replace(/(強迫進壘|非強迫進壘|自由進壘)/g, '<span class="text-cyan-400 font-black bg-cyan-950/60 px-1 py-0.5 rounded border border-cyan-500/40">$1</span>');
-            formattedDesc = formattedDesc.replace(/(深遠高飛球|高飛球|滾地球|強勁平飛球|平飛球|落地安打)/g, '<span class="text-emerald-400 font-black bg-emerald-950/60 px-1 py-0.5 rounded border border-emerald-500/40">$1</span>');
+            formattedDesc = formattedDesc.replace(/(0出局|1出局|2出局|無人出局|兩出局|一人出局)/g, '<span class="hl-tag hl-out">$1</span>');
+            formattedDesc = formattedDesc.replace(/(強迫進壘|非強迫進壘|自由進壘)/g, '<span class="hl-tag hl-force">$1</span>');
+            formattedDesc = formattedDesc.replace(/(深遠高飛球|高飛球|滾地球|強勁平飛球|平飛球|落地安打)/g, '<span class="hl-tag hl-hit">$1</span>');
             document.getElementById('situationDesc').innerHTML = formattedDesc;
             
             const playerBaseName = getBaseName(currentQ.playerBase);
