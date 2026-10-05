@@ -6061,11 +6061,23 @@
             runner.base = targetBaseNumber === 4 ? 4 : targetBaseNumber;
         }
 
-        function moveRunnerTowardNextBase(runner, ratio = 0.32) {
+        function moveRunnerTowardNextBase(runner, ratio = 0.35) {
             const nextBase = getNextBasePosition(runner.base);
-            if (!nextBase) return;
-            runner.targetX = runner.x + (nextBase.x - runner.x) * ratio;
-            runner.targetY = runner.y + (nextBase.y - runner.y) * ratio;
+            const origBase = getRunnerStartPosition(runner.base);
+            if (!nextBase || !origBase) return;
+            const targetX = origBase.x + (nextBase.x - origBase.x) * ratio;
+            const targetY = origBase.y + (nextBase.y - origBase.y) * ratio;
+            runner.targetX = targetX;
+            runner.targetY = targetY;
+            runner.customTrajectory = {
+                type: 'lead_off_shuffle',
+                startX: origBase.x,
+                startY: origBase.y,
+                targetX: targetX,
+                targetY: targetY,
+                nextBaseX: nextBase.x,
+                nextBaseY: nextBase.y
+            };
         }
 
         function markPlayerForChoice(runner, choiceId, consequence) {
@@ -6290,7 +6302,40 @@
                 fieldRunners.forEach(runner => {
                     runner.animProgress = progress;
 
-                    if (runner.customTrajectory && runner.customTrajectory.type === 'scramble_back') {
+                    if (runner.customTrajectory && runner.customTrajectory.type === 'lead_off_shuffle') {
+                        // 離壘觀察游移演出 (Lead-Off Observation Shuffle):
+                        // 沿著壘包線前後游移：往前踏 25% ➔ 微幅後撤 6% ➔ 再向前游移定位至 35% 離壘點
+                        const traj = runner.customTrajectory;
+                        const sX = traj.startX;
+                        const sY = traj.startY;
+                        const tX = traj.targetX;
+                        const tY = traj.targetY;
+                        
+                        if (progress <= 0.40) {
+                            // 階段一：迅速離壘探步至 28%
+                            const subP = progress / 0.40;
+                            const apexX = sX + (tX - sX) * 1.15;
+                            const apexY = sY + (tY - sY) * 1.15;
+                            runner.x = sX + (apexX - sX) * subP;
+                            runner.y = sY + (apexY - sY) * subP;
+                        } else if (progress <= 0.70) {
+                            // 階段二：觀察投手重心，向後退兩步警戒
+                            const subP = (progress - 0.40) / 0.30;
+                            const apexX = sX + (tX - sX) * 1.15;
+                            const apexY = sY + (tY - sY) * 1.15;
+                            const backX = sX + (tX - sX) * 0.75;
+                            const backY = sY + (tY - sY) * 0.75;
+                            runner.x = apexX + (backX - apexX) * subP;
+                            runner.y = apexY + (backY - apexY) * subP;
+                        } else {
+                            // 階段三：穩定二次探步，定位於 35% 離壘觀察觀察點
+                            const subP = (progress - 0.70) / 0.30;
+                            const backX = sX + (tX - sX) * 0.75;
+                            const backY = sY + (tY - sY) * 0.75;
+                            runner.x = backX + (tX - backX) * subP;
+                            runner.y = backY + (tY - backY) * subP;
+                        }
+                    } else if (runner.customTrajectory && runner.customTrajectory.type === 'scramble_back') {
                         // 雙階段折返路徑 (U-Turn Scramble):
                         // 0.00 ~ 0.50: 打擊出去離壘狂奔（往前衝刺至 apex 點）
                         // 0.50 ~ 0.58: 外野手接殺瞬間驚慌煞車掉頭（Skid dust）
@@ -6363,6 +6408,7 @@
                     }
 
                     const isTargetMoving = (Math.abs(runner.targetX - runner.startX) > 1 || Math.abs(runner.targetY - runner.startY) > 1);
+                    const isShuffle = (runner.customTrajectory && runner.customTrajectory.type === 'lead_off_shuffle');
                     if (runner.statusLabel && runner.statusLabel.includes("塞壘") && progress > 0.65) {
                         // 急煞車輪/球鞋摩擦泥土白煙與飛濺砂石 (Skid dust)
                         createDust(runner.x, runner.y, 4);
@@ -6370,7 +6416,7 @@
                             runner.hasPlayedBrakeSound = true;
                             playSlideSound();
                         }
-                    } else if (isTargetMoving && progress < 0.9 && Math.random() > 0.4) {
+                    } else if (isTargetMoving && !isShuffle && progress < 0.9 && Math.random() > 0.4) {
                         createDust(runner.x, runner.y, 2);
                     }
                 });
