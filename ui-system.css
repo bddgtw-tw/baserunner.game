@@ -1,0 +1,148 @@
+/* RUNNER KING UI SYSTEM v20261005-03
+ * Accessibility-first visual guard for the light mint + 16-bit theme.
+ * Keep semantic colors centralized here instead of overriding .text-white globally.
+ */
+:root {
+  --rk-ink: #102a24;
+  --rk-muted: #4b665f;
+  --rk-surface: #ffffff;
+  --rk-surface-soft: #f3faf7;
+  --rk-line: #a9c9bf;
+  --rk-primary: #075985;
+  --rk-primary-hover: #0c4a6e;
+  --rk-success: #047857;
+  --rk-danger: #b91c1c;
+  --rk-warning: #92400e;
+  --rk-on-color: #ffffff;
+  --rk-focus: #0369a1;
+}
+
+/* Typography: Traditional Chinese first; Inter is reserved for Latin/numbers. */
+html, body, button, input, select, textarea {
+  font-family: 'Noto Sans TC', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+}
+body { color: var(--rk-ink) !important; }
+
+/* Never globally turn white text into dark text: white is semantic "on color". */
+.text-white { color: var(--rk-on-color) !important; }
+.text-slate-100, .text-slate-200 { color: var(--rk-ink) !important; }
+.text-slate-300, .text-slate-400 { color: var(--rk-muted) !important; }
+
+/* Colored controls always get a deliberate foreground. */
+.bg-blue-600, .bg-blue-500, .bg-cyan-600, .bg-cyan-500,
+.bg-emerald-600, .bg-emerald-500, .bg-teal-600, .bg-red-600,
+.bg-rose-600, .bg-gradient-to-r.from-blue-600, .bg-gradient-to-r.from-emerald-600 {
+  color: var(--rk-on-color) !important;
+}
+.bg-amber-500, .bg-amber-400 { color: #3b2200 !important; }
+
+/* Navigation: selected blue/green tabs must remain white-on-color. */
+#modeChallengeTab.bg-gradient-to-r,
+#modeSandboxTab.bg-gradient-to-r,
+#submitRegistryBtn,
+#nextQuestionButton,
+.primary-score-button {
+  color: var(--rk-on-color) !important;
+}
+
+/* Main question hierarchy. */
+#situationTitle { color: #7c4a00 !important; }
+#situationDesc {
+  color: var(--rk-ink) !important;
+  font-weight: 700 !important;
+  line-height: 1.7 !important;
+}
+#targetRunnerText { color: #075985 !important; }
+#playerRoleBadge {
+  color: #075985 !important;
+  background: #e0f2fe !important;
+  border-color: #7dd3fc !important;
+}
+
+/* Keyword chips: high contrast on the light question card. */
+#situationDesc .text-amber-400 {
+  color: #78350f !important;
+  background: #fef3c7 !important;
+  border-color: #d97706 !important;
+}
+#situationDesc .text-cyan-400 {
+  color: #155e75 !important;
+  background: #cffafe !important;
+  border-color: #0891b2 !important;
+}
+#situationDesc .text-emerald-400 {
+  color: #065f46 !important;
+  background: #d1fae5 !important;
+  border-color: #059669 !important;
+}
+
+/* Decision buttons: title and helper text stay readable regardless of old Tailwind classes. */
+.option-btn { color: var(--rk-ink) !important; background: var(--rk-surface) !important; }
+.option-btn span.text-amber-300,
+.option-btn span.text-amber-400,
+.option-btn span.text-amber-500 { color: #78350f !important; }
+.option-btn span.text-slate-100,
+.option-btn span.text-slate-200,
+.option-btn span.text-slate-300 { color: var(--rk-ink) !important; }
+.option-btn:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--rk-focus) !important;
+  outline-offset: 3px !important;
+}
+
+/* Post-decision controls. */
+#replayAnimBtn {
+  background: #f1f5f9 !important;
+  color: #1e293b !important;
+  border-color: #94a3b8 !important;
+}
+#reviewExplanationBtn {
+  background: #f59e0b !important;
+  color: #3b2200 !important;
+  border-color: #92400e !important;
+}
+#nextQuestionButton {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+  border-color: #1e3a8a !important;
+}
+
+/* Light-theme forms and matrix controls. */
+input, select, textarea {
+  background: #ffffff !important;
+  color: var(--rk-ink) !important;
+  border-color: var(--rk-line) !important;
+}
+select option { color: #111827; background: #ffffff; }
+
+/* Tables/modals that still carry dark-theme utility classes. */
+#matrixExplorerModal > div,
+#validatorModal > div,
+#helpModal > div,
+#scoreboardModal > div {
+  background: var(--rk-surface) !important;
+  color: var(--rk-ink) !important;
+}
+#matrixExplorerModal .text-white,
+#validatorModal .text-white,
+#helpModal .text-white,
+#scoreboardModal .text-white { color: var(--rk-ink) !important; }
+
+/* Minimum readable sizing for the primary child-facing flow. */
+#targetRunnerText { font-size: clamp(1rem, 1.8vw, 1.2rem) !important; }
+.option-btn { min-height: 4.25rem !important; }
+@media (max-width: 480px) {
+  #situationDesc { font-size: 0.95rem !important; line-height: 1.65 !important; }
+  .option-btn { min-height: 3.75rem !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

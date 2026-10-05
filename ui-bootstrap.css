@@ -1,0 +1,2 @@
+/* UI system bootstrap: import accessibility guard last so it wins over legacy inline CSS. */
+@import url('./ui-system.css');
