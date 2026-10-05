@@ -1559,7 +1559,7 @@
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
                         <span>你是跑壘王!!!</span> 
                         <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">少棒跑壘判斷</span>
-                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20260527-18</span>
+                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20260527-19</span>
                     </h1>
                     <p class="text-xs text-slate-400 font-medium">跑壘指導員互動出題版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
@@ -2221,12 +2221,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20260527-17</span>
+        <span id="footerVersionText">版本：v20260527-19</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20260527-18";
+        const APP_VERSION = "v20260527-19";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -3049,13 +3049,26 @@
                     }, 120);
                 }, catchWaitMs);
             }
-            // 3. 深遠飛球提早起跑促請裁決 (Tag-up Appeal Out)
-            else if (ruleKey === 'deepFlyThirdTag' && choiceId === 'A') {
-                const basePos = getBasePosition(3);
-                const coveringKey = "3B";
+            // 3. 飛球遭接殺：跑者提前狂奔，外野接殺後長傳回原壘雙殺促請裁決 (Tag-up Appeal Out / Double Play)
+            else if ((ruleKey === 'deepFlyThirdTag' || ruleKey === 'deepFlyHalfway' || ruleKey === 'shortFlyHalfway') && choiceId === 'A') {
+                const appealBaseNum = playerBase; // 回傳跑者原壘包 (一壘、二壘或三壘)
+                const basePos = getBasePosition(appealBaseNum);
+                if (!basePos) return;
 
-                moveFielderTo(coveringKey, basePos.x, basePos.y, 700);
+                let coveringKey = "2B";
+                if (appealBaseNum === 3) {
+                    coveringKey = "3B";
+                } else if (appealBaseNum === 2) {
+                    // 若是二壘，由非接球側的二壘手或游擊手迅速踩壘包
+                    coveringKey = (fielderKey === "RF" || fielderKey === "1B") ? "SS" : "2B";
+                } else if (appealBaseNum === 1) {
+                    coveringKey = "1B";
+                }
 
+                // 補位野手衝向原壘包踩壘待命
+                moveFielderTo(coveringKey, basePos.x, basePos.y, 750);
+
+                // 外野手確實接住飛球後，雷射肩長傳回原壘包抓雙殺！
                 window.defensiveThrowTimeout = setTimeout(() => {
                     const catchF = fieldersState[fielderKey];
                     if (catchF) catchF.state = 'catch';
@@ -3063,15 +3076,17 @@
 
                     setTimeout(() => {
                         const fromPos = fieldersState[fielderKey] || originFielder;
-                        triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 500, () => {
+                        // 根據外野到內野距離設定長傳動畫時間
+                        triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 520, () => {
                             const coverF = fieldersState[coveringKey];
                             if (coverF) {
                                 coverF.x = basePos.x;
                                 coverF.y = basePos.y;
                                 coverF.state = 'catch';
                             }
+                            playCatchSound();
                         });
-                    }, 150);
+                    }, 140);
                 }, catchWaitMs);
             }
             // 4. 非強迫進壘滾地球硬衝遭觸殺
