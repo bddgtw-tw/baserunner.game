@@ -5736,8 +5736,8 @@
 
         function drawRunners(scale) {
             fieldRunners.forEach(runner => {
-                let baseX = (runner.startX + (runner.targetX - runner.startX) * runner.animProgress);
-                let baseY = (runner.startY + (runner.targetY - runner.startY) * runner.animProgress);
+                let baseX = (runner.x !== undefined) ? runner.x : runner.startX;
+                let baseY = (runner.y !== undefined) ? runner.y : runner.startY;
 
                 // 判斷動作狀態 (state: idle | run | slide | out)
                 let runnerState = 'idle';
