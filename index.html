@@ -1667,7 +1667,7 @@
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
                         <span>你是跑壘王!!!</span> 
                         <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">少棒跑壘判斷</span>
-                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20261005-03</span>
+                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20261005-04</span>
                     </h1>
                     <p class="text-xs text-slate-400 font-medium">跑壘指導員互動出題版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
@@ -2329,12 +2329,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20261005-03</span>
+        <span id="footerVersionText">版本：v20261005-04</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20261005-03";
+        const APP_VERSION = "v20261005-04";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -3226,6 +3226,41 @@
                         });
                     }, 120);
                 }, catchWaitMs);
+            }
+            // 4.5. 離壘過遠或不當離壘遭內野夾殺 (Option B Rundown Trap Animation)
+            else if (choiceId === 'B' && consequence.outcome === 'OUT') {
+                const origPos = getRunnerStartPosition(playerBase);
+                const nextBaseNum = getNextBaseNumber(playerBase);
+                const nextPos = getNextBasePosition(playerBase);
+                if (origPos && nextPos) {
+                    let rearFielderKey = "1B";
+                    let frontFielderKey = "2B";
+                    if (playerBase === 1) { rearFielderKey = "1B"; frontFielderKey = "2B"; }
+                    else if (playerBase === 2) { rearFielderKey = "2B"; frontFielderKey = "3B"; }
+                    else if (playerBase === 3) { rearFielderKey = "3B"; frontFielderKey = "C"; }
+
+                    // 兩側野手同時向跑者中途點雙向夾擊逼近
+                    const trapTargetX = origPos.x + (nextPos.x - origPos.x) * 0.38;
+                    const trapTargetY = origPos.y + (nextPos.y - origPos.y) * 0.38;
+
+                    moveFielderTo(rearFielderKey, origPos.x + (trapTargetX - origPos.x) * 0.5, origPos.y + (trapTargetY - origPos.y) * 0.5, 750);
+                    moveFielderTo(frontFielderKey, nextPos.x + (trapTargetX - nextPos.x) * 0.4, nextPos.y + (trapTargetY - nextPos.y) * 0.4, 750);
+
+                    window.defensiveThrowTimeout = setTimeout(() => {
+                        const catchF = fieldersState[fielderKey];
+                        if (catchF) catchF.state = 'catch';
+                        playCatchSound();
+
+                        setTimeout(() => {
+                            const fromPos = fieldersState[fielderKey] || originFielder;
+                            triggerThrowAnimation(fromPos.x, fromPos.y, trapTargetX, trapTargetY, 400, () => {
+                                const frontF = fieldersState[frontFielderKey];
+                                if (frontF) frontF.state = 'catch';
+                                playCatchSound();
+                            });
+                        }, 120);
+                    }, catchWaitMs);
+                }
             }
             // 5. 正解或安打：外野接球後傳回內野轉傳 (Cutoff)
             else if (currentQ.batType === 'clean_hit' || consequence.outcome === 'SAFE') {
@@ -6054,12 +6089,40 @@
                     moveRunnerTowardNextBase(runner, 0.68);
                 }
             } else if (animAction === 'out_leadoff') {
-                moveRunnerTowardNextBase(runner, 0.35); // 離壘處被回傳刺殺/夾殺
+                // 棒球真實演出（Track 2: 選 B 離壘過遠/猶豫遭內野守備夾殺 Rundown Trap）：
+                // 跑者離壘約 38% 處發現野手假動作假傳，進退維谷停在半路，野手雙向包夾！
+                const nextBasePos = getNextBasePosition(runner.base);
+                const origBasePos = getRunnerStartPosition(runner.base);
+                if (nextBasePos && origBasePos) {
+                    const midX = origBasePos.x + (nextBasePos.x - origBasePos.x) * 0.38;
+                    const midY = origBasePos.y + (nextBasePos.y - origBasePos.y) * 0.38;
+                    runner.targetX = midX;
+                    runner.targetY = midY;
+                    runner.customTrajectory = {
+                        type: 'rundown_trap',
+                        midX: midX,
+                        midY: midY,
+                        origX: origBasePos.x,
+                        origY: origBasePos.y,
+                        nextX: nextBasePos.x,
+                        nextY: nextBasePos.y
+                    };
+                } else {
+                    moveRunnerTowardNextBase(runner, 0.35);
+                }
             } else {
-                // hold / wasted_hold / out_holding (守原壘或原壘被封殺)
+                // hold / wasted_hold / out_holding (守原壘或原壘被強迫進壘封殺 Force Out)
                 const original = getRunnerStartPosition(runner.base);
                 runner.targetX = original.x;
                 runner.targetY = original.y;
+                if (animAction === 'out_holding' && consequence.outcome === 'OUT') {
+                    // Track 3: 強迫進壘卻死守原壘遭封殺 (Force Out)
+                    runner.customTrajectory = {
+                        type: 'force_out_holding',
+                        origX: original.x,
+                        origY: original.y
+                    };
+                }
             }
         }
 
@@ -6220,6 +6283,32 @@
                             const subP = (progress - 0.58) / 0.42;
                             runner.x = traj.apexX + (traj.finalX - traj.apexX) * subP;
                             runner.y = traj.apexY + (traj.finalY - traj.apexY) * subP;
+                        }
+                    } else if (runner.customTrajectory && runner.customTrajectory.type === 'rundown_trap') {
+                        // 夾殺中途折返與猶豫 (Rundown Trap Trajectory):
+                        // 0.00 ~ 0.45: 試圖離壘推進至中途點 38%
+                        // 0.45 ~ 0.55: 驚覺野手假傳牽制，緊急煞車 (Skid dust & hesitation)
+                        // 0.55 ~ 1.00: 試圖往原壘逃跑，但前野手與後野手雙向包夾，受困於 25% 處遭觸殺！
+                        const traj = runner.customTrajectory;
+                        if (progress <= 0.45) {
+                            const subP = progress / 0.45;
+                            runner.x = runner.startX + (traj.midX - runner.startX) * subP;
+                            runner.y = runner.startY + (traj.midY - runner.startY) * subP;
+                        } else if (progress <= 0.55) {
+                            runner.x = traj.midX;
+                            runner.y = traj.midY;
+                            createDust(runner.x, runner.y, 4);
+                            if (!runner.hasPlayedBrakeSound) {
+                                runner.hasPlayedBrakeSound = true;
+                                playSlideSound();
+                            }
+                        } else {
+                            const subP = (progress - 0.55) / 0.45;
+                            // 往原壘退兩步
+                            const retX = traj.midX + (traj.origX - traj.midX) * 0.45;
+                            const retY = traj.midY + (traj.origY - traj.midY) * 0.45;
+                            runner.x = traj.midX + (retX - traj.midX) * subP;
+                            runner.y = traj.midY + (retY - traj.midY) * subP;
                         }
                     } else {
                         runner.x = runner.startX + (runner.targetX - runner.startX) * progress;
