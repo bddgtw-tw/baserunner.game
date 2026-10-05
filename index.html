@@ -1559,7 +1559,7 @@
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
                         <span>你是跑壘王!!!</span> 
                         <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">少棒跑壘判斷</span>
-                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20261005-01</span>
+                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20261005-02</span>
                     </h1>
                     <p class="text-xs text-slate-400 font-medium">跑壘指導員互動出題版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
@@ -2221,12 +2221,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20261005-01</span>
+        <span id="footerVersionText">版本：v20261005-02</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20261005-01";
+        const APP_VERSION = "v20261005-02";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -5282,9 +5282,9 @@
 
                     // 微浮動呼吸彈跳效果
                     const popY = Math.sin(Date.now() / 400) * 1.5 * scale;
-                    // 置於本壘與打擊區右側的綠色草皮區 (X: 254, Y: 346)
+                    // 置於本壘與打擊區右側的綠色草皮區 (微向上移 15px 避免遮擋本壘跑者起跑視線)
                     const bx = 254 * scale;
-                    const by = (cPos.y - 4) * scale + popY;
+                    const by = (cPos.y - 19) * scale + popY;
 
                     ctx.save();
                     ctx.imageSmoothingEnabled = false;
@@ -6209,7 +6209,12 @@
             document.getElementById('situationTitle').innerText = `【 ${currentQ.title} 】`;
             document.getElementById('baseFactsText').innerText = currentQ.baseFactsText || describeBaseFactsForDisplay(currentQ);
             document.getElementById('baseFactsBox').classList.add('hidden');
-            document.getElementById('situationDesc').innerText = currentQ.desc;
+            // 針對小球員閱讀體驗：將核心戰術關鍵字自動以亮眼標籤高亮
+            let formattedDesc = currentQ.desc || "";
+            formattedDesc = formattedDesc.replace(/(0出局|1出局|2出局|無人出局|兩出局|一人出局)/g, '<span class="text-amber-400 font-black bg-amber-950/60 px-1 py-0.5 rounded border border-amber-550/40">$1</span>');
+            formattedDesc = formattedDesc.replace(/(強迫進壘|非強迫進壘|自由進壘)/g, '<span class="text-cyan-400 font-black bg-cyan-950/60 px-1 py-0.5 rounded border border-cyan-500/40">$1</span>');
+            formattedDesc = formattedDesc.replace(/(深遠高飛球|高飛球|滾地球|強勁平飛球|平飛球|落地安打)/g, '<span class="text-emerald-400 font-black bg-emerald-950/60 px-1 py-0.5 rounded border border-emerald-500/40">$1</span>');
+            document.getElementById('situationDesc').innerHTML = formattedDesc;
             
             const playerBaseName = getBaseName(currentQ.playerBase);
             document.getElementById('playerRoleBadge').innerText = `扮演角色：${playerBaseName}跑者`;
@@ -6250,8 +6255,8 @@
                 btn.innerHTML = `
                     <div class="flex flex-col items-center justify-center gap-1 w-full relative">
                         <span class="key-badge absolute top-0 right-0">${keyNum}</span>
-                        <span class="text-sm sm:text-lg font-black text-amber-500 leading-tight">${opt.title}</span>
-                        <span class="text-xs sm:text-sm font-black text-slate-200 leading-snug">${opt.text}</span>
+                        <span class="text-sm sm:text-lg font-black text-amber-300 drop-shadow-sm leading-tight">${opt.title}</span>
+                        <span class="text-xs sm:text-sm font-black text-slate-100 leading-snug">${opt.text}</span>
                     </div>
                 `;
                 container.appendChild(btn);
@@ -6395,6 +6400,12 @@
             actionGroup.id = 'postDecisionActionGroup';
             actionGroup.className = 'w-full flex flex-col sm:flex-row gap-2.5';
 
+            const replayBtn = document.createElement('button');
+            replayBtn.id = 'replayAnimBtn';
+            replayBtn.className = 'flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-black py-3.5 px-3 rounded-2xl shadow-md transition-all active:scale-95 flex justify-center items-center gap-1.5 text-xs sm:text-sm border border-slate-700';
+            replayBtn.innerHTML = `<i class="fa-solid fa-rotate-left"></i> 重播跑壘動畫`;
+            replayBtn.onclick = replayDecisionAnimation;
+
             const reviewBtn = document.createElement('button');
             reviewBtn.id = 'reviewExplanationBtn';
             reviewBtn.className = 'flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3.5 px-3 rounded-2xl shadow-md transition-all active:scale-95 flex justify-center items-center gap-1.5 text-xs sm:text-sm';
@@ -6407,6 +6418,7 @@
             nextBtn.innerHTML = `進入下一題 <i class="fa-solid fa-arrow-right ml-1"></i>`;
             nextBtn.onclick = () => loadQuestion(currentQuestionIdx + 1);
 
+            actionGroup.appendChild(replayBtn);
             actionGroup.appendChild(reviewBtn);
             actionGroup.appendChild(nextBtn);
 
@@ -6415,6 +6427,20 @@
                 try { actionGroup.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
             }, 120);
             return nextBtn;
+        }
+
+        // 🔁 教練戰術重播：隨時重播上一動作之連續物理動畫，便於小球員覆盤
+        function replayDecisionAnimation() {
+            if (!lastAnsweredExplanation || !lastAnsweredExplanation.choiceId) return;
+            const currentQ = generatedQuestions[currentQuestionIdx];
+            if (!currentQ) return;
+            triggerHaptic(20);
+            setupRunnersForScenario(currentQ);
+            resetFieldersState();
+            drawStadium();
+            const consequence = getChoiceConsequence(currentQ, lastAnsweredExplanation.choiceId);
+            animateRunners(lastAnsweredExplanation.choiceId, lastAnsweredExplanation.isCorrect);
+            triggerDefensivePlay(currentQ, lastAnsweredExplanation.choiceId, consequence);
         }
 
         window.addEventListener('error', function(event) {
@@ -7214,7 +7240,7 @@
             const shareText = 
 `⚾【敦化少棒跑壘大師・訓練戰報】⚾
 👦 球員：#${playerJersey || '18'} ${playerName || '少棒球員'}
-🏆 獲得稱號：${honor}
+🏆 獲得稱號：${honor.title}
 📊 測驗成果：答對 ${currentCorrectCount}/${totalQ} 題 (勝率 ${acc}%) | 總分 ${score} 分
 🔥 最高連勝：${maxStreakThisGame} 題
 ---------------------------------
