@@ -1536,14 +1536,14 @@
             <div class="space-y-4 mb-6 text-left">
                 <div>
                     <label class="block text-xs font-black text-slate-400 mb-1">球衣背號 (Jersey Number)</label>
-                    <input type="number" id="playerJersey" placeholder="例如：99" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 text-sm font-bold">
+                    <input type="number" id="playerJersey" placeholder="例如：99" onkeydown="if(event.key==='Enter')submitPlayerRegistry()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 text-sm font-bold">
                 </div>
                 <div>
                     <label class="block text-xs font-black text-slate-400 mb-1">球員名字 / 綽號 (Name)</label>
-                    <input type="text" id="playerName" placeholder="例如：王小明" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 text-sm font-bold">
+                    <input type="text" id="playerName" placeholder="例如：王小明" onkeydown="if(event.key==='Enter')submitPlayerRegistry()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 text-sm font-bold">
                 </div>
             </div>
-            <button onclick="submitPlayerRegistry()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black py-3 rounded-2xl shadow-lg transition-all active:scale-95 text-sm sm:text-base">
+            <button id="submitRegistryBtn" onclick="submitPlayerRegistry()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black py-3 rounded-2xl shadow-lg transition-all active:scale-95 text-sm sm:text-base cursor-pointer">
                 登錄名單，踏入球場！
             </button>
         </div>
@@ -1559,7 +1559,7 @@
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
                         <span>你是跑壘王!!!</span> 
                         <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">少棒跑壘判斷</span>
-                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20260601-01</span>
+                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20260527-18</span>
                     </h1>
                     <p class="text-xs text-slate-400 font-medium">跑壘指導員互動出題版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
@@ -2226,7 +2226,7 @@
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20260527-17";
+        const APP_VERSION = "v20260527-18";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -2428,17 +2428,41 @@
         }
 
         function submitPlayerRegistry() {
-            const jerseyInput = document.getElementById('playerJersey').value;
-            const nameInput = document.getElementById('playerName').value;
-            
-            if (jerseyInput) playerJersey = jerseyInput;
-            if (nameInput) playerName = nameInput;
+            try {
+                const jerseyInput = document.getElementById('playerJersey');
+                const nameInput = document.getElementById('playerName');
+                
+                if (jerseyInput && jerseyInput.value && jerseyInput.value.trim() !== '') {
+                    playerJersey = jerseyInput.value.trim();
+                } else if (!playerJersey) {
+                    playerJersey = '99';
+                }
 
-            document.getElementById('headerPlayerDisplay').innerText = `#${playerJersey} ${playerName}`;
-            updateHeaderPlayerRecordHint();
-            document.getElementById('registryModal').classList.add('hidden');
-            
-            initAudio();
+                if (nameInput && nameInput.value && nameInput.value.trim() !== '') {
+                    playerName = nameInput.value.trim();
+                } else if (!playerName) {
+                    playerName = '王小明';
+                }
+
+                const headerDisplay = document.getElementById('headerPlayerDisplay');
+                if (headerDisplay) {
+                    headerDisplay.innerText = `#${playerJersey} ${playerName}`;
+                }
+                updateHeaderPlayerRecordHint();
+            } catch (err) {
+                console.warn('Error saving player registry:', err);
+            }
+
+            const modal = document.getElementById('registryModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+
+            try {
+                initAudio();
+            } catch (e) {
+                console.warn('initAudio error on registry submit:', e);
+            }
         }
 
         function toggleLights() {
@@ -6370,8 +6394,6 @@
                 }
                 btn.onclick = null;
             });
-
-            const selectedOpt = currentQ.options.find(o => o.id === choiceId);
 
             if (isCorrect) {
                 playSuccessSound();
