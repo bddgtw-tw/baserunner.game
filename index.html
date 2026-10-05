@@ -1261,7 +1261,7 @@
         }
     
 
-        /* ACTION BUTTONS FINAL: three choices side by side */
+        /* ACTION BUTTONS FINAL: three choices side by side (optimized for thumb ergonomics) */
         #optionsContainer {
             display: grid !important;
             grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
@@ -1283,12 +1283,27 @@
         }
         @media (max-width: 480px) {
             #optionsContainer {
+                grid-template-columns: 1fr !important; /* 窄手機改為舒適單欄排列，避免字體擠壓與誤觸 */
                 gap: 0.45rem !important;
             }
             #optionsContainer .runner-action {
-                min-height: 3.6rem !important;
-                padding: 0.55rem 0.35rem !important;
-                border-radius: 0.9rem !important;
+                min-height: 3.35rem !important;
+                padding: 0.65rem 0.85rem !important;
+                border-radius: 0.95rem !important;
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+            }
+            #optionsContainer .runner-action > div {
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                width: 100% !important;
+                text-align: left !important;
+            }
+            #optionsContainer .runner-action .key-badge {
+                display: none !important;
             }
         }
 
@@ -1640,7 +1655,10 @@
                 </div>
 
                 <!-- Game Phase Badge (Overlay Top-Right) -->
-                <div class="absolute top-8 right-4 z-10">
+                <div class="absolute top-4 right-4 z-10 flex items-center gap-2">
+                    <button id="skipAnimBtn" onclick="skipToExplanationModal()" class="hidden px-2.5 py-1.5 rounded-xl text-xs font-black bg-amber-500 hover:bg-amber-400 text-slate-950 border border-amber-300 shadow-md transition-all active:scale-95 items-center gap-1">
+                        <i class="fa-solid fa-forward-step"></i> <span>跳過動畫看詳解</span>
+                    </button>
                     <span id="hitTypeBadge" class="px-3 py-1.5 rounded-xl text-xs font-black bg-slate-900/90 border border-slate-800 text-slate-300 tracking-wider">
                         準備擊球
                     </span>
@@ -2203,12 +2221,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20260527-16</span>
+        <span id="footerVersionText">版本：v20260527-17</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20260527-16";
+        const APP_VERSION = "v20260527-17";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -6062,6 +6080,15 @@
             answered = false;
             isSimulationActive = false; // 換題時重置演示狀態
             catcherShoutText = null; // 換題時清除上一題捕手氣泡
+            if (window.explanationModalTimer) {
+                clearTimeout(window.explanationModalTimer);
+                window.explanationModalTimer = null;
+            }
+            const skipBtn = document.getElementById('skipAnimBtn');
+            if (skipBtn) {
+                skipBtn.classList.add('hidden');
+                skipBtn.classList.remove('flex');
+            }
             currentQuestionIdx = idx;
             const eduBox = document.getElementById('educationCardBox');
             if (eduBox) eduBox.classList.add('hidden');
@@ -6440,9 +6467,40 @@
             };
             const modalDelay = (durationMapMs[currentQ.batType] || 2000) + 1000; // 接球 + 傳球踩壘 + 緩衝 1 秒
 
-            setTimeout(() => {
+            // 顯示跳過動畫按鈕（方便小球員快速進入解析）
+            const skipBtn = document.getElementById('skipAnimBtn');
+            if (skipBtn) {
+                skipBtn.classList.remove('hidden');
+                skipBtn.classList.add('flex');
+            }
+
+            if (window.explanationModalTimer) clearTimeout(window.explanationModalTimer);
+            window.explanationModalTimer = setTimeout(() => {
+                if (skipBtn) {
+                    skipBtn.classList.add('hidden');
+                    skipBtn.classList.remove('flex');
+                }
                 showAnswerExplanationModal(choiceId, selectedOpt, isCorrect);
             }, modalDelay);
+        }
+
+        // 跳過等待，立即彈出前因後果剖析彈窗
+        function skipToExplanationModal() {
+            if (window.explanationModalTimer) {
+                clearTimeout(window.explanationModalTimer);
+                window.explanationModalTimer = null;
+            }
+            const skipBtn = document.getElementById('skipAnimBtn');
+            if (skipBtn) {
+                skipBtn.classList.add('hidden');
+                skipBtn.classList.remove('flex');
+            }
+            const currentQ = generatedQuestions[currentQuestionIdx];
+            if (!currentQ) return;
+            // 若上一次已作答但彈窗尚未彈出，立即觸發彈窗
+            if (lastAnsweredExplanation && lastAnsweredExplanation.choiceId) {
+                showAnswerExplanationModal(lastAnsweredExplanation.choiceId, lastAnsweredExplanation.selectedOpt, lastAnsweredExplanation.isCorrect);
+            }
         }
 
         function insertNextButton() {
