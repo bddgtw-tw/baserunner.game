@@ -1,0 +1,23 @@
+/* V2 alpha.2 representative matrix: 20 cases. */
+(function(global){'use strict';const S=[];const add=(id,outs,ball,runners,runnerId,expected)=>S.push({id,outs,ball,runners,player:{runnerId},expected});
+add('G0_R1_SS',0,{type:'GROUND_BALL',zone:'SS',fielder:'SS'},[{id:'R1',base:'1B'}],'R1',{ADVANCE:{defenseBase:'2B',reason:'FORCE_PLAY_PRIORITY'}});
+add('G1_R1_2B',1,{type:'GROUND_BALL',zone:'2B',fielder:'2B'},[{id:'R1',base:'1B'}],'R1',{ADVANCE:{defenseBase:'2B',reason:'FORCE_PLAY_PRIORITY'}});
+add('G2_R1_3B',2,{type:'GROUND_BALL',zone:'3B',fielder:'3B'},[{id:'R1',base:'1B'}],'R1',{ADVANCE:{defenseBase:'2B',reason:'FORCE_PLAY_PRIORITY'}});
+add('G0_R12_R2',0,{type:'GROUND_BALL',zone:'2B',fielder:'2B'},[{id:'R1',base:'1B'},{id:'R2',base:'2B'}],'R2',{ADVANCE:{defenseBase:'3B',reason:'FORCE_PLAY_PRIORITY'}});
+add('G1_R12_R2',1,{type:'GROUND_BALL',zone:'SS',fielder:'SS'},[{id:'R1',base:'1B'},{id:'R2',base:'2B'}],'R2',{ADVANCE:{defenseBase:'3B',reason:'FORCE_PLAY_PRIORITY'}});
+add('G0_R123_R3',0,{type:'GROUND_BALL',zone:'3B',fielder:'3B'},[{id:'R1',base:'1B'},{id:'R2',base:'2B'},{id:'R3',base:'3B'}],'R3',{ADVANCE:{defenseBase:'HOME',reason:'FORCE_PLAY_PRIORITY'}});
+add('G1_R123_R3',1,{type:'GROUND_BALL',zone:'SS',fielder:'SS'},[{id:'R1',base:'1B'},{id:'R2',base:'2B'},{id:'R3',base:'3B'}],'R3',{ADVANCE:{defenseBase:'HOME',reason:'FORCE_PLAY_PRIORITY'}});
+add('G0_R2_NONFORCE',0,{type:'GROUND_BALL',zone:'SS',fielder:'SS'},[{id:'R2',base:'2B'}],'R2',{ADVANCE:{defenseBase:'1B',reason:'SECURE_BATTER_RUNNER'}});
+add('G1_R3_NONFORCE',1,{type:'GROUND_BALL',zone:'3B',fielder:'3B'},[{id:'R3',base:'3B'}],'R3',{ADVANCE:{defenseBase:'1B',reason:'SECURE_BATTER_RUNNER'}});
+add('G2_R23_R3',2,{type:'GROUND_BALL',zone:'SS',fielder:'SS'},[{id:'R2',base:'2B'},{id:'R3',base:'3B'}],'R3',{ADVANCE:{defenseBase:'1B',reason:'SECURE_BATTER_RUNNER'}});
+add('F0_R1_LF_C',0,{type:'FLY_BALL',zone:'LF',fielder:'LF',caught:true},[{id:'R1',base:'1B'}],'R1',{ADVANCE:{defenseBase:'1B',reason:'CAUGHT_BALL_RETURN_OR_APPEAL'}});
+add('F1_R2_CF_C',1,{type:'FLY_BALL',zone:'CF',fielder:'CF',caught:true},[{id:'R2',base:'2B'}],'R2',{ADVANCE:{defenseBase:'2B',reason:'CAUGHT_BALL_RETURN_OR_APPEAL'}});
+add('F0_R3_RF_C',0,{type:'FLY_BALL',zone:'RF',fielder:'RF',caught:true},[{id:'R3',base:'3B'}],'R3',{ADVANCE:{defenseBase:'3B',reason:'CAUGHT_BALL_RETURN_OR_APPEAL'}});
+add('F1_R13_CF_C',1,{type:'FLY_BALL',zone:'CF',fielder:'CF',caught:true},[{id:'R1',base:'1B'},{id:'R3',base:'3B'}],'R3',{ADVANCE:{defenseBase:'3B',reason:'CAUGHT_BALL_RETURN_OR_APPEAL'}});
+add('F0_R12_LF_C',0,{type:'FLY_BALL',zone:'LF',fielder:'LF',caught:true},[{id:'R1',base:'1B'},{id:'R2',base:'2B'}],'R2',{ADVANCE:{defenseBase:'2B',reason:'CAUGHT_BALL_RETURN_OR_APPEAL'}});
+add('L0_R1_SS_C',0,{type:'LINE_DRIVE',zone:'SS',fielder:'SS',caught:true},[{id:'R1',base:'1B'}],'R1',{ADVANCE:{defenseBase:'1B',reason:'CAUGHT_BALL_RETURN_OR_APPEAL'}});
+add('L1_R2_2B_C',1,{type:'LINE_DRIVE',zone:'2B',fielder:'2B',caught:true},[{id:'R2',base:'2B'}],'R2',{ADVANCE:{defenseBase:'2B',reason:'CAUGHT_BALL_RETURN_OR_APPEAL'}});
+add('F0_R1_RF_DROP',0,{type:'FLY_BALL',zone:'RF',fielder:'RF',caught:false},[{id:'R1',base:'1B'}],'R1',{ADVANCE:{defenseBase:'2B',reason:'FORCE_PLAY_PRIORITY'}});
+add('F1_R2_CF_DROP',1,{type:'FLY_BALL',zone:'CF',fielder:'CF',caught:false},[{id:'R2',base:'2B'}],'R2',{ADVANCE:{defenseBase:'1B',reason:'SECURE_BATTER_RUNNER'}});
+add('L0_R3_3B_DROP',0,{type:'LINE_DRIVE',zone:'3B',fielder:'3B',caught:false},[{id:'R3',base:'3B'}],'R3',{ADVANCE:{defenseBase:'1B',reason:'SECURE_BATTER_RUNNER'}});
+global.RunnerKingV2ScenariosAlpha2=S;if(typeof module!=='undefined'&&module.exports)module.exports=S;})(typeof window!=='undefined'?window:globalThis);
