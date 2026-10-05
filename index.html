@@ -6347,6 +6347,8 @@
 
             const consequence = getChoiceConsequence(currentQ, choiceId);
             const isCorrect = consequence.isCorrect;
+            const selectedOpt = currentQ.options.find(o => o.id === choiceId);
+            lastAnsweredExplanation = { choiceId, selectedOpt, isCorrect };
 
             optionBtns.forEach(btn => {
                 const btnChoiceId = btn.dataset.choiceId;
