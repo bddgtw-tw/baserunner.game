@@ -6044,13 +6044,14 @@
             const waypoints = [];
 
             // 構建沿跑壘線行進之過路壘包點 (Waypoints)
+            // 使用無 offset 之精確壘包中心點 getBasePosition(b)，確保軌跡 100% 壓在白界線/跑壘線上！
             if (targetBaseNumber > currentBaseNum) {
                 for (let b = currentBaseNum + 1; b <= targetBaseNumber; b++) {
-                    const bPos = getRunnerStartPosition(b);
+                    const bPos = getBasePosition(b);
                     waypoints.push({ base: b, x: bPos.x, y: bPos.y });
                 }
             } else {
-                const bPos = getRunnerStartPosition(targetBaseNumber);
+                const bPos = getBasePosition(targetBaseNumber);
                 waypoints.push({ base: targetBaseNumber, x: bPos.x, y: bPos.y });
             }
 
@@ -6063,7 +6064,7 @@
 
         function moveRunnerTowardNextBase(runner, ratio = 0.35) {
             const nextBase = getNextBasePosition(runner.base);
-            const origBase = getRunnerStartPosition(runner.base);
+            const origBase = getBasePosition(runner.base);
             if (!nextBase || !origBase) return;
             const targetX = origBase.x + (nextBase.x - origBase.x) * ratio;
             const targetY = origBase.y + (nextBase.y - origBase.y) * ratio;
