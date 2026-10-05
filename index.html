@@ -6277,6 +6277,9 @@
             currentVisualOccupiedBases = getVisualBasesFromRunners(fieldRunners);
             document.getElementById('baseStatusText').innerText = `${currentQ.outs}出局 - 選擇後：${describeOccupiedBases(currentVisualOccupiedBases)}`;
 
+            // 守備方下一個動作同步連動觸發 (Defensive Coordination)
+            triggerDefensivePlay(currentQ, action, consequence);
+
             let start = null;
             // 物理移動真實速度與距離精確對應：
             // Option A (直接衝壘 - 100% 壘間全速狂飆)：850ms (平均速度: 1.17 距離/s) ➔ 極速感!
