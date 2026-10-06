@@ -1667,7 +1667,7 @@
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
                         <span>你是跑壘王!!!</span> 
                         <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">少棒跑壘判斷</span>
-                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20261006-02</span>
+                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20261006-03</span>
                     </h1>
                     <p class="text-xs text-slate-400 font-medium">跑壘指導員互動出題版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
@@ -1770,6 +1770,17 @@
                     <span id="hitTypeBadge" class="px-3 py-1.5 rounded-xl text-xs font-black bg-slate-900/90 border border-slate-800 text-slate-300 tracking-wider">
                         準備擊球
                     </span>
+                </div>
+
+                <div class="absolute top-16 left-3 right-3 z-10 flex justify-end">
+                    <label class="rounded-lg bg-slate-950/95 px-2 py-1 text-xs font-bold text-white">同題守備演練
+                        <select id="tacticalVariant" onchange="changeTacticalVariant(this.value)" class="ml-1 min-h-[44px] rounded-lg border border-slate-500 bg-slate-900 px-2 text-white" aria-label="選擇同題守備演練結果">
+                            <option value="standard">正常處理</option>
+                            <option value="drop">漏接／漏擋</option>
+                            <option value="bobble">碰球後再處理</option>
+                            <option value="throw_error">傳球失誤</option>
+                        </select>
+                    </label>
                 </div>
 
                 <!-- Dynamic Canvas -->
@@ -2330,12 +2341,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20261006-02</span>
+        <span id="footerVersionText">版本：v20261006-03</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20261006-02";
+        const APP_VERSION = "v20261006-03";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -2993,116 +3004,15 @@
             throwAnim.active = false;
         }
 
-        function moveFielderTo(key, targetX, targetY, duration = 800) {
-            const f = fieldersState[key];
-            if (!f) return;
-            f.startX = f.x;
-            f.startY = f.y;
-            f.targetX = targetX;
-            f.targetY = targetY;
-            f.isMoving = true;
-            f.state = 'run';
-            f.moveProgress = 0;
-
-            const startTime = Date.now();
-            function step() {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                f.moveProgress = progress;
-                f.x = f.startX + (f.targetX - f.startX) * progress;
-                f.y = f.startY + (f.targetY - f.startY) * progress;
-
-                if (progress < 0.9 && Math.random() > 0.4) {
-                    createDust(f.x, f.y, 2);
-                }
-
-                if (progress < 1) {
-                    requestAnimationFrame(step);
-                } else {
-                    f.isMoving = false;
-                    f.state = 'idle';
-                }
-            }
-            requestAnimationFrame(step);
-        }
-
-        function triggerThrowAnimation(fromX, fromY, toX, toY, duration = 420, onComplete = null) {
-            throwAnim.active = true;
-            throwAnim.startX = fromX;
-            throwAnim.startY = fromY;
-            throwAnim.targetX = toX;
-            throwAnim.targetY = toY;
-            throwAnim.x = fromX;
-            throwAnim.y = fromY;
-            throwAnim.progress = 0;
-            throwAnim.startTime = Date.now();
-            throwAnim.duration = duration;
-            throwAnim.onComplete = onComplete;
-
-            function stepThrow() {
-                if (!throwAnim.active) return;
-                const elapsed = Date.now() - throwAnim.startTime;
-                const progress = Math.min(elapsed / throwAnim.duration, 1);
-                throwAnim.progress = progress;
-                throwAnim.x = throwAnim.startX + (throwAnim.targetX - throwAnim.startX) * progress;
-                throwAnim.y = throwAnim.startY + (throwAnim.targetY - throwAnim.startY) * progress;
-
-                drawStadium();
-
-                if (progress < 1) {
-                    requestAnimationFrame(stepThrow);
-                } else {
-                    throwAnim.active = false;
-                    createGrassSplash(throwAnim.targetX, throwAnim.targetY, 10);
-                    playCatchSound();
-                    if (throwAnim.onComplete) throwAnim.onComplete();
-                    drawStadium();
-                }
-            }
-            requestAnimationFrame(stepThrow);
-        }
-
-        /**
-         * 守備方自動跑位踩壘與二段傳球流動 (Defensive Play Coordinator)
-         * 嚴格貫徹因果順序：
-         * 1. 擊球時，補位野手可提前跑位踩壘 (符合棒球預判)。
-         * 2. 接球野手必須等打擊球確實抵達並接住後 (或經由 sequential 回呼)，才啟動雷射肩傳球！
-         * 3. 傳球抵達壘包時，補位野手轉為接球態，完成踩壘出局判定！
-         */
-        // Ball outcome is fixed by the situation, never by the player's A/B/C choice.
+        // Deterministic instructional plays: decision quality and physical result are separate.
+        // Milliseconds are compressed animation timings, not youth athletic benchmarks.
+        let tacticalVariant = 'standard';
+        const TACTICAL_VARIANTS = ['standard', 'drop', 'bobble', 'throw_error'];
         function resolveBallResult(q) {
-            if (q.batType === 'grounder') return 'fielded';
-            if (q.batType === 'clean_hit') return 'landed';
-            if (q.batType === 'line_drive' || q.ruleKey === 'infieldFlyStay') return 'caught';
-            if (q.batType === 'fly_ball' && q.ruleKey === 'shortFlyHalfway' && q.hitDepth === '短淺' && q.hitDirection === '外野') {
-                const hash = [...q.matrixId].reduce((n, ch) => (n * 31 + ch.charCodeAt(0)) >>> 0, 7);
-                return hash % 4 === 0 ? 'dropped' : 'caught';
-            }
-            return 'caught';
+            const variant = q.executionVariant || tacticalVariant;
+            if (variant === 'drop') return q.batType === 'grounder' ? 'misfielded' : q.batType === 'clean_hit' ? 'misfielded' : 'dropped';
+            return q.batType === 'grounder' ? 'fielded' : q.batType === 'clean_hit' ? 'landed' : 'caught';
         }
-
-        function buildTacticalPlayPlan(q, choice, outcome) {
-            const ballResult = resolveBallResult(q);
-            const contactAt = { grounder: 2100, clean_hit: 2300, line_drive: 1650, fly_ball: 2800 }[q.batType];
-            const appeal = ballResult === 'caught' && choice === 'A' && outcome.outcome === 'OUT';
-            const forceThrow = q.batType === 'grounder' && outcome.outcome === 'OUT';
-            const events = [{ at: 0, type: 'hit', text: '擊球！先看球的方向' },
-                { at: contactAt, type: ballResult, text: {
-                    caught: '確實接殺！跑者注意回踩', dropped: '漏接！球落地後再推進',
-                    landed: '安打落地！守備追球', fielded: '攔下滾地球！防守準備傳球'
-                }[ballResult] }];
-            if (ballResult === 'dropped' || ballResult === 'landed') {
-                events.push({ at: contactAt + (ballResult === 'dropped' ? 550 : 0), type: 'pickup', text: '野手撿球，隊友補位' });
-                events.push({ at: contactAt + (ballResult === 'dropped' ? 750 : 150), type: 'throw', text: '守備傳向目標壘包' });
-            } else if (appeal || forceThrow) {
-                events.push({ at: contactAt + 140, type: 'throw', text: appeal ? '傳回原壘促請裁決' : '傳向下一壘封殺' });
-            }
-            const finalAt = contactAt + (appeal ? 800 : (ballResult === 'dropped' || ballResult === 'landed') ? 1350 : forceThrow ? 700 : 450);
-            events.push({ at: finalAt, type: 'call', text: outcome.outcome === 'OUT' ? '跑者出局' :
-                outcome.outcome === 'WASTED' ? '安全但錯失最佳判斷' : '安全！判斷正確' });
-            return { ballResult, contactAt, finalAt, events, fielderKey: q.fielderKey, matrixId: q.matrixId };
-        }
-
         function setPlayEventStatus(value) {
             const el = document.getElementById('playEventStatus');
             if (el) { el.textContent = value; el.classList.toggle('hidden', !value); }
@@ -3110,351 +3020,213 @@
         function cancelTacticalPlay() {
             tacticalToken++;
             tacticalVisual = null;
+            ballAnim.active = false;
+            if (window.ballInterval) clearInterval(window.ballInterval);
+            if (window.ballTimeout) clearTimeout(window.ballTimeout);
             if (window.defensiveThrowTimeout) clearTimeout(window.defensiveThrowTimeout);
             throwAnim.active = false;
             setPlayEventStatus('');
         }
-        function animateRunnerAfterDrop(q, token) {
-            const runner = fieldRunners.find(r => r.isPlayer);
-            const target = getNextBasePosition(q.playerBase);
-            if (!runner || !target) return;
-            const x = runner.x, y = runner.y, start = performance.now();
-            function step(now) {
-                if (token !== tacticalToken) return;
-                const p = Math.min((now - start) / 850, 1);
-                runner.x = x + (target.x - x) * p;
-                runner.y = y + (target.y - y) * p;
-                if (p < 1) requestAnimationFrame(step);
-                else { runner.statusLabel = '落地後推進 SAFE 🟢'; runner.statusColor = '#10b981'; }
-                drawStadium();
-            }
-            requestAnimationFrame(step);
-        }
-        function playTacticalVisual(q, choice, outcome, plan) {
+        function changeTacticalVariant(value) {
+            if (!TACTICAL_VARIANTS.includes(value)) return;
+            tacticalVariant = value;
             cancelTacticalPlay();
-            const token = tacticalToken;
-            const f = fielders[plan.fielderKey] || { x: 200, y: 150 };
-            ballAnim.active = false;
-            tacticalVisual = { plan, start: performance.now(), x: bases.home.x, y: bases.home.y, ball: true, alert: false };
-            plan.events.forEach(ev => setTimeout(() => {
-                if (token !== tacticalToken || !tacticalVisual) return;
-                setPlayEventStatus(ev.text);
-                if (ev.type === 'caught' || ev.type === 'fielded') {
-                    tacticalVisual.ball = false;
-                    if (fieldersState[plan.fielderKey]) fieldersState[plan.fielderKey].state = 'catch';
-                } else if (ev.type === 'dropped' || ev.type === 'landed') {
-                    tacticalVisual.x = f.x + 13; tacticalVisual.y = f.y + 13;
-                    if (ev.type === 'dropped') {
-                        tacticalVisual.alert = true;
-                        createGrassSplash(tacticalVisual.x, tacticalVisual.y, 8);
-                        setTimeout(() => { if (token === tacticalToken && tacticalVisual) tacticalVisual.alert = false; }, 650);
-                        if (choice === 'B') animateRunnerAfterDrop(q, token);
+            if (window.explanationModalTimer) clearTimeout(window.explanationModalTimer);
+            if (answered && lastAnsweredExplanation) replayDecisionAnimation();
+            else setPlayEventStatus('同題改變守備處理；擊球當下的最佳選擇仍依原情境判斷。');
+        }
+        function buildTacticalPlayPlan(q, choice, legacy) {
+            const variant = q.executionVariant || tacticalVariant;
+            const ballResult = resolveBallResult(q);
+            const airborne = q.batType === 'fly_ball' || q.batType === 'line_drive';
+            const caught = ballResult === 'caught';
+            const infieldFly = q.ruleKey === 'infieldFlyStay';
+            const inningEnd = caught && q.outs === 2;
+            const contactAt = {grounder:2100, clean_hit:2300, line_drive:1650, fly_ball:2800}[q.batType];
+            const touchAt = contactAt;
+            const secureAt = contactAt + (variant === 'bobble' ? 650 : 0);
+            const force = !caught && !infieldFly && !!q.isPlayerForced;
+            const f = fielders[q.fielderKey];
+            const depth = q.hitDepth === '深遠' ? .98 : q.hitDepth === '短淺' && q.hitDirection === '外野' ? .65 : .9;
+            const contact = {x:200+(f.x-200)*depth, y:bases.home.y+(f.y-bases.home.y)*depth};
+            const loose = {x:contact.x + (q.fielderKey === 'RF' ? -22 : 22), y:contact.y+22};
+            const pickupAt = caught ? secureAt : secureAt + (ballResult === 'misfielded' || ballResult === 'dropped' ? 650 : 240);
+            const events = [{at:0,type:'hit',text:'擊球！看出局數、強迫進壘與球路'}];
+            if (infieldFly) events.push({at:600,type:'infield_fly',text:'內野高飛球宣告：打者出局，強迫進壘解除'});
+            if (variant === 'bobble') events.push({at:touchAt,type:'bobble',text:airborne ? '第一次碰球！尚未確實接住；已踩壘可起跑' : '處理球不順！野手重新控制球'});
+            events.push({at:secureAt,type:ballResult,text:{caught:'確實接殺！離壘者回踩；已踩壘者可起跑',dropped:'漏接落地！沒有接殺，觀察是否必須進壘',misfielded:'球漏過手套！隊友補救，跑者再判斷',landed:'安打落地！跑者推進、外野追球',fielded:'滾地球入手！守備選擇傳球目標'}[ballResult]});
+            if (!caught) events.push({at:pickupAt,type:'pickup',text:'野手控制球；補位與中繼準備完成'});
+            const runners = [];
+            const occupied = q.runners || [q.playerBase];
+            function isForced(base) { return !caught && !infieldFly && [1,2,3].filter(b=>b<=base).every(b=>occupied.includes(b)); }
+            function addRunner(base, action, isPlayer, batter=false) {
+                const seg=[];
+                const next=base+1;
+                const forced=batter || isForced(base);
+                const tag=action==='C' && caught && q.batType==='fly_ball' && q.hitDepth==='深遠' && base===3 && q.outs<2;
+                function move(at,duration,from,to){seg.push({at,end:at+duration,from,to});}
+                if(action==='A') move(0,850,0,1);
+                else if(action==='B') {move(0,640,0,.28);move(640,480,.28,.24);move(1120,480,.24,.35);}
+                let arrival=action==='A'?850:Infinity;
+                let returnAt=action==='C'?0:Infinity;
+                if(caught && !inningEnd) {
+                    if(tag) {move(touchAt,850,0,1);arrival=touchAt+850;}
+                    else if(action!=='C') {
+                        const fraction=action==='A'?1:.35;
+                        const at=secureAt+180;
+                        move(at,850*fraction,fraction,0);returnAt=at+850*fraction;arrival=Infinity;
                     }
-                } else if (ev.type === 'pickup') tacticalVisual.ball = false;
-                else if (ev.type === 'call') {
-                    tacticalVisual.ball = false;
-                    if (answered && generatedQuestions[currentQuestionIdx] === q) {
-                        const avatar = document.getElementById('coachAvatar');
-                        const feedback = document.getElementById('coachFeedback');
-                        const badge = document.getElementById('hitTypeBadge');
-                        if (avatar) avatar.innerText = outcome.isCorrect ? '🤩' : outcome.outcome === 'WASTED' ? '🤦‍♂️' : '😭';
-                        if (feedback) feedback.innerText = outcome.coachFeedback;
-                        if (badge) {
-                            badge.innerText = outcome.isCorrect ? 'SAFE! 🟢' : outcome.bannerText;
-                            badge.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black tracking-wider ' + (outcome.isCorrect ? 'bg-emerald-500 text-slate-950' : outcome.outcome === 'WASTED' ? 'bg-amber-500 text-slate-950' : 'bg-red-600 text-white');
-                        }
-                    }
-                    if (!(plan.ballResult === 'caught' && choice === 'A' && outcome.outcome === 'OUT'))
-                        triggerOutcomeBanner(outcome.bannerText, outcome.bannerSub, outcome.outcome);
+                } else if(!caught && action==='B' && (airborne || forced)) {
+                    move(secureAt+180,850*.65,.35,1);arrival=secureAt+180+850*.65;
+                } else if(!caught && action==='C' && forced) {
+                    move(secureAt+650,850,0,1);arrival=secureAt+1500;
                 }
+                const advances=seg.some(x=>x.to===1) && (!caught || tag || action==='A');
+                const blocked=advances && next<=3 && occupied.includes(next) && !isForced(next) && !tag;
+                if(blocked) {seg.forEach(x=>{x.to=Math.min(x.to,.65);x.from=Math.min(x.from,.65);});arrival=Infinity;}
+                runners.push({base,next,action,isPlayer,batter,forced,tag,blocked,segments:seg,arrival,returnAt});
+            }
+            for(const base of occupied) {
+                const action=base===q.playerBase?choice: q.outs===2?'A': !airborne?(isForced(base)||q.batType==='clean_hit'?'A':'C'): base===3 && q.hitDepth==='深遠'?'C': q.hitDirection==='外野'?'B':'C';
+                addRunner(base,action,base===q.playerBase);
+            }
+            if(!caught && !infieldFly) addRunner(0,'A',false,true);
+            const player=runners.find(r=>r.isPlayer);
+            const appeal=caught && !inningEnd && player.action!=='C';
+            const targetBase=appeal?q.playerBase:(force || player.tag || player.arrival<Infinity || player.blocked)?q.playerBase+1:1;
+            const target=getBasePosition(targetBase);
+            const covers={1:'1B',2:q.fielderKey==='SS'?'2B':'SS',3:'3B',4:'C'};
+            let receiver=covers[targetBase];
+            if(receiver===q.fielderKey) receiver=targetBase===1?'P':targetBase===2?'2B':'SS';
+            const outfield=['LF','CF','RF'].includes(q.fielderKey);
+            let cutoff=outfield ? (q.fielderKey==='LF'?'SS':'2B') : null;
+            if(cutoff===receiver) cutoff=cutoff==='SS'?'2B':'SS';
+            const relay=outfield && !appeal && targetBase>=3;
+            const cutoffPoint={x:contact.x+(target.x-contact.x)*.58,y:contact.y+(target.y-contact.y)*.58};
+            const preferredBackup=outfield?(q.fielderKey==='CF'?'LF':'CF'):(q.fielderKey==='P'?'SS':'P');
+            const backup=[preferredBackup,'P','C','CF','LF','RF','SS','2B','3B','1B'].find(k=>k!==q.fielderKey&&k!==receiver&&(!relay||k!==cutoff));
+            const roles=[{key:q.fielderKey,to:contact,at:0,duration:Math.max(500,contactAt-150),role:'追球'},
+                {key:receiver,to:target,at:0,duration:850,role:appeal?'回原壘補位':'目標壘包補位'},
+                {key:backup,to:{x:loose.x+12,y:loose.y+8},at:0,duration:1200,role:'追球後援'}];
+            if(relay) roles.push({key:cutoff,to:cutoffPoint,at:0,duration:1000,role:'中繼截傳'});
+            const legs=[];
+            let ballAt=pickupAt+120,from=caught?contact: (ballResult==='dropped'||ballResult==='misfielded'?loose:contact);
+            if(!caught) roles.push({key:q.fielderKey,to:from,at:secureAt,duration:Math.max(100,pickupAt-secureAt),role:'撿球'});
+            const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+            function leg(to,key,label){const duration=Math.max(220,Math.min(700,distance(from,to)*2.5));legs.push({at:ballAt,end:ballAt+duration,from:{...from},to:{...to},key,label});events.push({at:ballAt,type:'throw',text:label},{at:ballAt+duration,type:'receive',text:fielders[key].name+'接到傳球'});ballAt+=duration+120;from=to;}
+            if(!inningEnd) {
+                if(relay) leg(cutoffPoint,cutoff,'外野傳向中繼；壘包與後援同步補位');
+                if(variant==='throw_error') {
+                    const wild={x:target.x+(target.x<200?26:-26),y:target.y+22};
+                    leg(wild,receiver,'傳球偏離壘包！後援追球');
+                    events.pop(); events.push({at:ballAt-120,type:'throw_error',text:'傳球失誤！球仍活著，觀察可否推進'});
+                    roles.push({key:backup,to:wild,at:ballAt-120,duration:650,role:'傳球後援'});
+                    ballAt+=650; events.push({at:ballAt,type:'pickup',text:'後援撿回球，再傳向壘包'});
+                    leg(target,receiver,appeal?'後援回傳原壘促請裁決':'後援重新傳向目標壘包');
+                } else leg(target,receiver,appeal?'接殺後回傳原壘促請裁決':force?'傳向下一壘封殺':player.tag?'傳本壘；捕手準備觸殺':'傳向目標壘包；非強迫須觸殺');
+            }
+            const receiveAt=inningEnd?secureAt:ballAt-120;
+            const retireAt=receiveAt+(appeal||force?0:120);
+            let physicalResult='SAFE',retirement=null;
+            if(inningEnd) physicalResult='INNING_END';
+            else if(appeal && player.returnAt>retireAt) {physicalResult='OUT';retirement='appeal';}
+            else if(force && player.arrival>retireAt) {physicalResult='OUT';retirement='force';}
+            else if((player.tag || !caught && choice==='A') && !player.blocked && player.arrival>retireAt) {physicalResult='OUT';retirement='tag';}
+            // A non-forced runner holding his base cannot be retired by merely touching the next base.
+            const decisionCorrect=choice===q.correct;
+            const finalAt=Math.max(retireAt+250,secureAt+900,Number.isFinite(player.arrival)?player.arrival+150:0,Number.isFinite(player.returnAt)?player.returnAt+150:0);
+            if(retirement==='tag'){const fraction=tacticalFraction(player,retireAt),start=getBasePosition(player.base);roles.push({key:receiver,to:{x:start.x+(target.x-start.x)*fraction,y:start.y+(target.y-start.y)*fraction},at:receiveAt,duration:120,role:'持球觸殺'});}
+            const physicalText=physicalResult==='INNING_END'?'打者接殺，第三出局：攻守交換':physicalResult==='OUT'?({appeal:'原壘促請裁決出局',force:'球先到下一壘：封殺出局',tag:'持球觸碰跑者：觸殺出局'}[retirement]):player.blocked?'前方壘包有人：停止推進':player.tag?'合法起跑，安全到本壘':caught?'完成回踩，安全留壘':player.arrival<Infinity?'跑者先到，安全推進':'安全留在原壘';
+            events.push({at:retireAt,type:'adjudicate',text:physicalText},{at:finalAt,type:'call',text:physicalText+'｜'+(decisionCorrect?'起始判斷正確':'起始判斷須調整')});
+            events.sort((a,b)=>a.at-b.at);
+            return {variant,ballResult,contactAt,touchAt,secureAt,pickupAt,contact,loose,force,infieldFly,inningEnd,appeal,targetBase,roles,legs,runners,physicalResult,retirement,retireAt,decisionCorrect,physicalText,finalAt,events,fielderKey:q.fielderKey,matrixId:q.matrixId};
+        }
+        function getChoiceConsequence(q,choice) {
+            const baseline=getLegacyChoiceConsequence(q,choice);
+            const plan=buildTacticalPlayPlan(q,choice,baseline);
+            const outcome=plan.physicalResult==='OUT'?'OUT':plan.decisionCorrect?'SAFE':'WASTED';
+            const bannerText=plan.physicalResult==='INNING_END'?'第三出局 ⚾':plan.physicalResult==='OUT'?'OUT 🔴':plan.decisionCorrect?'SAFE 🟢':'SAFE／判斷待改 🟠';
+            const lesson=plan.infieldFly?'內野高飛球宣告後沒有強迫進壘；球未接住也不會恢復封殺。':plan.inningEnd?'兩出局先跑；若打者被接殺，這局結束，跑者先到本壘也不計分。':plan.ballResult==='caught'?'球被接殺須回踩；已踩壘者可在第一次碰球後起跑。':plan.force?'球未接殺且被強迫進壘，必須跑向下一壘。':'球落地仍須看前方跑者、守備持球位置與傳球方向；不能保證每次都可推進。';
+            return {...baseline,outcome,bannerText,badgeText:bannerText,mistakeTitle:plan.decisionCorrect?'起始判斷正確':plan.physicalResult==='OUT'?'判斷風險成為實際出局':'這次安全，仍須修正判斷',bannerSub:plan.physicalText,runnerLabel:plan.physicalText,coachFeedback:(plan.decisionCorrect?'起始判斷正確。':'即使這次安全，也要修正起始判斷。')+lesson,detailReason:baseline.detailReason+'\n本次演練：'+plan.physicalText+'。'+lesson,physicalResult:plan.physicalResult};
+        }
+        function tacticalFraction(r,t) {
+            let value=0;
+            for(const s of r.segments){if(t<s.at)break;value=t>=s.end?s.to:s.from+(s.to-s.from)*(t-s.at)/(s.end-s.at);}
+            return value;
+        }
+        function runTacticalPlay(q,choice,outcome) {
+            cancelTacticalPlay();
+            const plan=buildTacticalPlayPlan(q,choice,outcome),token=tacticalToken;
+            resetFieldersState();setupRunnersForScenario(q);
+            if(plan.runners.some(r=>r.batter)) fieldRunners.push({base:0,label:'打',isPlayer:false,isBatter:true,x:bases.home.x,y:bases.home.y,animProgress:0,taggedOut:false});
+            const roleStarts={};
+            for(const k of Object.keys(fielders))roleStarts[k]={...fielders[k]};
+            tacticalVisual={plan,start:performance.now(),x:bases.home.x,y:bases.home.y,ball:true,alert:false,alertKey:q.fielderKey};
+            let eventIdx=0;
+            function frame(now){
+                if(token!==tacticalToken||!tacticalVisual)return;
+                const t=now-tacticalVisual.start,v=tacticalVisual;
+                while(eventIdx<plan.events.length&&plan.events[eventIdx].at<=t){
+                    const ev=plan.events[eventIdx++];setPlayEventStatus(ev.text);
+                    if(['dropped','misfielded','bobble','throw_error'].includes(ev.type)){v.alertUntil=ev.at+800;v.alertKey=ev.type==='throw_error'?plan.legs.find(l=>l.end===ev.at)?.key||q.fielderKey:q.fielderKey;}
+                    if(ev.type==='call') finishTacticalPlay(q,outcome,plan);
+                }
+                for(const role of plan.roles){
+                    if(t<role.at)continue;
+                    const f=fieldersState[role.key];
+                    const earlier=plan.roles.filter(r=>r.key===role.key&&r.at<role.at).at(-1);
+                    const origin=earlier?earlier.to:roleStarts[role.key];
+                    const p=Math.min(1,(t-role.at)/role.duration);
+                    f.x=origin.x+(role.to.x-origin.x)*p;f.y=origin.y+(role.to.y-origin.y)*p;f.isMoving=p<1;f.state=p<1?'run':'idle';
+                }
+                for(const r of plan.runners){
+                    const runner=fieldRunners.find(x=>r.batter?x.isBatter:x.base===r.base&&!x.isBatter);
+                    if(!runner)continue;
+                    const from=r.base===0?bases.home:getBasePosition(r.base),to=getBasePosition(r.next);
+                    const effective=plan.inningEnd?Math.min(t,plan.secureAt):r.isPlayer&&plan.physicalResult==='OUT'?Math.min(t,plan.retireAt):t;
+                    let fraction=tacticalFraction(r,effective);
+                    const ahead=plan.runners.find(x=>x.base===r.next&&!x.batter);
+                    const trafficBlocked=!plan.appeal&&!plan.inningEnd&&ahead&&!ahead.tag&&tacticalFraction(ahead,Math.min(t,plan.retireAt))<.25&&fraction>.65;
+                    if(trafficBlocked)fraction=.65;
+                    runner.x=from.x+(to.x-from.x)*fraction;runner.y=from.y+(to.y-from.y)*fraction;
+                    const segment=r.segments.find(s=>effective>=s.at&&effective<s.end);
+                    runner.animProgress=segment&&!trafficBlocked?(effective-segment.at)/(segment.end-segment.at):1;
+                    runner.startX=from.x;runner.startY=from.y;runner.targetX=to.x;runner.targetY=to.y;
+                    runner.taggedOut=r.isPlayer&&plan.physicalResult==='OUT'&&t>=plan.retireAt;
+                    runner.statusLabel=runner.taggedOut?'OUT 🔴':(trafficBlocked||r.blocked&&fraction>=.65)?'⚠️ 塞壘卡住！停住':t>=plan.finalAt&&r.isPlayer?plan.physicalText:r.tag&&t<plan.touchAt?'踩壘等碰球':r.action==='B'&&t<plan.secureAt?'離壘觀察 👀':null;
+                    runner.statusColor=runner.taggedOut?'#f87171':r.blocked?'#facc15':'#6ee7b7';
+                }
+                v.alert=t<(v.alertUntil||0);
+                throwAnim.active=false;v.ball=true;
+                if(t<plan.contactAt){const p=Math.min(1,t/plan.contactAt);v.x=bases.home.x+(plan.contact.x-bases.home.x)*p;v.y=bases.home.y+(plan.contact.y-bases.home.y)*p-(q.batType==='grounder'?5:q.batType==='line_drive'?12:q.hitDepth==='深遠'?65:42)*Math.sin(Math.PI*p);}
+                else if(t<plan.secureAt){v.x=plan.contact.x;v.y=plan.contact.y-8*Math.sin((t-plan.touchAt)/80);}
+                else if(t<plan.pickupAt&&!['caught','fielded'].includes(plan.ballResult)){const p=Math.min(1,(t-plan.secureAt)/300);v.x=plan.contact.x+(plan.loose.x-plan.contact.x)*p;v.y=plan.contact.y+(plan.loose.y-plan.contact.y)*p;}
+                else {v.ball=false;const missed=plan.variant==='throw_error'?plan.legs.find(l=>l.label.includes('偏離')&&t>l.end&&t<plan.legs.at(-1).at):null;if(missed){v.ball=true;v.x=missed.to.x;v.y=missed.to.y;}const l=plan.legs.find(l=>t>=l.at&&t<=l.end);if(l){const p=(t-l.at)/(l.end-l.at);throwAnim.active=true;throwAnim.startX=l.from.x;throwAnim.startY=l.from.y;throwAnim.x=l.from.x+(l.to.x-l.from.x)*p;throwAnim.y=l.from.y+(l.to.y-l.from.y)*p;} else {for(const l of plan.legs)if(t>=l.end&&t<l.end+120&&plan.variant!=='throw_error')fieldersState[l.key].state='catch';}}
                 drawStadium();
-            }, ev.at));
-            function frame(now) {
-                if (token !== tacticalToken || !tacticalVisual) return;
-                const t = now - tacticalVisual.start;
-                if (t < plan.contactAt) {
-                    const p = Math.min(t / plan.contactAt, 1);
-                    tacticalVisual.x = bases.home.x + (f.x - bases.home.x) * p;
-                    tacticalVisual.y = bases.home.y + (f.y - bases.home.y) * p
-                        - (q.batType === 'grounder' ? 4 : 42) * Math.sin(Math.PI * p);
-                }
-                drawStadium();
-                if (t < plan.finalAt + 500) requestAnimationFrame(frame);
-                else tacticalVisual = null;
+                if(t<plan.finalAt+250)requestAnimationFrame(frame);
+                else {throwAnim.active=false;v.ball=false;}
             }
-            requestAnimationFrame(frame);
+            requestAnimationFrame(frame);return plan;
         }
-        function drawTacticalVisual(scale) {
-            if (!tacticalVisual) return;
-            const v = tacticalVisual;
-            if (v.ball && !throwAnim.active) {
-                ctx.fillStyle = '#0f172a';
-                ctx.fillRect((v.x-4)*scale,(v.y-4)*scale,8*scale,8*scale);
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect((v.x-3)*scale,(v.y-3)*scale,6*scale,6*scale);
-                ctx.fillStyle = '#dc2626';
-                ctx.fillRect(v.x*scale,(v.y-2)*scale,2*scale,2*scale);
-            }
-            if (v.alert) {
-                const f = fieldersState[v.plan.fielderKey] || fielders[v.plan.fielderKey];
-                if (!f) return;
-                const x=(f.x+12)*scale, y=(f.y-29)*scale;
-                ctx.fillStyle='#0f172a'; ctx.fillRect(x-2*scale,y-2*scale,11*scale,23*scale);
-                ctx.fillStyle='#facc15'; ctx.fillRect(x,y,7*scale,12*scale);
-                ctx.fillRect(x+2*scale,y+15*scale,4*scale,4*scale);
+        function finishTacticalPlay(q,outcome,plan){
+            currentVisualOccupiedBases=plan.inningEnd?[]:plan.runners.filter(r=>!(r.isPlayer&&plan.physicalResult==='OUT')).map(r=>{const f=tacticalFraction(r,plan.finalAt);return f===0?r.base:f===1?r.next:null;}).filter(b=>b>=1&&b<=3);
+            currentVisualOccupiedBases=[...new Set(currentVisualOccupiedBases)];
+            const baseText=document.getElementById('baseStatusText');
+            if(baseText)baseText.innerText=plan.physicalText+'｜'+describeOccupiedBases(currentVisualOccupiedBases);
+            triggerOutcomeBanner(outcome.bannerText,outcome.bannerSub,outcome.outcome);
+            if(outcome.isCorrect){playSuccessSound();playCheerSound();}else if(outcome.outcome==='OUT')playFailSound();else playWarningSound();
+            if(answered&&generatedQuestions[currentQuestionIdx]===q){
+                const avatar=document.getElementById('coachAvatar'),feedback=document.getElementById('coachFeedback'),badge=document.getElementById('hitTypeBadge');
+                if(avatar)avatar.innerText=outcome.isCorrect?'🤩':'🤔';
+                if(feedback){feedback.innerText=outcome.coachFeedback;feedback.className='text-sm sm:text-base text-white mt-1 leading-relaxed font-black';}
+                if(badge){badge.innerText=outcome.bannerText;badge.className='px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-slate-950 text-white tracking-wider';}
             }
         }
-        function runTacticalPlay(q, choice, outcome) {
-            const plan = buildTacticalPlayPlan(q, choice, outcome);
-            playTacticalVisual(q, choice, outcome, plan);
-            triggerDefensivePlay(q, choice, outcome);
-            return plan;
-        }
-
-        function triggerDefensivePlay(currentQ, choiceId, consequence, onBallCaughtCallback = null) {
-            if (!currentQ) return;
-            resetFieldersState();
-
-            const fielderKey = currentQ.fielderKey;
-            const originFielder = fielders[fielderKey] || { x: 200, y: 210 };
-            const playerBase = currentQ.playerBase;
-            const ruleKey = currentQ.ruleKey;
-            if (resolveBallResult(currentQ) === 'dropped') {
-                const token = tacticalToken;
-                const x = originFielder.x + 13, y = originFielder.y + 13;
-                const backup = fielderKey === 'CF' ? 'LF' : 'CF';
-                const target = getNextBasePosition(playerBase);
-                const cover = playerBase === 3 ? 'C' : playerBase === 2 ? '3B' : '2B';
-                if (target) moveFielderTo(cover, target.x, target.y, 1100);
-                moveFielderTo(backup, x + 18, y + 8, 1350);
-                setTimeout(() => {
-                    if (token !== tacticalToken) return;
-                    moveFielderTo(fielderKey, x, y, 480);
-                    setTimeout(() => {
-                        if (token !== tacticalToken) return;
-                        if (fieldersState[fielderKey]) fieldersState[fielderKey].state = 'catch';
-                        playCatchSound();
-                        if (target) setTimeout(() => {
-                            if (token !== tacticalToken) return;
-                            const from = fieldersState[fielderKey] || originFielder;
-                            triggerThrowAnimation(from.x, from.y, target.x, target.y, 500, () => {
-                                if (fieldersState[cover]) fieldersState[cover].state = 'catch';
-                            });
-                        }, 220);
-                    }, 500);
-                }, 2800);
-                return;
-            }
-
-            // 根據擊球型態計算真實接球時間 (秒 -> 毫秒)
-            const durationMapMs = {
-                fly_ball: 2800,
-                clean_hit: 2300,
-                grounder: 2100,
-                line_drive: 1650
-            };
-            const catchWaitMs = durationMapMs[currentQ.batType] || 2000;
-
-            // 1. 平飛球回原壘促請裁決刺殺 (例如投手方向平飛球，二壘跑者離壘出局)
-            if (ruleKey === 'lineDriveReturn' && consequence.outcome === 'OUT') {
-                const basePos = getBasePosition(playerBase);
-                if (!basePos) return;
-
-                let coveringKey = "2B";
-                if (playerBase === 2) {
-                    coveringKey = (fielderKey === "SS" || fielderKey === "3B") ? "2B" : "SS";
-                } else if (playerBase === 1) {
-                    coveringKey = (fielderKey === "1B") ? "P" : "1B";
-                } else if (playerBase === 3) {
-                    coveringKey = "3B";
-                }
-
-                // 補位野手提前跑向壘包待命
-                moveFielderTo(coveringKey, basePos.x, basePos.y, 800);
-
-                // 嚴格等待接球野手接到平飛球後，才拿出球傳向壘包！
-                window.defensiveThrowTimeout = setTimeout(() => {
-                    const catchF = fieldersState[fielderKey];
-                    if (catchF) catchF.state = 'catch';
-                    playCatchSound();
-
-                    setTimeout(() => {
-                        const fromPos = fieldersState[fielderKey] || originFielder;
-                        triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 420, () => {
-                            const coverF = fieldersState[coveringKey];
-                            if (coverF) {
-                                coverF.x = basePos.x;
-                                coverF.y = basePos.y;
-                                coverF.state = 'catch';
-                            }
-                        });
-                    }, 120); // 野手接球後抽球傳出微間隔
-                }, catchWaitMs);
-            }
-            // 2. 強迫進壘封殺 (例如滾地球，跑者被逼進下一壘卻猶豫或留壘)
-            else if (ruleKey === 'forcedGrounderRun' && consequence.outcome === 'OUT') {
-                const nextBaseNum = getNextBaseNumber(playerBase);
-                const basePos = getBasePosition(nextBaseNum);
-                if (!basePos) return;
-
-                let coveringKey = "2B";
-                if (nextBaseNum === 2) {
-                    coveringKey = (fielderKey === "SS" || fielderKey === "3B") ? "2B" : "SS";
-                } else if (nextBaseNum === 3) {
-                    coveringKey = "3B";
-                } else if (nextBaseNum === 4) {
-                    coveringKey = "C";
-                }
-
-                // 補位野手提前往目標壘包補位
-                moveFielderTo(coveringKey, basePos.x, basePos.y, 800);
-
-                // 等滾地球滾進野手手套後，野手才傳球給補位隊友！
-                window.defensiveThrowTimeout = setTimeout(() => {
-                    const catchF = fieldersState[fielderKey];
-                    if (catchF) catchF.state = 'catch';
-                    playCatchSound();
-
-                    setTimeout(() => {
-                        const fromPos = fieldersState[fielderKey] || originFielder;
-                        triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 420, () => {
-                            const coverF = fieldersState[coveringKey];
-                            if (coverF) {
-                                coverF.x = basePos.x;
-                                coverF.y = basePos.y;
-                                coverF.state = 'catch';
-                            }
-                        });
-                    }, 120);
-                }, catchWaitMs);
-            }
-            // 3. 飛球遭接殺：跑者提前狂奔，外野接殺後長傳回原壘雙殺促請裁決 (Tag-up Appeal Out / Double Play)
-            else if ((ruleKey === 'deepFlyThirdTag' || ruleKey === 'deepFlyHalfway' || ruleKey === 'shortFlyHalfway') && choiceId === 'A') {
-                const appealBaseNum = playerBase; // 回傳跑者原壘包 (一壘、二壘或三壘)
-                const basePos = getBasePosition(appealBaseNum);
-                if (!basePos) return;
-
-                let coveringKey = "2B";
-                if (appealBaseNum === 3) {
-                    coveringKey = "3B";
-                } else if (appealBaseNum === 2) {
-                    // 若是二壘，由非接球側的二壘手或游擊手迅速踩壘包
-                    coveringKey = (fielderKey === "RF" || fielderKey === "1B") ? "SS" : "2B";
-                } else if (appealBaseNum === 1) {
-                    coveringKey = "1B";
-                }
-
-                // 補位野手衝向原壘包踩壘待命
-                moveFielderTo(coveringKey, basePos.x, basePos.y, 750);
-
-                // 外野手確實接住飛球後，雷射肩長傳回原壘包抓雙殺！
-                window.defensiveThrowTimeout = setTimeout(() => {
-                    const catchF = fieldersState[fielderKey];
-                    if (catchF) catchF.state = 'catch';
-                    playCatchSound();
-
-                    setTimeout(() => {
-                        const fromPos = fieldersState[fielderKey] || originFielder;
-                        // 根據外野到內野距離設定長傳動畫時間 (520ms)
-                        triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 520, () => {
-                            const coverF = fieldersState[coveringKey];
-                            if (coverF) {
-                                coverF.x = basePos.x;
-                                coverF.y = basePos.y;
-                                coverF.state = 'catch';
-                            }
-                            playCatchSound();
-                            // 球先一步抵達原壘包踩壘！震撼彈出判定與音效：
-                            playFailSound();
-                            triggerOutcomeBanner(consequence.bannerText, consequence.bannerSub, consequence.outcome);
-                        });
-                    }, 140);
-                }, catchWaitMs);
-            }
-            // 4. 非強迫進壘滾地球硬衝遭觸殺
-            else if ((ruleKey === 'leftSideGrounderStay' || ruleKey === 'unforcedGrounderStay') && choiceId === 'A') {
-                const nextBaseNum = getNextBaseNumber(playerBase);
-                const basePos = getBasePosition(nextBaseNum);
-                if (!basePos) return;
-
-                const coveringKey = nextBaseNum === 3 ? "3B" : "2B";
-                moveFielderTo(coveringKey, basePos.x, basePos.y, 700);
-
-                window.defensiveThrowTimeout = setTimeout(() => {
-                    const catchF = fieldersState[fielderKey];
-                    if (catchF) catchF.state = 'catch';
-                    playCatchSound();
-
-                    setTimeout(() => {
-                        const fromPos = fieldersState[fielderKey] || originFielder;
-                        triggerThrowAnimation(fromPos.x, fromPos.y, basePos.x, basePos.y, 420, () => {
-                            const coverF = fieldersState[coveringKey];
-                            if (coverF) {
-                                coverF.x = basePos.x;
-                                coverF.y = basePos.y;
-                                coverF.state = 'catch';
-                            }
-                        });
-                    }, 120);
-                }, catchWaitMs);
-            }
-            // 4.5. 離壘過遠或不當離壘遭內野夾殺 (Option B Rundown Trap Animation)
-            else if (choiceId === 'B' && consequence.outcome === 'OUT') {
-                const origPos = getRunnerStartPosition(playerBase);
-                const nextBaseNum = getNextBaseNumber(playerBase);
-                const nextPos = getNextBasePosition(playerBase);
-                if (origPos && nextPos) {
-                    let rearFielderKey = "1B";
-                    let frontFielderKey = "2B";
-                    if (playerBase === 1) { rearFielderKey = "1B"; frontFielderKey = "2B"; }
-                    else if (playerBase === 2) { rearFielderKey = "2B"; frontFielderKey = "3B"; }
-                    else if (playerBase === 3) { rearFielderKey = "3B"; frontFielderKey = "C"; }
-
-                    // 兩側野手同時向跑者中途點雙向夾擊逼近
-                    const trapTargetX = origPos.x + (nextPos.x - origPos.x) * 0.38;
-                    const trapTargetY = origPos.y + (nextPos.y - origPos.y) * 0.38;
-
-                    moveFielderTo(rearFielderKey, origPos.x + (trapTargetX - origPos.x) * 0.5, origPos.y + (trapTargetY - origPos.y) * 0.5, 750);
-                    moveFielderTo(frontFielderKey, nextPos.x + (trapTargetX - nextPos.x) * 0.4, nextPos.y + (trapTargetY - nextPos.y) * 0.4, 750);
-
-                    window.defensiveThrowTimeout = setTimeout(() => {
-                        const catchF = fieldersState[fielderKey];
-                        if (catchF) catchF.state = 'catch';
-                        playCatchSound();
-
-                        setTimeout(() => {
-                            const fromPos = fieldersState[fielderKey] || originFielder;
-                            triggerThrowAnimation(fromPos.x, fromPos.y, trapTargetX, trapTargetY, 400, () => {
-                                const frontF = fieldersState[frontFielderKey];
-                                if (frontF) frontF.state = 'catch';
-                                playCatchSound();
-                            });
-                        }, 120);
-                    }, catchWaitMs);
-                }
-            }
-            // 5. 正解或安打：外野接球後傳回內野轉傳 (Cutoff)
-            else if (currentQ.batType === 'clean_hit' || consequence.outcome === 'SAFE') {
-                if (fielderKey === 'LF' || fielderKey === 'CF' || fielderKey === 'RF') {
-                    const cutoffBase = getBasePosition(2);
-                    const coveringKey = (fielderKey === 'LF') ? 'SS' : '2B';
-                    moveFielderTo(coveringKey, cutoffBase.x, cutoffBase.y, 900);
-
-                    window.defensiveThrowTimeout = setTimeout(() => {
-                        const catchF = fieldersState[fielderKey];
-                        if (catchF) catchF.state = 'catch';
-                        playCatchSound();
-
-                        setTimeout(() => {
-                            const fromPos = fieldersState[fielderKey] || originFielder;
-                            triggerThrowAnimation(fromPos.x, fromPos.y, cutoffBase.x, cutoffBase.y, 520, () => {
-                                coverF = fieldersState[coveringKey];
-                                if (coverF) coverF.state = 'catch';
-                            });
-                        }, 150);
-                    }, catchWaitMs);
-                }
-            }
+        function drawTacticalVisual(scale){
+            if(!tacticalVisual)return;
+            const v=tacticalVisual;
+            if(v.ball&&!throwAnim.active){ctx.fillStyle='#0f172a';ctx.fillRect((v.x-4)*scale,(v.y-4)*scale,8*scale,8*scale);ctx.fillStyle='#ffffff';ctx.fillRect((v.x-3)*scale,(v.y-3)*scale,6*scale,6*scale);ctx.fillStyle='#dc2626';ctx.fillRect(v.x*scale,(v.y-2)*scale,2*scale,2*scale);}
+            if(v.alert){const f=fieldersState[v.alertKey];if(!f)return;const x=(f.x+12)*scale,y=(f.y-29)*scale;ctx.fillStyle='#0f172a';ctx.fillRect(x-2*scale,y-2*scale,11*scale,23*scale);ctx.fillStyle='#facc15';ctx.fillRect(x,y,7*scale,12*scale);ctx.fillRect(x+2*scale,y+15*scale,4*scale,4*scale);}
         }
 
         let particles = [];
@@ -3559,28 +3331,13 @@
          * - WASTED: 次佳/消極/猶豫，未出局但「少進一壘」或「錯失得分」
          * - OUT: 致命錯誤/犯規，遭雙殺、觸殺、封殺或促請裁決刺殺出局
          */
-        function getChoiceConsequence(ctx, choiceId) {
+        function getLegacyChoiceConsequence(ctx, choiceId) {
             const ruleKey = ctx.ruleKey || (ctx.resolvedRule && ctx.resolvedRule.ruleKey) || ctx.id;
             const correctChoice = ctx.correct || (ctx.resolvedRule && ctx.resolvedRule.correct);
             const isCorrect = choiceId === correctChoice;
             const playerBase = ctx.playerBase;
             const outs = ctx.outs;
             const isPlayerForced = ctx.isPlayerForced;
-            if (ctx.matrixId && resolveBallResult(ctx) === 'dropped' && !isCorrect
-                && (ruleKey === 'shortFlyHalfway' || ruleKey === 'deepFlyHalfway')) {
-                const ranEarly = choiceId === 'A';
-                return {
-                    choiceId, isCorrect: false, outcome: 'WASTED',
-                    bannerText: ranEarly ? 'SAFE, BUT RISKY 🟠' : 'MISSED CHANCE 🟠',
-                    bannerSub: ranEarly ? '這次漏接才安全；飛球未落地前衝刺可能雙殺' : '球已漏接，仍留在原壘錯失推進',
-                    runnerLabel: ranEarly ? '冒險推進 🟠' : '錯失推進 🟠',
-                    runnerAnimAction: ranEarly ? 'advance' : 'hold',
-                    coachAvatar: '🤔',
-                    coachFeedback: ranEarly ? '這次漏接救了你，但不能在球落地前賭接殺！' : '確認球落地後，記得把握推進機會！',
-                    detailReason: ranEarly ? '野手漏接使跑者安全，但擊球當下無法預知漏接；先觀察才是穩定判斷。'
-                        : '球確實漏接後應觀察防守位置並推進，守在原壘會錯失機會。'
-                };
-            }
 
             if (isCorrect) {
                 let bannerSub = '最佳判斷！成功推進壘包';
@@ -3965,7 +3722,7 @@
 
         function buildDecisionOptions(resolvedRule, context) {
             return Object.entries(BASERUNNING_CONTENT.decisions).map(([id, decision]) => {
-                const conseq = getChoiceConsequence({
+                const conseq = getLegacyChoiceConsequence({
                     ...context,
                     ruleKey: resolvedRule.ruleKey,
                     correct: resolvedRule.correct,
@@ -4268,11 +4025,11 @@
                 modalHeader.className = "px-5 py-4 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between gap-3 flex-shrink-0";
                 modalTitle.innerText = "答對了，這球判斷漂亮！ 🟢";
                 modalBadge.className = "px-3.5 py-1 rounded-full text-xs font-black bg-emerald-600 text-white shadow-sm";
-                modalBadge.innerText = "SAFE 🟢";
+                modalBadge.innerText = consequence.bannerText;
                 mistakeBox.classList.add('hidden');
             } else if (consequence.outcome === 'WASTED') {
                 modalHeader.className = "px-5 py-4 bg-amber-50 border-b border-amber-100 flex items-center justify-between gap-3 flex-shrink-0";
-                modalTitle.innerText = "未出局，但錯失了關鍵進壘/得分機會！ ⚠️";
+                modalTitle.innerText = "這次安全，起始判斷仍須調整！ ⚠️";
                 modalBadge.className = "px-3.5 py-1 rounded-full text-xs font-black bg-amber-600 text-white shadow-sm";
                 modalBadge.innerText = consequence.badgeText;
                 mistakeBox.className = "rounded-2xl bg-amber-50 border border-amber-200 p-3 shadow-sm";
@@ -4305,7 +4062,7 @@
             document.getElementById('answerModalCorrectChoice').innerText = `${getDecisionLabel(currentQ.correct)}：${BASERUNNING_CONTENT.decisions[currentQ.correct].text}`;
             
             const answerFacts = currentQ.baseFactsText || describeBaseFactsForDisplay(currentQ);
-            document.getElementById('answerModalReason').innerText = `${answerFacts}。${correctOpt ? correctOpt.explain : selectedOpt.explain}`;
+            document.getElementById('answerModalReason').innerText = `${answerFacts}。${currentQ.explanation || (correctOpt ? correctOpt.explain : selectedOpt.explain)}\n本次守備演練：${consequence.bannerSub}。${consequence.coachFeedback}`;
 
             // 3D 技巧與教育卡片
             const rhymeEl = document.getElementById('answerModalRhyme');
@@ -4465,7 +4222,6 @@
             }
 
             // 執行場上 16-bit 衝擊彈跳框與跑者動態
-            animateRunners(choiceId, consequence.isCorrect);
             runTacticalPlay(currentQ, choiceId, consequence);
         }
 
@@ -6225,443 +5981,6 @@
                 .map(runner => runner.base))].sort((a, b) => a - b);
         }
 
-        function shouldShowBatterRunner(q, choiceId, isCorrect) {
-            if (q.ruleKey === "infieldFlyStay") return false;
-            if (q.batType === "line_drive") return false;
-            if (q.batType === "fly_ball" && q.outs < 2) return false;
-            if (q.batType === "grounder" || q.batType === "clean_hit") return true;
-            return choiceId === "A" && q.outs === 2;
-        }
-
-        function addBatterRunnerToFirst(isBlockedAtFirst = false) {
-            const start = { x: bases.home.x, y: bases.home.y - 20 };
-            const firstPos = getRunnerStartPosition(1);
-            const firstAlreadyRepresented = fieldRunners.some(runner => !runner.taggedOut && runner.base === 1 && runner.targetX === firstPos.x && runner.targetY === firstPos.y);
-            if (firstAlreadyRepresented && !isBlockedAtFirst) return;
-
-            let targetX = firstPos.x;
-            let targetY = firstPos.y;
-            let statusLabel = null;
-            let statusColor = "#10b981";
-
-            if (isBlockedAtFirst) {
-                // 一壘被不跑的跑者卡住：打者衝到一壘前 65% 處急煞
-                targetX = start.x + (firstPos.x - start.x) * 0.65;
-                targetY = start.y + (firstPos.y - start.y) * 0.65;
-                statusLabel = "⚠️ 塞壘卡住!";
-                statusColor = "#f59e0b";
-            }
-
-            fieldRunners.push({
-                base: 1,
-                isPlayer: false,
-                label: "打",
-                startX: start.x,
-                startY: start.y,
-                x: start.x,
-                y: start.y,
-                targetX: targetX,
-                targetY: targetY,
-                animProgress: 0,
-                taggedOut: false,
-                statusLabel: statusLabel,
-                statusColor: statusColor
-            });
-        }
-
-        function moveRunnerToBase(runner, targetBaseNumber) {
-            const currentBaseNum = runner.base;
-            const waypoints = [];
-
-            // 構建沿跑壘線行進之過路壘包點 (Waypoints)
-            // 使用無 offset 之精確壘包中心點 getBasePosition(b)，確保軌跡 100% 壓在白界線/跑壘線上！
-            if (targetBaseNumber > currentBaseNum) {
-                for (let b = currentBaseNum + 1; b <= targetBaseNumber; b++) {
-                    const bPos = getBasePosition(b);
-                    waypoints.push({ base: b, x: bPos.x, y: bPos.y });
-                }
-            } else {
-                const bPos = getBasePosition(targetBaseNumber);
-                waypoints.push({ base: targetBaseNumber, x: bPos.x, y: bPos.y });
-            }
-
-            runner.waypoints = waypoints;
-            const finalPos = waypoints[waypoints.length - 1];
-            runner.targetX = finalPos.x;
-            runner.targetY = finalPos.y;
-            runner.base = targetBaseNumber === 4 ? 4 : targetBaseNumber;
-        }
-
-        function moveRunnerTowardNextBase(runner, ratio = 0.35) {
-            const nextBase = getNextBasePosition(runner.base);
-            const origBase = getBasePosition(runner.base);
-            if (!nextBase || !origBase) return;
-            const targetX = origBase.x + (nextBase.x - origBase.x) * ratio;
-            const targetY = origBase.y + (nextBase.y - origBase.y) * ratio;
-            runner.targetX = targetX;
-            runner.targetY = targetY;
-            runner.customTrajectory = {
-                type: 'lead_off_shuffle',
-                startX: origBase.x,
-                startY: origBase.y,
-                targetX: targetX,
-                targetY: targetY,
-                nextBaseX: nextBase.x,
-                nextBaseY: nextBase.y
-            };
-        }
-
-        function markPlayerForChoice(runner, choiceId, consequence) {
-            runner.taggedOut = (consequence.outcome === 'OUT');
-            runner.statusLabel = consequence.runnerLabel;
-            runner.statusColor = consequence.outcome === 'SAFE' ? '#10b981' : (consequence.outcome === 'WASTED' ? '#f59e0b' : '#ef4444');
-            runner.outLabel = consequence.runnerLabel;
-            runner.customTrajectory = null; // 重置自訂路徑
-
-            const animAction = consequence.runnerAnimAction;
-            if (animAction === 'advance' || animAction === 'tag_up_home') {
-                const nextBaseNumber = getNextBaseNumber(runner.base);
-                if (nextBaseNumber) moveRunnerToBase(runner, nextBaseNumber);
-            } else if (animAction === 'lead_off' || animAction === 'wasted_leadoff') {
-                moveRunnerTowardNextBase(runner, 0.35);
-            } else if (animAction === 'out_advancing') {
-                // 棒球真實演出（接殺前盲目狂奔 -> 驚覺被接殺緊急折返撲回原壘 -> 來不及回壘遭促請裁決刺殺）：
-                const nextBasePos = getNextBasePosition(runner.base);
-                const origBasePos = getRunnerStartPosition(runner.base);
-                if (nextBasePos && origBasePos) {
-                    const apexX = origBasePos.x + (nextBasePos.x - origBasePos.x) * 0.62;
-                    const apexY = origBasePos.y + (nextBasePos.y - origBasePos.y) * 0.62;
-                    // 回撲至距離原壘包約 22% 處停住（已被補位野手接球踩壘判出局）
-                    const finalX = origBasePos.x + (nextBasePos.x - origBasePos.x) * 0.22;
-                    const finalY = origBasePos.y + (nextBasePos.y - origBasePos.y) * 0.22;
-                    runner.targetX = finalX;
-                    runner.targetY = finalY;
-                    runner.customTrajectory = {
-                        type: 'scramble_back',
-                        apexX: apexX,
-                        apexY: apexY,
-                        finalX: finalX,
-                        finalY: finalY
-                    };
-                } else {
-                    moveRunnerTowardNextBase(runner, 0.68);
-                }
-            } else if (animAction === 'out_leadoff') {
-                // 棒球真實演出（Track 2: 選 B 離壘過遠/猶豫遭內野守備夾殺 Rundown Trap）：
-                // 跑者離壘約 38% 處發現野手假動作假傳，進退維谷停在半路，野手雙向包夾！
-                const nextBasePos = getNextBasePosition(runner.base);
-                const origBasePos = getRunnerStartPosition(runner.base);
-                if (nextBasePos && origBasePos) {
-                    const midX = origBasePos.x + (nextBasePos.x - origBasePos.x) * 0.38;
-                    const midY = origBasePos.y + (nextBasePos.y - origBasePos.y) * 0.38;
-                    runner.targetX = midX;
-                    runner.targetY = midY;
-                    runner.customTrajectory = {
-                        type: 'rundown_trap',
-                        midX: midX,
-                        midY: midY,
-                        origX: origBasePos.x,
-                        origY: origBasePos.y,
-                        nextX: nextBasePos.x,
-                        nextY: nextBasePos.y
-                    };
-                } else {
-                    moveRunnerTowardNextBase(runner, 0.35);
-                }
-            } else {
-                // hold / wasted_hold / out_holding (守原壘或原壘被強迫進壘封殺 Force Out)
-                const original = getRunnerStartPosition(runner.base);
-                runner.targetX = original.x;
-                runner.targetY = original.y;
-                if (animAction === 'out_holding' && consequence.outcome === 'OUT') {
-                    // Track 3: 強迫進壘卻死守原壘遭封殺 (Force Out)
-                    runner.customTrajectory = {
-                        type: 'force_out_holding',
-                        origX: original.x,
-                        origY: original.y
-                    };
-                }
-            }
-        }
-
-        function animateRunners(action, isCorrect) {
-            const currentQ = generatedQuestions[currentQuestionIdx];
-            const consequence = getChoiceConsequence(currentQ, action);
-
-            fieldRunners.forEach(runner => {
-                runner.startX = runner.x;
-                runner.startY = runner.y;
-                runner.animProgress = 0;
-                runner.taggedOut = false;
-                runner.statusLabel = null;
-                runner.outLabel = "❌ OUT";
-                runner.waypoints = null;
-                runner.customTrajectory = null;
-            });
-
-            if (isCorrect) {
-                if (currentQ.runTarget === "advance_one_base" || currentQ.runTarget === "force_all") {
-                    fieldRunners.forEach(runner => {
-                        const nextBaseNumber = getNextBaseNumber(runner.base);
-                        if (nextBaseNumber) moveRunnerToBase(runner, nextBaseNumber);
-                        if (runner.isPlayer) {
-                            runner.statusLabel = "SAFE 🟢";
-                            runner.statusColor = "#10b981";
-                        }
-                    });
-                } else if (currentQ.runTarget === "lead_off") {
-                    // B: 離壘觀察，向前小跑步 3 步到中途觀察點
-                    fieldRunners.forEach(runner => {
-                        if (runner.isPlayer) {
-                            moveRunnerTowardNextBase(runner, 0.35);
-                            runner.statusLabel = "離壘觀察 👀";
-                            runner.statusColor = "#38bdf8";
-                        }
-                    });
-                } else if (currentQ.runTarget === "tag_up_3toH") {
-                    fieldRunners.forEach(runner => {
-                        if (runner.isPlayer && runner.base === 3) {
-                            moveRunnerToBase(runner, 4);
-                            runner.statusLabel = "TAG-UP SAFE! 🟢";
-                            runner.statusColor = "#10b981";
-                        }
-                    });
-                } else {
-                    // C: 守住原壘 / 回踩原壘
-                    fieldRunners.forEach(runner => {
-                        if (runner.isPlayer) {
-                            const basePos = getBasePosition(runner.base);
-                            if (basePos) {
-                                runner.targetX = basePos.x;
-                                runner.targetY = basePos.y;
-                            }
-                            runner.statusLabel = "守住原壘 🟢";
-                            runner.statusColor = "#10b981";
-                        }
-                    });
-                }
-            } else {
-                // 玩家選錯時：
-                // 1. 玩家跑者依選取的動作反應（留壘/離壘/亂衝）
-                const playerRunner = fieldRunners.find(r => r.isPlayer);
-                if (playerRunner) {
-                    markPlayerForChoice(playerRunner, action, consequence);
-                }
-
-                // 2. 判斷戰術正解下，其他隊友的預期推進目標
-                const correctTarget = currentQ.runTarget;
-                const playerStayingOnBase = (action === 'C' || (playerRunner && playerRunner.targetX === playerRunner.startX && playerRunner.targetY === playerRunner.startY));
-                const playerOccupiedBase = playerRunner ? playerRunner.base : null;
-
-                // 3. 場上的隊友執行「正確標準跑壘」，但若目標壘包被不跑的玩家卡住，則觸發「塞壘 / 卡住」
-                fieldRunners.forEach(runner => {
-                    if (runner.isPlayer) return;
-
-                    if (correctTarget === "advance_one_base" || correctTarget === "force_all") {
-                        const nextBaseNumber = getNextBaseNumber(runner.base);
-                        if (nextBaseNumber) {
-                            // 檢查是否被留在原壘的玩家卡住
-                            if (playerStayingOnBase && nextBaseNumber === playerOccupiedBase) {
-                                // ⚠️ 塞壘卡位！衝到壘包前煞車，無法踩壘
-                                const basePos = getBasePosition(nextBaseNumber);
-                                const curPos = getRunnerStartPosition(runner.base);
-                                // 停在距離目標壘包約 24px 處（跑壘線 65% 位置）
-                                runner.targetX = curPos.x + (basePos.x - curPos.x) * 0.65;
-                                runner.targetY = curPos.y + (basePos.y - curPos.y) * 0.65;
-                                runner.statusLabel = "⚠️ 塞壘卡住!";
-                                runner.statusColor = "#f59e0b";
-                            } else {
-                                moveRunnerToBase(runner, nextBaseNumber);
-                            }
-                        }
-                    } else if (correctTarget === "tag_up_3toH") {
-                        if (runner.base === 3) {
-                            moveRunnerToBase(runner, 4);
-                        }
-                    } else if (correctTarget === "lead_off") {
-                        moveRunnerTowardNextBase(runner, 0.35);
-                    } else {
-                        // 正解為 stay_on_bases: 隊友冷靜守在原壘
-                        const basePos = getBasePosition(runner.base);
-                        if (basePos) {
-                            runner.targetX = basePos.x;
-                            runner.targetY = basePos.y;
-                        }
-                    }
-                });
-
-                // 若玩家選守壘 (C) 導致身後隊友被卡住，在玩家頭頂額外提示「⚠️ 佔用壘包」
-                if (playerStayingOnBase && fieldRunners.some(r => !r.isPlayer && r.statusLabel && r.statusLabel.includes("塞壘"))) {
-                    if (playerRunner && !playerRunner.taggedOut) {
-                        playerRunner.statusLabel = "⚠️ 佔用壘包";
-                        playerRunner.statusColor = "#ef4444";
-                    }
-                }
-            }
-
-            if (shouldShowBatterRunner(currentQ, action, isCorrect)) {
-                const isBlockedAtFirst = !isCorrect && fieldRunners.some(r => r.base === 1 && r.targetX === getRunnerStartPosition(1).x && r.targetY === getRunnerStartPosition(1).y);
-                addBatterRunnerToFirst(isBlockedAtFirst);
-            }
-
-            currentVisualOccupiedBases = getVisualBasesFromRunners(fieldRunners);
-            document.getElementById('baseStatusText').innerText = `${currentQ.outs}出局 - 選擇後：${describeOccupiedBases(currentVisualOccupiedBases)}`;
-
-
-            let start = null;
-            // 物理移動真實速度與距離精確對應：
-            // Option A (直接衝壘 - 100% 壘間全速狂飆)：850ms (平均速度: 1.17 距離/s) ➔ 極速感!
-            // Option B (離壘觀察 - 35% 壘間探步步調)：1600ms (平均速度: 0.22 距離/s) ➔ 緩慢謹慎!
-            // Option C (守住原壘 / 微幅調整)：1200ms
-            const hasScramble = fieldRunners.some(r => r.customTrajectory && r.customTrajectory.type === 'scramble_back');
-            const hasRundown = fieldRunners.some(r => r.customTrajectory && r.customTrajectory.type === 'rundown_trap');
-            let duration = 850; // 預設 Option A 衝刺爆發極速
-            if (hasScramble) {
-                duration = 2400; // 衝出 62% ➔ 急煞 ➔ 撲回原壘
-            } else if (hasRundown) {
-                duration = 1800; // 離壘 38% ➔ 急煞 ➔ 被夾殺包夾
-            } else if (action === 'B') {
-                duration = 1600; // 離壘觀察謹慎步調
-            } else if (action === 'C') {
-                duration = 1000;
-            }
-
-            function step(timestamp) {
-                if (!start) start = timestamp;
-                const elapsed = timestamp - start;
-                const progress = Math.min(elapsed / duration, 1);
-
-                fieldRunners.forEach(runner => {
-                    runner.animProgress = progress;
-
-                    if (runner.customTrajectory && runner.customTrajectory.type === 'lead_off_shuffle') {
-                        // 離壘觀察游移演出 (Lead-Off Observation Shuffle):
-                        // 沿著壘包線前後游移：往前踏 25% ➔ 微幅後撤 6% ➔ 再向前游移定位至 35% 離壘點
-                        const traj = runner.customTrajectory;
-                        const sX = traj.startX;
-                        const sY = traj.startY;
-                        const tX = traj.targetX;
-                        const tY = traj.targetY;
-                        
-                        if (progress <= 0.40) {
-                            // 階段一：迅速離壘探步至 28%
-                            const subP = progress / 0.40;
-                            const apexX = sX + (tX - sX) * 1.15;
-                            const apexY = sY + (tY - sY) * 1.15;
-                            runner.x = sX + (apexX - sX) * subP;
-                            runner.y = sY + (apexY - sY) * subP;
-                        } else if (progress <= 0.70) {
-                            // 階段二：觀察投手重心，向後退兩步警戒
-                            const subP = (progress - 0.40) / 0.30;
-                            const apexX = sX + (tX - sX) * 1.15;
-                            const apexY = sY + (tY - sY) * 1.15;
-                            const backX = sX + (tX - sX) * 0.75;
-                            const backY = sY + (tY - sY) * 0.75;
-                            runner.x = apexX + (backX - apexX) * subP;
-                            runner.y = apexY + (backY - apexY) * subP;
-                        } else {
-                            // 階段三：穩定二次探步，定位於 35% 離壘觀察觀察點
-                            const subP = (progress - 0.70) / 0.30;
-                            const backX = sX + (tX - sX) * 0.75;
-                            const backY = sY + (tY - sY) * 0.75;
-                            runner.x = backX + (tX - backX) * subP;
-                            runner.y = backY + (tY - backY) * subP;
-                        }
-                    } else if (runner.customTrajectory && runner.customTrajectory.type === 'scramble_back') {
-                        // 雙階段折返路徑 (U-Turn Scramble):
-                        // 0.00 ~ 0.50: 打擊出去離壘狂奔（往前衝刺至 apex 點）
-                        // 0.50 ~ 0.58: 外野手接殺瞬間驚慌煞車掉頭（Skid dust）
-                        // 0.58 ~ 1.00: 轉身拼命回撲原壘，但防守方雷射肩先傳到，停在距原壘 22% 處遭刺殺！
-                        const traj = runner.customTrajectory;
-                        if (progress <= 0.50) {
-                            const subP = progress / 0.50;
-                            runner.x = runner.startX + (traj.apexX - runner.startX) * subP;
-                            runner.y = runner.startY + (traj.apexY - runner.startY) * subP;
-                        } else if (progress <= 0.58) {
-                            // 急煞車與轉向
-                            runner.x = traj.apexX;
-                            runner.y = traj.apexY;
-                            createDust(runner.x, runner.y, 5);
-                            if (!runner.hasPlayedBrakeSound) {
-                                runner.hasPlayedBrakeSound = true;
-                                playSlideSound();
-                            }
-                        } else {
-                            const subP = (progress - 0.58) / 0.42;
-                            runner.x = traj.apexX + (traj.finalX - traj.apexX) * subP;
-                            runner.y = traj.apexY + (traj.finalY - traj.apexY) * subP;
-                        }
-                    } else if (runner.customTrajectory && runner.customTrajectory.type === 'rundown_trap') {
-                        // 夾殺中途折返與猶豫 (Rundown Trap Trajectory):
-                        // 0.00 ~ 0.45: 試圖離壘推進至中途點 38%
-                        // 0.45 ~ 0.55: 驚覺野手假傳牽制，緊急煞車 (Skid dust & hesitation)
-                        // 0.55 ~ 1.00: 試圖往原壘逃跑，但前野手與後野手雙向包夾，受困於 25% 處遭觸殺！
-                        const traj = runner.customTrajectory;
-                        if (progress <= 0.45) {
-                            const subP = progress / 0.45;
-                            runner.x = runner.startX + (traj.midX - runner.startX) * subP;
-                            runner.y = runner.startY + (traj.midY - runner.startY) * subP;
-                        } else if (progress <= 0.55) {
-                            runner.x = traj.midX;
-                            runner.y = traj.midY;
-                            createDust(runner.x, runner.y, 4);
-                            if (!runner.hasPlayedBrakeSound) {
-                                runner.hasPlayedBrakeSound = true;
-                                playSlideSound();
-                            }
-                        } else {
-                            const subP = (progress - 0.55) / 0.45;
-                            // 往原壘退兩步
-                            const retX = traj.midX + (traj.origX - traj.midX) * 0.45;
-                            const retY = traj.midY + (traj.origY - traj.midY) * 0.45;
-                            runner.x = traj.midX + (retX - traj.midX) * subP;
-                            runner.y = traj.midY + (retY - traj.midY) * subP;
-                        }
-                    } else if (runner.waypoints && runner.waypoints.length > 0) {
-                        // 多壘包過路路徑插值 (Multi-base waypoints pathing):
-                        // 確保跑者嚴格沿著 1壘 ➔ 2壘 ➔ 3壘 ➔ 本壘 的壘線移動，在壘包處轉彎踩壘！
-                        const wps = [{ x: runner.startX, y: runner.startY }, ...runner.waypoints];
-                        const totalSegs = wps.length - 1;
-                        if (totalSegs === 1) {
-                            runner.x = wps[0].x + (wps[1].x - wps[0].x) * progress;
-                            runner.y = wps[0].y + (wps[1].y - wps[0].y) * progress;
-                        } else {
-                            const segProgress = progress * totalSegs;
-                            const segIdx = Math.min(Math.floor(segProgress), totalSegs - 1);
-                            const subP = segProgress - segIdx;
-                            const p1 = wps[segIdx];
-                            const p2 = wps[segIdx + 1];
-                            runner.x = p1.x + (p2.x - p1.x) * subP;
-                            runner.y = p1.y + (p2.y - p1.y) * subP;
-                        }
-                    } else {
-                        runner.x = runner.startX + (runner.targetX - runner.startX) * progress;
-                        runner.y = runner.startY + (runner.targetY - runner.startY) * progress;
-                    }
-
-                    const isTargetMoving = (Math.abs(runner.targetX - runner.startX) > 1 || Math.abs(runner.targetY - runner.startY) > 1);
-                    const isShuffle = (runner.customTrajectory && runner.customTrajectory.type === 'lead_off_shuffle');
-                    if (runner.statusLabel && runner.statusLabel.includes("塞壘") && progress > 0.65) {
-                        // 急煞車輪/球鞋摩擦泥土白煙與飛濺砂石 (Skid dust)
-                        createDust(runner.x, runner.y, 4);
-                        if (!runner.hasPlayedBrakeSound) {
-                            runner.hasPlayedBrakeSound = true;
-                            playSlideSound();
-                        }
-                    } else if (isTargetMoving && !isShuffle && progress < 0.9 && Math.random() > 0.4) {
-                        createDust(runner.x, runner.y, 2);
-                    }
-                });
-
-                drawStadium();
-
-                if (progress < 1) {
-                    requestAnimationFrame(step);
-                }
-            }
-            requestAnimationFrame(step);
-        }
-
         function generateGameScenarios() {
             generatedQuestions = [];
             const answerKeypool = buildShuffledAnswerPool();
@@ -6963,7 +6282,6 @@
             resetFieldersState();
             drawStadium();
             const consequence = getChoiceConsequence(currentQ, lastAnsweredExplanation.choiceId);
-            animateRunners(lastAnsweredExplanation.choiceId, lastAnsweredExplanation.isCorrect);
             runTacticalPlay(currentQ, lastAnsweredExplanation.choiceId, consequence);
         }
 
@@ -7014,8 +6332,6 @@
             });
 
             if (isCorrect) {
-                playSuccessSound();
-                playCheerSound();
                 score += 10 + (consecutiveStreak * 2);
                 consecutiveStreak++;
                 currentCorrectCount++;
@@ -7036,10 +6352,9 @@
                 coachFeedback.className = "text-sm sm:text-base text-emerald-400 mt-1 leading-relaxed font-black";
                 coachFeedback.innerText = consequence.coachFeedback;
                 
-                document.getElementById('hitTypeBadge').innerText = "SAFE! 🟢";
+                document.getElementById('hitTypeBadge').innerText = consequence.bannerText;
                 document.getElementById('hitTypeBadge').className = "px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black bg-emerald-500 text-slate-950 tracking-wider";
             } else if (consequence.outcome === 'WASTED') {
-                playWarningSound();
                 currentWrongCount++;
                 consecutiveStreak = 0;
                 
@@ -7062,7 +6377,6 @@
 
             if (!isCorrect && consequence.outcome !== 'WASTED') {
                 if (!isDelayedAppealPlay) {
-                    playFailSound();
                 }
                 currentWrongCount++;
                 consecutiveStreak = 0;
@@ -7095,7 +6409,6 @@
             ensureNextButtonVisible();
 
             try {
-                animateRunners(choiceId, isCorrect);
                 runTacticalPlay(currentQ, choiceId, consequence);
             } catch (error) {
                 console.error('跑者動畫失敗，但已保留下一題按鈕：', error);
@@ -7553,9 +6866,8 @@
             if (!sc) return;
 
             playHitSound();
-            playSuccessSound();
-            triggerOutcomeBanner("SAFE! 🟢", "完美依照規則跑壘！", true);
-            animateRunners(sc.correct, true);
+            setupRunnersForScenario(sc);
+            runTacticalPlay(sc, sc.correct, getChoiceConsequence(sc, sc.correct));
         }
 
         function resetSandboxConditions() {
@@ -7835,3 +7147,4 @@
 </script>
 </body>
 </html>
+
