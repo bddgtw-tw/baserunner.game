@@ -1667,7 +1667,7 @@
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
                         <span>你是跑壘王!!!</span> 
                         <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">少棒跑壘判斷</span>
-                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20261005-12</span>
+                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20261006-01</span>
                     </h1>
                     <p class="text-xs text-slate-400 font-medium">跑壘指導員互動出題版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
@@ -2051,7 +2051,7 @@
                         <tr>
                             <th class="p-2">出局/壘包</th>
                             <th class="p-2">你是誰</th>
-                            <th class="p-2">擊球狀況</th>
+                            <th class="p-2">擊球狀況 / 守備員</th>
                             <th class="p-2 text-center">正解策略</th>
                             <th class="p-2">黃金口訣 / 規則依據</th>
                             <th class="p-2 text-center">操作</th>
@@ -2329,12 +2329,12 @@
     <footer class="w-full text-center py-3 text-xs text-slate-600 border-t border-slate-950 mt-4 max-w-7xl mx-auto flex flex-col sm:flex-row justify-between px-6 gap-2 font-bold font-mono">
         <span>© 2026 你是跑壘王!!! - 專屬配合台灣少棒基層培訓</span>
         <span id="footerFeatureText">系統功能：完美黃金配比戰術生成引擎 • 50題邏輯自動校驗器</span>
-        <span id="footerVersionText">版本：v20261005-12</span>
+        <span id="footerVersionText">版本：v20261006-01</span>
     </footer>
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20261005-12";
+        const APP_VERSION = "v20261006-01";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
@@ -3862,8 +3862,12 @@
             return `你在${playerBaseName}｜${describeTeammates(teammates)}`;
         }
 
-        function describeForceStatus(isForced) {
-            return isForced ? "這是一個強迫進壘的狀態" : "這不是強迫進壘的狀態";
+        function describeForceStatus(isForced, hitTypeId, isInfieldFly = false) {
+            if (isInfieldFly) return "內野高飛球宣告後打者出局，跑者不再被強迫進壘";
+            if (hitTypeId === "fly_ball" || hitTypeId === "line_drive") {
+                return isForced ? "球若落地才有強迫進壘；若被接殺，先回踩原壘" : "目前沒有強迫進壘；若被接殺，先回踩原壘";
+            }
+            return isForced ? "球落地後須強迫進壘" : "沒有強迫進壘";
         }
 
         function getNextBaseName(base) {
@@ -3993,13 +3997,13 @@
         function describeBaseFactsForDisplay(question) {
             const playerBaseName = getBaseName(question.playerBase);
             const teammates = question.teammates || question.runners.filter(base => base !== question.playerBase);
-            return `${question.outs}出局｜壘包：${describeOccupiedBases(question.runners)}｜你在${playerBaseName}｜${describeTeammates(teammates)}｜${describeForceStatus(question.isPlayerForced)}`;
+            return `${question.outs}出局｜壘包：${describeOccupiedBases(question.runners)}｜你在${playerBaseName}｜${describeTeammates(teammates)}｜${describeForceStatus(question.isPlayerForced, question.batType, question.ruleKey === "infieldFlyStay")}`;
         }
 
         function buildAnnouncerDescription(context) {
             const teammates = context.teammates || context.runners.filter(base => base !== context.playerBase);
             const opening = `現在【${context.outs}出局】，你是【${context.playerBaseName}跑壘員】，${describeTeammatesForInstructor(teammates)}`;
-            const forceText = context.isPlayerForced ? "這是一個強迫進壘的狀態。" : "這不是強迫進壘的狀態。";
+            const forceText = `${describeForceStatus(context.isPlayerForced, context.hitType.id, context.isInfieldFly)}。`;
             const hitDescription = describeHitForInstructor(context);
             return `${opening}${forceText}${hitDescription}這個情況下，你應該怎麼跑？`;
         }
@@ -4036,7 +4040,7 @@
             document.getElementById('totalQuestionNum').innerText = questionCount;
             document.getElementById('validatorButtonText').innerText = `🧪 ${validationCount}題邏輯驗證`;
             document.getElementById('validatorTitle').innerText = `${validationCount}題走壘戰術組合 - 邏輯自動驗證器`;
-            document.getElementById('validatorIntro').innerText = `系統已展開 ${matrixCount} 組題型矩陣，並抽樣 ${validationCount} 題比對跑壘規則，確保決策判定穩定。`;
+            document.getElementById('validatorIntro').innerText = `系統已展開 ${matrixCount} 組題型矩陣；抽樣 ${validationCount} 題檢查文字，另以固定邊界案例對照預期答案。`;
             document.getElementById('validatorResultLabel').innerText = `${validationCount} 題跑單驗證結果：`;
             document.getElementById('validatorRerunText').innerText = `重新模擬並再跑 ${validationCount} 題`;
             document.getElementById('footerFeatureText').innerText = `系統功能：${matrixCount}組題型矩陣生成引擎 • ${validationCount}題邏輯自動校驗器`;
@@ -4457,7 +4461,7 @@
                 if (!scenario.desc.includes(fragment)) return { ok: false, reason: `缺少題目條件：${fragment}` };
             }
 
-            const forceFragment = scenario.isPlayerForced ? "這是一個強迫進壘的狀態" : "這不是強迫進壘的狀態";
+            const forceFragment = describeForceStatus(scenario.isPlayerForced, scenario.batType, scenario.ruleKey === "infieldFlyStay");
             if (!scenario.desc.includes(forceFragment)) {
                 return { ok: false, reason: "題目缺少強迫進壘狀態" };
             }
@@ -4544,6 +4548,39 @@
             return matrix;
         }
 
+        // 固定案例的預期答案由教學規則人工列定，不從 solveBaserunningRule 推導。
+        const GOLDEN_RULE_CASES = [
+            { id: "O0_R1_P1_grounder_infield_P", answer: "A", reason: "一壘滾地球強迫進壘" },
+            { id: "O0_R2_P2_grounder_infield_SS", answer: "C", reason: "二壘非強迫，三游方向滾地球" },
+            { id: "O0_R12_P1_fly_ball_infield_short_SS", answer: "C", reason: "零出局一二壘內野高飛球" },
+            { id: "O1_R123_P3_line_drive_infield_P", answer: "C", reason: "滿壘平飛球先防接殺" },
+            { id: "O0_R1_P1_fly_ball_outfield_short_LF", answer: "B", reason: "一壘外野短淺飛球觀察" },
+            { id: "O0_R3_P3_fly_ball_outfield_deep_CF", answer: "C", reason: "三壘深遠飛球等接殺後起跑" },
+            { id: "O0_R1_P1_clean_hit_outfield_CF", answer: "A", reason: "安打已落地推進" },
+            { id: "O2_R2_P2_fly_ball_outfield_deep_RF", answer: "A", reason: "兩出局擊球即跑" }
+        ];
+
+        function auditGoldenRuleCases() {
+            const byId = new Map(getScenarioMatrix().map(entry => [entry.matrixId, entry]));
+            const failures = [];
+            GOLDEN_RULE_CASES.forEach(test => {
+                const entry = byId.get(test.id);
+                if (!entry) {
+                    failures.push(`${test.reason}：矩陣缺少 ${test.id}`);
+                    return;
+                }
+                const scenario = createScenarioFromMatrixEntry(entry, 0);
+                if (!scenario || scenario.correct !== test.answer) {
+                    failures.push(`${test.reason}：預期 ${test.answer}，實際 ${scenario?.correct || "無題目"}`);
+                }
+                if (scenario && (entry.hitTypeId === "fly_ball" || entry.hitTypeId === "line_drive")
+                    && !scenario.desc.includes("接殺") && !scenario.desc.includes("內野高飛球宣告")) {
+                    failures.push(`${test.reason}：題幹未說明接殺後的回壘條件`);
+                }
+            });
+            return { total: GOLDEN_RULE_CASES.length, failures };
+        }
+
         function getScenarioMatrix() {
             if (!scenarioMatrixCache) {
                 scenarioMatrixCache = buildScenarioMatrix();
@@ -4620,9 +4657,11 @@
 
                 const statusText = document.getElementById('validatorStatusText');
                 const audit = auditScenarioMatrix();
-                statusText.innerHTML = audit.ok
-                    ? `🟢 成功驗證 ${successCount} 題！目前題型矩陣池共有 ${audit.total} 組可用組合，題目文字、強迫進壘與接殺起跑條件皆通過檢查。`
-                    : `🔴 題目檢查發現 ${audit.failures.length} 個問題，請修正後再使用。`;
+                const golden = auditGoldenRuleCases();
+                const allPassed = audit.ok && golden.failures.length === 0 && successCount === scenariosCount;
+                statusText.textContent = allPassed
+                    ? `🟢 隨機 ${successCount}/${scenariosCount} 題、矩陣文字 ${audit.total} 題與獨立固定案例 ${golden.total}/${golden.total} 通過。固定案例僅涵蓋列出的邊界情境。`
+                    : `🔴 隨機 ${successCount}/${scenariosCount}、矩陣文字問題 ${audit.failures.length}、固定案例問題 ${golden.failures.length}：${[...audit.failures.slice(0, 2).map(f => f.reason), ...golden.failures].join("；")}`;
             }, 300);
         }
 
@@ -7354,7 +7393,7 @@
                 if (ansFilter !== 'all' && item.correct !== ansFilter) return false;
                 if (keyword) {
                     const ruleData = BASERUNNING_CONTENT.ruleResults[item.ruleKey] || {};
-                    const textCorpus = `${item.matrixId} ${item.direction} ${item.depth} ${ruleData.rhyme || ''} ${ruleData.explanation || ''}`.toLowerCase();
+                    const textCorpus = `${item.matrixId} ${item.direction} ${item.depth} ${item.fielderKey} ${fielders[item.fielderKey]?.name || ''} ${ruleData.rhyme || ''} ${ruleData.explanation || ''}`.toLowerCase();
                     if (!textCorpus.includes(keyword)) return false;
                 }
                 return true;
@@ -7381,7 +7420,7 @@
                     <tr class="hover:bg-slate-800/60 transition-colors">
                         <td class="p-2 font-bold text-slate-300">${item.outs}出局 / ${runnerCfg ? runnerCfg.text : ''}</td>
                         <td class="p-2 font-black text-cyan-400">${item.playerBase}壘跑者</td>
-                        <td class="p-2 text-slate-300 font-bold">${item.direction}${item.depth}</td>
+                        <td class="p-2 text-slate-300 font-bold">${BASERUNNING_CONTENT.hitTypes.find(type => type.id === item.hitTypeId)?.text || item.hitTypeId} · ${item.direction}${item.depth}<br><span class="text-cyan-300">${fielders[item.fielderKey]?.name || item.fielderKey} (${item.fielderKey})</span><br><span class="font-mono text-[10px] text-slate-400">${item.matrixId}</span></td>
                         <td class="p-2 text-center"><span class="px-2 py-0.5 rounded-lg text-[10px] font-black ${badgeColor}">${badgeText}</span></td>
                         <td class="p-2 text-slate-300"><span class="text-amber-400 font-black">「${ruleData.rhyme || ''}」</span></td>
                         <td class="p-2 text-center">
