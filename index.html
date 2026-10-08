@@ -1619,6 +1619,161 @@
             border-radius: inherit;
         }
 
+        /* 16-BIT 街機球場右上角黑底斜角厚框 HUD 儀表板 */
+        .sfc-scoreboard-hud {
+            background: #090d16 !important;
+            border: 2.5px solid #334155 !important;
+            border-radius: 8px !important;
+            box-shadow: 
+                inset 1.5px 1.5px 0px rgba(255,255,255,0.2),
+                inset -2px -2px 0px #000000,
+                3px 3px 0px #000000 !important;
+        }
+        .sfc-base-diamond-wrap {
+            width: 36px;
+            height: 36px;
+        }
+        .sfc-hud-base {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #1e293b;
+            border: 1.5px solid #000000;
+            transform: rotate(45deg);
+            box-shadow: inset 1px 1px 0px rgba(255,255,255,0.15);
+            transition: all 0.15s ease;
+        }
+        .sfc-hud-base.active {
+            background: #facc15 !important;
+            border-color: #78350f !important;
+            box-shadow: 
+                inset 1px 1px 0px #fef08a,
+                0 0 8px #facc15,
+                0 0 14px rgba(250, 204, 21, 0.6) !important;
+        }
+        .sfc-hud-home {
+            background: #475569;
+            width: 9px;
+            height: 9px;
+        }
+        .sfc-hud-text {
+            font-family: 'Press Start 2P', monospace, sans-serif !important;
+            font-weight: 900 !important;
+            text-shadow: 0 0 4px rgba(250, 204, 21, 0.5) !important;
+        }
+        .sfc-hud-score {
+            font-family: 'Press Start 2P', monospace, sans-serif !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.5px !important;
+            text-shadow: 0 0 6px rgba(34, 197, 94, 0.7) !important;
+        }
+        .sfc-bso-col span:first-child {
+            font-family: 'Press Start 2P', monospace, sans-serif !important;
+            width: 10px;
+            display: inline-block;
+        }
+        .sfc-led {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            background: #1e293b;
+            border: 1px solid #000000;
+            box-shadow: inset 1px 1px 0px rgba(255,255,255,0.1);
+        }
+        .sfc-led-b.active {
+            background: #22c55e !important;
+            box-shadow: 0 0 6px #22c55e, 0 0 10px rgba(34, 197, 94, 0.5) !important;
+        }
+        .sfc-led-s.active {
+            background: #eab308 !important;
+            box-shadow: 0 0 6px #eab308, 0 0 10px rgba(234, 179, 8, 0.5) !important;
+        }
+        .sfc-led-o.active {
+            background: #ef4444 !important;
+            box-shadow: 0 0 6px #ef4444, 0 0 10px rgba(239, 68, 68, 0.5) !important;
+        }
+
+        /* 16-BIT 復古對話框 (Retro Dialogue Box with Double Pixel Border) */
+        .sfc-dialogue-box {
+            background: #090d16 !important;
+            border: 3px solid #f8fafc !important;
+            box-shadow: 
+                inset 0 0 0 2px #090d16,
+                inset 0 0 0 4px #475569,
+                4px 4px 0px #000000 !important;
+            border-radius: 0.75rem !important;
+        }
+
+        /* 16-BIT 街機實體厚邊框按鈕 (3D Arcade Chunky Beveled Buttons) */
+        .sfc-arcade-btn {
+            position: relative !important;
+            border-radius: 0.75rem !important;
+            transition: transform 0.06s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.06s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        .sfc-btn-go {
+            background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%) !important;
+            border: 3px solid #60a5fa !important;
+            box-shadow: 
+                inset 2px 2px 0px #93c5fd,
+                inset -2px -2px 0px #1e3a8a,
+                0px 5px 0px #172554,
+                0px 7px 4px rgba(0,0,0,0.5) !important;
+            color: #ffffff !important;
+        }
+        .sfc-btn-go:hover {
+            background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%) !important;
+            border-color: #bfdbfe !important;
+        }
+        .sfc-btn-go:active {
+            transform: translateY(4px) !important;
+            box-shadow: 
+                inset 2px 2px 0px #1e3a8a,
+                0px 1px 0px #172554 !important;
+        }
+
+        .sfc-btn-wait {
+            background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%) !important;
+            border: 3px solid #fde047 !important;
+            box-shadow: 
+                inset 2px 2px 0px #fef08a,
+                inset -2px -2px 0px #78350f,
+                0px 5px 0px #451a03,
+                0px 7px 4px rgba(0,0,0,0.5) !important;
+            color: #0f172a !important;
+        }
+        .sfc-btn-wait:hover {
+            background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%) !important;
+            border-color: #fef9c3 !important;
+        }
+        .sfc-btn-wait:active {
+            transform: translateY(4px) !important;
+            box-shadow: 
+                inset 2px 2px 0px #78350f,
+                0px 1px 0px #451a03 !important;
+        }
+
+        .sfc-btn-hold {
+            background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%) !important;
+            border: 3px solid #fca5a5 !important;
+            box-shadow: 
+                inset 2px 2px 0px #fecaca,
+                inset -2px -2px 0px #7f1d1d,
+                0px 5px 0px #450a0a,
+                0px 7px 4px rgba(0,0,0,0.5) !important;
+            color: #ffffff !important;
+        }
+        .sfc-btn-hold:hover {
+            background: linear-gradient(180deg, #f87171 0%, #ef4444 100%) !important;
+            border-color: #fee2e2 !important;
+        }
+        .sfc-btn-hold:active {
+            transform: translateY(4px) !important;
+            box-shadow: 
+                inset 2px 2px 0px #7f1d1d,
+                0px 1px 0px #450a0a !important;
+        }
+
         /*
          * ============================================================
          * CONTRAST GUARD (全站對比度總閘門) — 唯一的配色修正入口
@@ -1726,6 +1881,82 @@
             border: 1px solid var(--ui-line-strong) !important;
         }
         #replayAnimBtn:hover { background: #eefaf6 !important; }
+
+        /* ============================================================
+         * SFC 16-BIT RETRO ARCADE TOTAL THEME OVERRIDE (超任街機模式專用)
+         * ============================================================ */
+        html,
+        body {
+            background: #090d16 !important;
+            color: #f8fafc !important;
+        }
+        header {
+            background: #0d1527 !important;
+            border-bottom: 2px solid #1e293b !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+        }
+        header h1 {
+            color: #facc15 !important;
+            -webkit-text-fill-color: #facc15 !important;
+        }
+        header p,
+        header .text-slate-400 {
+            color: #94a3b8 !important;
+        }
+        header button {
+            background: #1e293b !important;
+            color: #f1f5f9 !important;
+            border: 1.5px solid #334155 !important;
+            box-shadow: 2px 2px 0px #000000 !important;
+        }
+        header button:hover {
+            background: #334155 !important;
+        }
+        #scorePanel {
+            background: #0d1527 !important;
+            border: 2.5px solid #1e293b !important;
+            color: #f8fafc !important;
+            box-shadow: inset 1px 1px 0px rgba(255,255,255,0.1), 3px 3px 0px #000000 !important;
+        }
+        #scorePanel .text-slate-400,
+        #scorePanel .text-2xs {
+            color: #94a3b8 !important;
+        }
+        #fieldStage {
+            background: #050b14 !important;
+            border: 4px solid #1e293b !important;
+            box-shadow: 
+                inset 0 0 25px rgba(0, 0, 0, 0.8),
+                0 0 0 2px #0f172a,
+                0 15px 40px rgba(0, 0, 0, 0.8) !important;
+            border-radius: 1.5rem !important;
+        }
+        #coachPanel {
+            background: #0d1527 !important;
+            border: 3px solid #1e293b !important;
+            box-shadow: inset 1px 1px 0px rgba(255,255,255,0.1), 4px 4px 0px #000000 !important;
+        }
+        #coachPanel .bg-cyan-950\/60,
+        #coachPanel .bg-slate-950,
+        #coachPanel .bg-cyan-950\/40 {
+            background: #090d16 !important;
+            border: 1.5px solid #1e293b !important;
+        }
+        #coachPanel .text-slate-100,
+        #coachPanel .text-slate-200,
+        #coachPanel .text-white,
+        #situationDesc {
+            color: #f8fafc !important;
+        }
+        #situationTitle {
+            color: #facc15 !important;
+            font-family: 'Press Start 2P', monospace, sans-serif !important;
+            font-size: 0.72rem !important;
+        }
+        #targetRunnerText {
+            color: #38bdf8 !important;
+            font-weight: 900 !important;
+        }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden pb-4">
@@ -1764,7 +1995,7 @@
                     <h1 class="text-lg sm:text-2xl font-black tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-2">
                         <span>你是跑壘王!!!</span> 
                         <span class="text-xs bg-blue-600 text-white font-bold py-0.5 px-2 rounded-full">少棒跑壘判斷</span>
-                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">v20261008-02 (SFC 16-BIT)</span>
+                        <span id="appVersionBadge" class="text-xs font-black px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 border border-amber-300 shadow-sm" style="font-family: 'Press Start 2P', monospace; font-size: 9px;">v20261008-03 SFC ARCADE</span>
                     </h1>
                     <p class="text-xs text-slate-400 font-medium">跑壘指導員互動出題版 • 當前球員：<span id="headerPlayerDisplay" class="text-blue-400 font-black">未登錄</span></p>
                 </div>
@@ -1859,19 +2090,53 @@
                     <span id="baseStatusText" class="hidden">無人在壘</span>
                 </div>
 
-                <!-- Game Phase Badge (Overlay Top-Right) -->
-                <div class="absolute top-4 right-4 z-10 flex items-center gap-2">
-                    <button id="skipAnimBtn" onclick="skipToExplanationModal()" class="hidden px-2.5 py-1.5 rounded-xl text-xs font-black bg-amber-500 hover:bg-amber-400 text-slate-950 border border-amber-300 shadow-md transition-all active:scale-95 items-center gap-1">
-                        <i class="fa-solid fa-forward-step"></i> <span>跳過動畫看詳解</span>
+                <!-- SFC ARCADE RETRO SCOREBOARD HUD (Top-Right Scoreboard with Base Diamond & B-S-O Lamps) -->
+                <div id="retroScoreboardHud" class="sfc-scoreboard-hud absolute top-3 right-3 z-20 flex items-center gap-2 p-2">
+                    <!-- Base Diamond Indicator -->
+                    <div class="sfc-base-diamond-wrap relative">
+                        <div id="hudBase2" class="sfc-hud-base" style="top: 0px; left: 13px;"></div>
+                        <div id="hudBase3" class="sfc-hud-base" style="top: 13px; left: 0px;"></div>
+                        <div id="hudBase1" class="sfc-hud-base" style="top: 13px; left: 26px;"></div>
+                        <div id="hudBaseHome" class="sfc-hud-base sfc-hud-home" style="top: 26px; left: 13px;"></div>
+                    </div>
+                    <!-- Inning & Score Display -->
+                    <div class="flex flex-col items-center justify-center px-1 border-x border-slate-700/80">
+                        <span id="hudInningText" class="sfc-hud-text text-amber-400 text-[10px]">1F</span>
+                        <span id="hudScoreText" class="sfc-hud-score text-emerald-400 text-xs">000</span>
+                    </div>
+                    <!-- B-S-O Neon LED Lamps -->
+                    <div class="sfc-bso-col flex flex-col gap-0.5 text-[9px] font-black">
+                        <div class="flex items-center gap-1">
+                            <span class="text-emerald-400">B</span>
+                            <span id="hudBall1" class="sfc-led sfc-led-b"></span>
+                            <span id="hudBall2" class="sfc-led sfc-led-b"></span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-amber-400">S</span>
+                            <span id="hudStrike1" class="sfc-led sfc-led-s"></span>
+                            <span id="hudStrike2" class="sfc-led sfc-led-s"></span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-red-500">O</span>
+                            <span id="hudOut1" class="sfc-led sfc-led-o"></span>
+                            <span id="hudOut2" class="sfc-led sfc-led-o"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Phase Badge & Skip (Overlay below HUD) -->
+                <div class="absolute top-16 right-3 z-10 flex items-center gap-2">
+                    <button id="skipAnimBtn" onclick="skipToExplanationModal()" class="hidden px-2 py-1 rounded-lg text-[11px] font-black bg-amber-500 hover:bg-amber-400 text-slate-950 border border-amber-300 shadow-md transition-all active:scale-95 items-center gap-1">
+                        <i class="fa-solid fa-forward-step"></i> <span>跳過</span>
                     </button>
-                    <span id="hitTypeBadge" class="px-3 py-1.5 rounded-xl text-xs font-black bg-slate-900/90 border border-slate-800 text-slate-300 tracking-wider">
+                    <span id="hitTypeBadge" class="px-2.5 py-1 rounded-lg text-xs font-black bg-slate-900/90 border border-slate-700 text-slate-200 tracking-wider">
                         準備擊球
                     </span>
                 </div>
 
-                <div class="tactical-controls absolute top-16 left-3 right-3 z-10 flex justify-end">
+                <div class="tactical-controls absolute top-24 left-3 right-3 z-10 flex justify-end">
                     <label class="rounded-lg bg-slate-950/95 px-2 py-1 text-xs font-bold text-white">同題守備演練
-                        <select id="tacticalVariant" onchange="changeTacticalVariant(this.value)" class="ml-1 min-h-[44px] rounded-lg border border-slate-500 bg-slate-900 px-2 text-white" aria-label="選擇同題守備演練結果">
+                        <select id="tacticalVariant" onchange="changeTacticalVariant(this.value)" class="ml-1 min-h-[40px] rounded-lg border border-slate-500 bg-slate-900 px-2 text-white" aria-label="選擇同題守備演練結果">
                             <option value="standard">正常處理</option>
                             <option value="drop">漏接／漏擋</option>
                             <option value="bobble">碰球後再處理</option>
@@ -1909,9 +2174,9 @@
                         </span>
                     </div>
 
-                    <!-- Unified News Ticker (場中播報氣泡箱) -->
-                    <div class="bg-slate-950 p-4 rounded-2xl border border-slate-850 space-y-3 shadow-inner">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-900 pb-2">
+                    <!-- Unified News Ticker (SFC 16-BIT 復古對話框) -->
+                    <div class="sfc-dialogue-box bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3 shadow-inner">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800 pb-2">
                             <span id="situationTitle" class="text-xs sm:text-sm font-black text-amber-400 tracking-wider">
                                 【跑壘指導員出題】
                             </span>
@@ -5252,36 +5517,37 @@
 
             // 1. 自然沉穩的大聯盟級草皮底色（16-bit 像素平鋪貼圖 + 優雅漸層烘托）
             if (!pixelPatterns.grass) create16BitPatterns();
-            ctx.fillStyle = nightMode ? (pixelPatterns.grassNight || "#0d3322") : (pixelPatterns.grass || "#1b4d2e");
+            ctx.fillStyle = nightMode ? (pixelPatterns.grassNight || "#0a2618") : (pixelPatterns.grass || "#14532d");
             ctx.fillRect(0, 0, w, h);
+
+            // 2. SFC 16-BIT 經典交替割草條紋 (Vertical Alternating Lawn Stripes - 鮮明直條紋)
+            ctx.save();
+            const stripeW = scX(22);
+            for (let sx = 0; sx < w; sx += stripeW * 2) {
+                ctx.fillStyle = nightMode 
+                    ? "rgba(22, 101, 52, 0.45)" 
+                    : "rgba(34, 197, 94, 0.16)";
+                ctx.fillRect(sx, 0, stripeW, h);
+            }
+            // 條紋微細邊線增添 16-bit 像素質感
+            ctx.fillStyle = nightMode ? "rgba(0, 0, 0, 0.18)" : "rgba(255, 255, 255, 0.05)";
+            for (let sx = 0; sx < w; sx += stripeW) {
+                ctx.fillRect(sx, 0, scX(1), h);
+            }
+            ctx.restore();
 
             // 疊加微光暈漸層，加強球場向心景深感
             const grassVignette = ctx.createRadialGradient(scX(200), scY(210), scX(40), scX(200), scY(210), scX(260));
-            grassVignette.addColorStop(0, "rgba(255, 255, 255, 0.04)");
-            grassVignette.addColorStop(1, "rgba(0, 0, 0, 0.35)");
+            grassVignette.addColorStop(0, "rgba(255, 255, 255, 0.05)");
+            grassVignette.addColorStop(1, "rgba(0, 0, 0, 0.42)");
             ctx.fillStyle = grassVignette;
             ctx.fillRect(0, 0, w, h);
-
-            // 2. 經典扇形割草紋理 (Subtle Lawn Mower Arcs - 16-bit 割草對比紋理)
-            ctx.save();
-            const arcRadii = [60, 95, 130, 165, 200, 235, 270];
-            arcRadii.forEach((r, idx) => {
-                if (idx % 2 === 0) {
-                    ctx.fillStyle = nightMode ? "rgba(255, 255, 255, 0.028)" : "rgba(255, 255, 255, 0.045)";
-                    ctx.beginPath();
-                    ctx.arc(scX(bases.home.x), scY(bases.home.y), scX(r), Math.PI * 1.15, Math.PI * 1.85);
-                    ctx.arc(scX(bases.home.x), scY(bases.home.y), scX(r - 35), Math.PI * 1.85, Math.PI * 1.15, true);
-                    ctx.closePath();
-                    ctx.fill();
-                }
-            });
-            ctx.restore();
 
             // 2.5 經典 16-BIT 外野看台看倌群與廣告看板 (Retro SFC Stadium Stands & Crowds)
             drawRetroCrowdAndWall(ctx, w, h, scale, scX, scY, foulLines, nightMode);
 
             // 3. 外野警戒區 (Warning Track - 經典顆粒泥土弧帶)
-            ctx.strokeStyle = nightMode ? "rgba(124, 45, 18, 0.65)" : "rgba(180, 83, 9, 0.65)";
+            ctx.strokeStyle = nightMode ? "rgba(124, 45, 18, 0.75)" : "rgba(194, 65, 12, 0.85)";
             ctx.lineWidth = scX(14);
             ctx.beginPath();
             ctx.moveTo(scX(foulLines.left.x), scY(foulLines.left.y));
@@ -5322,8 +5588,8 @@
             ctx.lineTo(scX(foulLines.right.x), scY(foulLines.right.y));
             ctx.stroke();
 
-            // 7. 內野紅土菱形 (Infield Dirt - 16-bit 像素紅土平鋪貼圖)
-            ctx.fillStyle = nightMode ? (pixelPatterns.dirtNight || "#79290f") : (pixelPatterns.dirt || "#a24213");
+            // 7. 內野紅土菱形 (Infield Dirt - 16-bit 經典飽和紅土球場)
+            ctx.fillStyle = nightMode ? (pixelPatterns.dirtNight || "#7c2d12") : (pixelPatterns.dirt || "#c2410c");
             ctx.beginPath();
             ctx.moveTo(scX(bases.home.x), scY(bases.home.y + 12));
             ctx.lineTo(scX(bases.first.x + 22), scY(bases.first.y));
@@ -5332,15 +5598,30 @@
             ctx.closePath();
             ctx.fill();
 
-            // 8. 內野草皮島 (Infield Grass Island - 16-bit 像素內野草皮貼圖)
-            ctx.fillStyle = nightMode ? (pixelPatterns.infieldGrassNight || "#0f3d28") : (pixelPatterns.infieldGrass || "#235e39");
+            // 紅土內陰影邊線
+            ctx.strokeStyle = nightMode ? "rgba(0,0,0,0.5)" : "rgba(124, 45, 18, 0.6)";
+            ctx.lineWidth = scX(1.8);
+            ctx.stroke();
+
+            // 8. 內野草皮島 (Infield Grass Island - 垂直條紋相間)
+            ctx.save();
             ctx.beginPath();
             ctx.moveTo(scX(200), scY(284));
             ctx.lineTo(scX(274), scY(210));
             ctx.lineTo(scX(200), scY(136));
             ctx.lineTo(scX(126), scY(210));
             ctx.closePath();
+            ctx.clip();
+
+            ctx.fillStyle = nightMode ? (pixelPatterns.infieldGrassNight || "#0f3d28") : (pixelPatterns.infieldGrass || "#166534");
             ctx.fill();
+
+            // 內野草皮直向割草條紋
+            for (let sx = 0; sx < w; sx += stripeW * 2) {
+                ctx.fillStyle = nightMode ? "rgba(22, 101, 52, 0.4)" : "rgba(34, 197, 94, 0.18)";
+                ctx.fillRect(sx, scY(136), stripeW, scY(148));
+            }
+            ctx.restore();
 
             // 9. 壘線粉筆白線 (Chalk Baselines)
             ctx.strokeStyle = "rgba(255, 255, 255, 0.82)";
@@ -5988,6 +6269,41 @@
                     ctx.restore();
                 }
 
+                // 🏃‍♂️ 經典 16-BIT 跑者衝刺白光速度線 (Speed Streaks & Dust Trail)
+                if (isMoving) {
+                    ctx.save();
+                    const streakDX = (runner.targetX - runner.startX);
+                    const streakDY = (runner.targetY - runner.startY);
+                    const streakLen = Math.hypot(streakDX, streakDY) || 1;
+                    const backNormX = -(streakDX / streakLen);
+                    const backNormY = -(streakDY / streakLen);
+
+                    // 繪製 3 條不同長度的純白像素拖尾風切線
+                    const streakOffsets = [-4, 0, 4];
+                    streakOffsets.forEach((off, sIdx) => {
+                        const perpX = -backNormY * off * scale;
+                        const perpY = backNormX * off * scale;
+                        const sTailLen = (12 + sIdx * 5) * scale;
+                        
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${0.45 + (sIdx % 2) * 0.35})`;
+                        ctx.lineWidth = Math.max(1, 1.8 * scale);
+                        ctx.beginPath();
+                        ctx.moveTo(rX + perpX + backNormX * 4 * scale, rY + perpY + backNormY * 4 * scale);
+                        ctx.lineTo(rX + perpX + backNormX * sTailLen, rY + perpY + backNormY * sTailLen);
+                        ctx.stroke();
+                    });
+
+                    // 跑者腳步揚起的小紅土顆粒 (Dirt Dust Puffs)
+                    const dustAlpha = 0.5 + Math.sin(Date.now() / 90) * 0.3;
+                    ctx.fillStyle = `rgba(234, 88, 12, ${dustAlpha})`;
+                    ctx.beginPath();
+                    ctx.arc(rX + backNormX * 8 * scale, rY + backNormY * 8 * scale + 6 * scale, 2.5 * scale, 0, Math.PI * 2);
+                    ctx.arc(rX + backNormX * 14 * scale, rY + backNormY * 14 * scale + 8 * scale, 1.8 * scale, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore();
+                }
+
                 // 24×24 像素 Q 版跑者
                 drawPixelPlayer(ctx, rX, rY, {
                     scale: scale,
@@ -6271,35 +6587,37 @@
 
             document.getElementById('baseStatusText').innerText = `${currentQ.outs}出局 - ${describeOccupiedBases(currentQ.runners)}`;
 
+            // 同步更新 SFC 16-BIT 街機右上角 Scoreboard HUD
+            updateScoreboardHud(currentQ.runners, currentQ.outs, idx + 1, score);
+
             triggerBallFlight(currentQ.fielderKey, currentQ.batType);
 
             const container = document.getElementById('optionsContainer');
             container.innerHTML = '';
             
             const arcadeThemes = {
-                'A': { borderClass: 'sfc-action-go', subBadge: 'GO! RUN', color: '#1d4ed8' },
-                'B': { borderClass: 'sfc-action-wait', subBadge: 'WAIT! WATCH', color: '#d97706' },
-                'C': { borderClass: 'sfc-action-hold', subBadge: 'HOLD! STOP', color: '#dc2626' }
+                'A': { btnClass: 'sfc-btn-go', badge: 'GO! RUN', keyBadge: '1', titleColor: '#ffffff', descColor: '#bfdbfe' },
+                'B': { btnClass: 'sfc-btn-wait', badge: 'WAIT! WATCH', keyBadge: '2', titleColor: '#0f172a', descColor: '#451a03' },
+                'C': { btnClass: 'sfc-btn-hold', badge: 'HOLD! STOP', keyBadge: '3', titleColor: '#ffffff', descColor: '#fecaca' }
             };
 
             currentQ.options.forEach(opt => {
                 const btn = document.createElement('button');
                 const theme = arcadeThemes[opt.id] || arcadeThemes['A'];
-                btn.className = `option-btn runner-action sfc-action-btn ${theme.borderClass} text-center p-3 rounded-2xl relative overflow-hidden group min-h-[4.4rem] flex items-center justify-center transition-all active:scale-95`;
+                btn.className = `option-btn runner-action sfc-arcade-btn ${theme.btnClass} text-center p-3 rounded-2xl relative overflow-hidden group min-h-[4.8rem] flex items-center justify-center transition-all cursor-pointer`;
                 btn.dataset.choiceId = opt.id;
                 btn.onclick = () => {
                     triggerHaptic(18);
                     selectChoice(opt.id);
                 };
-                const keyNum = opt.id === 'A' ? '1' : (opt.id === 'B' ? '2' : '3');
                 btn.innerHTML = `
                     <div class="flex flex-col items-center justify-center gap-1 w-full relative">
-                        <span class="key-badge absolute top-0 right-0">${keyNum}</span>
+                        <span class="key-badge absolute top-0 right-0">${theme.keyBadge}</span>
                         <div class="flex items-center gap-1.5">
-                            <span class="sfc-arcade-tag px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">${theme.subBadge}</span>
-                            <span class="text-sm sm:text-base font-black sfc-action-title leading-tight">${opt.title}</span>
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-black/30 border border-white/20" style="font-family: 'Press Start 2P', monospace;">${theme.badge}</span>
+                            <span class="text-sm sm:text-base font-black leading-tight" style="color: ${theme.titleColor};">${opt.title}</span>
                         </div>
-                        <span class="text-xs sm:text-sm font-black text-slate-800 leading-snug">${opt.text}</span>
+                        <span class="text-xs sm:text-sm font-black leading-snug" style="color: ${theme.descColor};">${opt.text}</span>
                     </div>
                 `;
                 container.appendChild(btn);
@@ -6433,6 +6751,48 @@
             requestAnimationFrame(renderLoop);
         }
 
+        /**
+         * 16-BIT 街機風格球場右上角 LED 計分板同步器
+         * @param {Array<number>} runners - 目前在壘跑者包號 [1, 2, 3]
+         * @param {number} outs - 出局數 (0, 1, 2)
+         * @param {number|string} inning - 局數
+         * @param {number} currentScore - 當前累積得分
+         */
+        function updateScoreboardHud(runners = [], outs = 0, inning = 1, currentScore = 0) {
+            // 1. 菱形四壘跑者亮燈
+            const base1 = document.getElementById('hudBase1');
+            const base2 = document.getElementById('hudBase2');
+            const base3 = document.getElementById('hudBase3');
+            const baseHome = document.getElementById('hudBaseHome');
+
+            if (base1) base1.className = runners.includes(1) ? 'sfc-hud-base active' : 'sfc-hud-base';
+            if (base2) base2.className = runners.includes(2) ? 'sfc-hud-base active' : 'sfc-hud-base';
+            if (base3) base3.className = runners.includes(3) ? 'sfc-hud-base active' : 'sfc-hud-base';
+            if (baseHome) baseHome.className = 'sfc-hud-base sfc-hud-home';
+
+            // 2. 局數與分數更新
+            const innEl = document.getElementById('hudInningText');
+            const scEl = document.getElementById('hudScoreText');
+            if (innEl) innEl.innerText = `${inning}F`;
+            if (scEl) scEl.innerText = String(currentScore).padStart(3, '0');
+
+            // 3. B-S-O 燈號更新 (B: 2綠, S: 2黃, O: 2紅依 outs 點亮)
+            const o1 = document.getElementById('hudOut1');
+            const o2 = document.getElementById('hudOut2');
+            if (o1) o1.className = outs >= 1 ? 'sfc-led sfc-led-o active' : 'sfc-led sfc-led-o';
+            if (o2) o2.className = outs >= 2 ? 'sfc-led sfc-led-o active' : 'sfc-led sfc-led-o';
+
+            // B (Ball) 與 S (Strike) 預設隨局數隨機維持球數張力 (1B 1S 或 2B 1S)
+            const b1 = document.getElementById('hudBall1');
+            const b2 = document.getElementById('hudBall2');
+            const s1 = document.getElementById('hudStrike1');
+            const s2 = document.getElementById('hudStrike2');
+            if (b1) b1.className = (inning % 2 === 1) ? 'sfc-led sfc-led-b active' : 'sfc-led sfc-led-b';
+            if (b2) b2.className = 'sfc-led sfc-led-b';
+            if (s1) s1.className = (inning % 3 === 0) ? 'sfc-led sfc-led-s active' : 'sfc-led sfc-led-s';
+            if (s2) s2.className = 'sfc-led sfc-led-s';
+        }
+
         function ensureNextButtonVisible() {
             const container = document.getElementById('optionsContainer');
             if (!container) return null;
@@ -6537,6 +6897,8 @@
                 currentCorrectCount++;
                 maxStreakThisGame = Math.max(maxStreakThisGame, consecutiveStreak);
                 document.getElementById('scoreText').innerText = String(score).padStart(3, '0');
+                const hudSc = document.getElementById('hudScoreText');
+                if (hudSc) hudSc.innerText = String(score).padStart(3, '0');
                 
                 const streakText = document.getElementById('streakText');
                 streakText.innerText = `🔥 ${consecutiveStreak}`;
@@ -7043,6 +7405,7 @@
 
             currentVisualOccupiedBases = [...sc.runners];
             setupRunnersForScenario(sc);
+            updateScoreboardHud(sc.runners, sc.outs, "SB", score);
             triggerBallFlight(sc.fielderKey, sc.batType);
             drawStadium();
         }
