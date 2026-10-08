@@ -269,6 +269,7 @@
         ctx.setTransform(scale,0,0,scale,0,0);ctx.clearRect(0,0,400,260);background();
         ctx.setTransform(scale*X,0,0,scale*Y,14.8*scale,offset*scale);
         drawPixelBatter(ctx,1);drawFielders(1);drawTacticalVisual(1);
+        if(isSimulationActive&&!tacticalVisual)drawBaseballBody(bases.home.x,bases.home.y-8,3,true);
         if(typeof catcherShoutText !== 'undefined' && catcherShoutText) drawCatcherShout(1);
         if(ballAnim.active)drawBallFlight(1);if(throwAnim.active)drawThrowBall(1);
         updateAndDrawParticles(ctx,1);drawRunners(1);

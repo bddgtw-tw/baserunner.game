@@ -159,9 +159,9 @@
                 <div id="retroScoreboardHud" class="sfc-scoreboard-hud absolute top-3 right-3 z-20 flex items-center gap-2 p-2">
                     <!-- Base Diamond Indicator -->
                     <div class="sfc-base-diamond-wrap relative">
-                        <div id="hudBase2" class="sfc-hud-base" style="top: 0px; left: 13px;"></div>
-                        <div id="hudBase3" class="sfc-hud-base" style="top: 13px; left: 0px;"></div>
-                        <div id="hudBase1" class="sfc-hud-base" style="top: 13px; left: 26px;"></div>
+                        <div id="hudBase2" class="sfc-hud-base" style="top: 0px; left: 13px;">二壘</div>
+                        <div id="hudBase3" class="sfc-hud-base" style="top: 13px; left: 0px;">三壘</div>
+                        <div id="hudBase1" class="sfc-hud-base" style="top: 13px; left: 26px;">一壘</div>
                         <div id="hudBaseHome" class="sfc-hud-base sfc-hud-home" style="top: 26px; left: 13px;"></div>
                     </div>
                     <!-- Inning & Score Display -->
@@ -182,7 +182,7 @@
                             <span id="hudStrike2" class="sfc-led sfc-led-s"></span>
                         </div>
                         <div class="flex items-center gap-1">
-                            <span class="text-red-500">O</span>
+                            <span class="text-red-500">出局 <span id="hudOutText">0</span></span>
                             <span id="hudOut1" class="sfc-led sfc-led-o"></span>
                             <span id="hudOut2" class="sfc-led sfc-led-o"></span>
                         </div>
@@ -211,7 +211,6 @@
                 </div>
 
                 <!-- Dynamic Canvas & Vintage CRT Scanline Filter -->
-                <div id="playEventStatus" role="status" aria-live="polite" class="hidden absolute bottom-12 left-3 right-3 z-10 mx-auto max-w-[90%] rounded-lg border border-amber-300 bg-slate-950/90 px-2 py-1 text-center text-xs font-black text-amber-200 pointer-events-none"></div>
                 <div class="sfc-crt-overlay"></div>
                 <canvas id="fieldCanvas" class="w-full h-full cursor-pointer bg-emerald-950"></canvas>
 
@@ -221,6 +220,8 @@
                     <span>點擊球場任意處開啟「木棒打擊」與「全場歡呼聲」音效！</span>
                 </div>
             </div>
+            <div id="playEventStatus" role="status" aria-live="polite" class="hidden"></div>
+            <div id="fieldResetControls" class="hidden"><button id="resetFieldBtn" onclick="resetFieldSimulation()">全部歸位</button><span>同一題・可重複試三種走法</span></div>
         </section>
 
         <!-- RIGHT PANEL: Simplified Unified Telecast Dashboard (精簡體育台轉播箱) -->
@@ -757,7 +758,7 @@
             <!-- Modal Footer (永遠固定在底部的按鈕) -->
             <div id="answerModalFooter" class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 flex-shrink-0">
                 <button onclick="startFieldSimulationMode()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
-                    <i class="fa-solid fa-play"></i> 回到球場演示不同走法
+                    <i class="fa-solid fa-arrow-left"></i> 回到球場
                 </button>
                 <button onclick="goNextQuestionFromModal()" class="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-black text-xs sm:text-sm hover:bg-blue-500 shadow-md transition-all flex items-center gap-2 active:scale-95">
                     <span>下一題</span> <i class="fa-solid fa-arrow-right"></i>
@@ -2561,17 +2562,12 @@
         // ⚾ 回到球場演示不同答案的結果 (跑壘會出局、滑壘推進等互動戰術演示)
         function startFieldSimulationMode() {
             toggleAnswerModal(false);
-            cancelTacticalPlay();
+            if (window.explanationModalTimer) clearTimeout(window.explanationModalTimer);
             isSimulationActive = true; // 進入自由演示狀態
             const currentQ = generatedQuestions[currentQuestionIdx];
             if (!currentQ) return;
 
-            // 重設跑者回初始位置
-            setupRunnersForScenario(currentQ);
-            
-            // ⚾ 關鍵：球的動向持續循環飛行！讓玩家一邊看球打去哪，一邊看跑者該怎麼跑
-            triggerBallFlight(currentQ.fielderKey, currentQ.batType);
-            drawStadium();
+            document.getElementById('fieldResetControls').classList.remove('hidden');
 
             const container = document.getElementById('optionsContainer');
             if (!container) return;
@@ -2584,8 +2580,8 @@
                 <div class="flex-1 flex items-center gap-2">
                     <span class="text-base">🎮</span>
                     <div>
-                        <p class="text-xs font-black text-amber-400">自由戰術演示模式</p>
-                        <p class="text-[11px] text-slate-300 font-bold">球的軌跡持續飛行中！點選按鈕實況看跑壘後果：</p>
+                        <p class="text-xs font-black text-amber-400">同題實際演示・不重複計分</p>
+                        <p class="text-[11px] text-slate-300 font-bold">按球場下方「全部歸位」，再選一種走法。</p>
                     </div>
                 </div>
                 <div class="flex gap-2 flex-shrink-0">
@@ -2623,7 +2619,6 @@
                         <span class="key-badge absolute top-0 right-0">${keyNum}</span>
                         <div class="flex items-center gap-1">
                             <span class="text-xs sm:text-sm font-black text-slate-100">${opt.title}</span>
-                            ${tagBadge}
                         </div>
                         <span class="text-[11px] font-bold text-slate-300 leading-snug line-clamp-1">${opt.text}</span>
                     </div>
@@ -2656,6 +2651,21 @@
 
             // 執行場上 16-bit 衝擊彈跳框與跑者動態
             runTacticalPlay(currentQ, choiceId, consequence);
+        }
+
+        function resetFieldSimulation() {
+            const q=generatedQuestions[currentQuestionIdx];
+            if(!q)return;
+            if(window.explanationModalTimer)clearTimeout(window.explanationModalTimer);
+            cancelTacticalPlay();resetFieldersState();setupRunnersForScenario(q);
+            outcomeBanner.active=false;
+            currentVisualOccupiedBases=[...(q.runners||[q.playerBase])];
+            updateScoreboardHud(currentVisualOccupiedBases,q.outs,currentQuestionIdx+1,score);
+            ballAnim.x=bases.home.x;ballAnim.y=bases.home.y;
+            setPlayEventStatus('全部歸位：打者、跑者、守備員與球已回到起點。請選一種走法。');
+            document.getElementById('hitTypeBadge').textContent='準備演示';
+            document.getElementById('skipAnimBtn').classList.add('hidden');
+            drawStadium();
         }
 
         function goNextQuestionFromModal() {
@@ -4612,6 +4622,7 @@
             document.getElementById('targetRunnerText').parentElement.classList.remove('hidden');
             document.getElementById('tacticalDrawer')?.classList.remove('hidden');
             isSimulationActive = false; // 換題時重置演示狀態
+            document.getElementById('fieldResetControls').classList.add('hidden');
             catcherShoutText = null; // 換題時清除上一題捕手氣泡
             if (window.explanationModalTimer) {
                 clearTimeout(window.explanationModalTimer);
@@ -4855,6 +4866,8 @@
             if (base1) base1.className = runners.includes(1) ? 'sfc-hud-base active' : 'sfc-hud-base';
             if (base2) base2.className = runners.includes(2) ? 'sfc-hud-base active' : 'sfc-hud-base';
             if (base3) base3.className = runners.includes(3) ? 'sfc-hud-base active' : 'sfc-hud-base';
+            for(const [base,el] of [[1,base1],[2,base2],[3,base3]])if(el){el.setAttribute('aria-label',`${base}壘${runners.includes(base)?'有人':'空壘'}`);el.title=el.getAttribute('aria-label');}
+            document.getElementById('retroScoreboardHud').setAttribute('aria-label',`壘況：${describeOccupiedBases(runners)}；${outs}出局`);
             if (baseHome) baseHome.className = 'sfc-hud-base sfc-hud-home';
 
             // 2. 局數與分數更新
@@ -4865,6 +4878,7 @@
 
             // 3. B-S-O 燈號更新 (B: 2綠, S: 2黃, O: 2紅依 outs 點亮)
             const o1 = document.getElementById('hudOut1');
+            document.getElementById('hudOutText').textContent=outs;
             const o2 = document.getElementById('hudOut2');
             if (o1) o1.className = outs >= 1 ? 'sfc-led sfc-led-o active' : 'sfc-led sfc-led-o';
             if (o2) o2.className = outs >= 2 ? 'sfc-led sfc-led-o active' : 'sfc-led sfc-led-o';
@@ -5102,7 +5116,7 @@
                     skipBtn.classList.add('hidden');
                     skipBtn.classList.remove('flex');
                 }
-                showAnswerExplanationModal(choiceId, selectedOpt, isCorrect);
+                startFieldSimulationMode();
             }, modalDelay);
         }
 

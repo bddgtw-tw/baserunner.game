@@ -1,6 +1,21 @@
 /* Single presentation layer. Game state, IDs and tactic rules stay in index.html. */
 :root{color-scheme:light;--ink:#24423e;--muted:#647b75;--line:#dbe7df;--paper:#fff;--green:#158066}
 @font-face{font-family:GamePixel;src:url('fonts/fusion-pixel-12px-proportional-zh_hant.otf.woff2') format('woff2');font-style:normal;font-weight:100 900;font-display:swap}
+/* Explicit occupancy labels and field reset controls. */
+#retroScoreboardHud{transform:none!important;gap:10px!important;padding:8px!important;font-size:12px}
+#retroScoreboardHud>.sfc-base-diamond-wrap{display:flex;gap:4px;width:auto;height:auto}
+#hudBase1{order:1}#hudBase2{order:2}#hudBase3{order:3}
+#retroScoreboardHud .sfc-hud-base{position:static;width:34px;height:auto;min-height:36px;transform:none;border-radius:4px;text-align:center;color:#526658;font-size:12px;padding:2px}
+#retroScoreboardHud .sfc-hud-base:after{content:'空壘';display:block;font-size:10px}
+#retroScoreboardHud .sfc-hud-base.active{color:#66450d;background:#ffe2a0;border:2px solid #b88620}
+#retroScoreboardHud .sfc-hud-base.active:after{content:'有人'}
+#retroScoreboardHud .sfc-hud-home,#retroScoreboardHud>div:nth-child(2),#retroScoreboardHud .sfc-bso-col>div:nth-child(-n+2),#retroScoreboardHud .sfc-led{display:none!important}
+#retroScoreboardHud .sfc-bso-col{font-size:12px!important;color:#ad3c36!important}
+#fieldResetControls{position:static;display:flex;align-items:center;gap:8px;padding:6px 8px;background:#fffffff2;border:1px solid #b4d3c0;border-radius:8px;color:#286047;font-size:12px}
+#leftGameColumn>#playEventStatus{position:static!important;max-width:100%!important;width:100%;margin:0;border-radius:8px;text-align:center}
+#resetFieldBtn{background:#16795f;color:#fff;padding:8px 14px;border-radius:6px;min-height:44px;white-space:nowrap}
+#fieldStage:has(#fieldResetControls:not(.hidden)) #playEventStatus{bottom:76px!important}
+@media(max-width:600px){#fieldResetControls{bottom:6px;left:6px;right:6px;padding:4px;font-size:10px}#resetFieldBtn{padding:6px 10px}#retroScoreboardHud{top:6px!important;right:6px!important;padding:4px!important}}
 html{scroll-behavior:smooth}body{background:#f5f8f1;color:var(--ink);font-family:GamePixel,sans-serif;min-height:100vh}
 body,body :not(i):not([class*="fa-"]){font-family:GamePixel,sans-serif!important;font-synthesis:none;font-weight:400!important}
 *{box-sizing:border-box}button,input,select{font-family:inherit}button{touch-action:manipulation;min-height:44px}button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f2b541;outline-offset:3px}.hidden,[hidden]{display:none!important}
