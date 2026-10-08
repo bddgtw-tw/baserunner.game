@@ -1622,6 +1622,7 @@
                     const origin=earlier?earlier.to:roleStarts[role.key];
                     const p=Math.min(1,(t-role.at)/role.duration);
                     f.x=origin.x+(role.to.x-origin.x)*p;f.y=origin.y+(role.to.y-origin.y)*p;f.isMoving=p<1;f.state=p<1?'run':'idle';
+                    if(p<1) f.facingLeft=role.to.x<origin.x;
                 }
                 if(t>=plan.pickupAt&&(!plan.legs.length||t<plan.legs[0].at))fieldersState[q.fielderKey].state='catch';
                 for(const r of plan.runners){

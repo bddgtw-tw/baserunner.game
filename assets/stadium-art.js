@@ -3,8 +3,13 @@
     const X = .926, Y = .605, offset = 4; // field projection; sprites cancel this nonuniform scale
     // World geometry follows the art's base footprints; strategy rules are unchanged.
     bases.second.y = 144;
-    const artPositions={CF:118,LF:140,RF:140,SS:170,'2B':170};
-    for(const [key,y] of Object.entries(artPositions))if(fielders[key])fielders[key].y=y;
+    const artPositions={
+        P:{x:200,y:210},C:{x:200,y:348},
+        '1B':{x:275,y:192},'3B':{x:125,y:192},
+        SS:{x:151,y:155},'2B':{x:249,y:155},
+        LF:{x:82,y:130},CF:{x:200,y:118},RF:{x:318,y:130}
+    };
+    for(const [key,position] of Object.entries(artPositions))Object.assign(fielders[key],position);
     const stadiumImage = new Image();
     stadiumImage.src = 'assets/stadium-day.png';
     stadiumImage.onload = () => drawStadium();
@@ -60,6 +65,19 @@
     const characterImage = new Image();
     characterImage.src = 'assets/characters-approved.png';
     characterImage.onload = () => drawStadium();
+    const batterImage = new Image();
+    batterImage.src = 'assets/batter-ready-v2.png';
+    batterImage.onload = () => drawStadium();
+    let facingQuestion = null;
+    let defenderFacings = {};
+    function arrangeDefenderFacings(q) {
+        if (q===facingQuestion && Object.keys(defenderFacings).length) return;
+        facingQuestion=q;
+        // Shuffle a balanced set once per scene, never randomly on each frame.
+        const keys=Object.keys(fielders);
+        for(let i=keys.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[keys[i],keys[j]]=[keys[j],keys[i]];}
+        defenderFacings=Object.fromEntries(keys.map((key,index)=>[key,index<4]));
+    }
     const poses = [
         [38,35,373,454], [519,42,434,455], [1027,104,473,373],
         [30,525,413,455], [516,566,474,416], [1071,532,447,455]
@@ -86,17 +104,32 @@
         c.restore();
     };
     drawPixelBatter = function(c,scale) {
-        drawPixelPlayer(c,181*scale,(bases.home.y-8)*scale,{state:'idle'});
-        c.save();c.translate(181*scale,(bases.home.y-8)*scale);c.scale(1/X,1/Y);
-        c.fillStyle='#b76e39';c.fillRect(-15,-31,2,18);c.fillStyle='#efc68c';c.fillRect(-15,-31,2,9);c.restore();
+        if (!batterImage.complete || !batterImage.naturalWidth) return;
+        // Helmet-to-feet height matches the other players; bat adds height above it.
+        const unit=28/927,w=939*unit,h=1115*unit;
+        c.save();c.translate(181*scale,bases.home.y*scale);c.scale(1/X,1/Y);
+        c.imageSmoothingEnabled=false;
+        c.fillStyle='rgba(20,65,44,.24)';c.beginPath();c.ellipse(0,2,9,2.5,0,0,Math.PI*2);c.fill();
+        c.drawImage(batterImage,153,65,939,1115,(153-675)*unit,-h+2,w,h);
+        c.restore();
     };
     drawFielders = function(scale) {
         const q=generatedQuestions[currentQuestionIdx];
-        for(const [key,p] of Object.entries(Object.keys(fieldersState).length?fieldersState:fielders)) {
+        arrangeDefenderFacings(q);
+        const players=Object.keys(fieldersState).length?fieldersState:fielders;
+        const leg=throwAnim.active ? tacticalVisual?.plan.legs.find(l=>{
+            const t=performance.now()-tacticalVisual.start;return t>=l.at && t<=l.end;
+        }) : null;
+        const thrower=leg ? Object.keys(players).reduce((best,key)=>{
+            const distance=p=>Math.hypot(p.x-leg.from.x,p.y-leg.from.y);
+            return distance(players[key])<distance(players[best])?key:best;
+        },Object.keys(players)[0]) : null;
+        for(const [key,p] of Object.entries(players)) {
             const moving=p.isMoving || p.state==='run';
-            const throwing=throwAnim.active && key===q?.fielderKey;
+            const throwing=key===thrower;
             drawPixelPlayer(ctx,p.x*scale,p.y*scale,{
-                isFielder:true,state:throwing?'throw':moving?'run':p.state||'idle'
+                isFielder:true,state:throwing?'throw':moving?'run':p.state||'idle',
+                facingLeft:throwing?leg.to.x<leg.from.x:moving?(p.facingLeft??defenderFacings[key]):defenderFacings[key]
             });
         }
     };
@@ -106,7 +139,12 @@
             const state=runner.taggedOut?'out':moving?(runner.animProgress>.85?'slide':'run'):'idle';
             const x=(runner.x ?? runner.startX)*scale;
             const y=(runner.y ?? runner.startY)*scale;
-            drawPixelPlayer(ctx,x,y,{state,isPlayer:runner.isPlayer,facingLeft:moving&&runner.targetX<runner.startX});
+            const next=getBasePosition(runner.base+1);
+            const delta=runner._lastDrawX===undefined?0:x-runner._lastDrawX;
+            const nextFacing=next.x<(runner.startX ?? x/scale);
+            const facingLeft=moving?(Math.abs(delta)>.01?delta<0:runner._facingLeft??nextFacing):nextFacing;
+            runner._lastDrawX=x;runner._facingLeft=facingLeft;
+            drawPixelPlayer(ctx,x,y,{state,isPlayer:runner.isPlayer,facingLeft});
             ctx.save();ctx.translate(x,y);ctx.scale(1/X,1/Y);
             if (runner.isPlayer) {
                 ctx.fillStyle='#f4c442';ctx.strokeStyle='#8a6920';ctx.lineWidth=.7;
