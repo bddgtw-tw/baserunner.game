@@ -3754,6 +3754,31 @@
             }
         }
 
+        function drawBaseballBody(x, y, radius, seam = false) {
+            const transform = ctx.getTransform();
+            const sx = Math.hypot(transform.a, transform.b);
+            const sy = Math.hypot(transform.c, transform.d);
+            ctx.save();
+            ctx.translate(x, y);
+            // 球場座標保留透視；球本體和縫線採等比例縮放。
+            if (sx > 0 && sy > 0) ctx.scale(1, sx / sy);
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = radius / 3.8;
+            ctx.stroke();
+            if (seam) {
+                ctx.strokeStyle = 'rgba(220, 38, 38, 0.85)';
+                ctx.lineWidth = radius * 0.24;
+                ctx.beginPath();
+                ctx.arc(0, 0, radius * 0.75, 0.2, Math.PI - 0.2);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
         function drawThrowBall(scale) {
             if (!throwAnim.active) return;
             const curX = throwAnim.x * scale;
@@ -3771,13 +3796,7 @@
             if (ctx.setLineDash) ctx.setLineDash([]);
 
             // 棒球本體 (飛行小白球)
-            ctx.fillStyle = "#ffffff";
-            ctx.beginPath();
-            ctx.arc(curX, curY, 3.8 * scale, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = "#0f172a";
-            ctx.lineWidth = 1 * scale;
-            ctx.stroke();
+            drawBaseballBody(curX, curY, 3.8 * scale);
             ctx.restore();
         }
 
@@ -4256,15 +4275,7 @@
             }
 
             // 空中實體球 (Ball in the Air - 高度為 curY - h)
-            ctx.fillStyle = "#ffffff";
-            ctx.beginPath();
-            ctx.arc(curX, curY - h, ballRadius * scale, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = "rgba(220, 38, 38, 0.85)";
-            ctx.lineWidth = 1.2 * scale;
-            ctx.beginPath();
-            ctx.arc(curX, curY - h, (ballRadius - 1.2) * scale, 0.2, Math.PI - 0.2);
-            ctx.stroke();
+            drawBaseballBody(curX, curY - h, ballRadius * scale, true);
         }
 
         function drawRunners(scale) {
