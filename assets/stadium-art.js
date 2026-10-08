@@ -1,6 +1,6 @@
-/* 2026-10-08 Kunio-kun Style B sprite engine; bright sunny daytime theme */
+/* Approved SFC character atlas and sunny stadium presentation. */
 (() => {
-    const X = .926, Y = .605, offset = 18; // offset increased to 18 to give outfielders ample breathing room from top
+    const X = .926, Y = .605, offset = 4; // field projection; sprites cancel this nonuniform scale
     // World geometry follows the art's base footprints; strategy rules are unchanged.
     bases.second.y = 144;
     const artPositions={CF:118,LF:140,RF:140,SS:170,'2B':170};
@@ -55,132 +55,72 @@
         for(let n=0;n<240;n++){const x=(n*73)%400,y=75+(n*37)%150;const dx=Math.abs(x-200),dy=Math.abs(y-150);if(dx/130+dy/78<1&&dx/75+dy/48>1)pixel(x,y,1,1,'#c85e35');}
     }
 
-    /**
-     * 風格 B：【熱血高校・硬派平頭粗曠像素風】(Kunio-kun Arcade Sprite Engine)
-     * 特色：粗黑邊框、方下巴、粗眉毛、堅毅咬牙/流汗表情、扎實厚重四肢、絕不美型
-     */
+    // Approved atlas: same source-to-world scale for ALL poses and both teams.
+    // Undo only the field's perspective transform; character pixels remain square.
+    const characterImage = new Image();
+    characterImage.src = 'assets/characters-approved.png';
+    characterImage.onload = () => drawStadium();
+    const poses = [
+        [38,35,373,454], [519,42,434,455], [1027,104,473,373],
+        [30,525,413,455], [516,566,474,416], [1071,532,447,455]
+    ];
     drawPixelPlayer = function(c,cx,cy,opts={}) {
-        const scale=.85;
-        c.save();c.translate(cx,cy);c.scale(scale/X,scale/Y);
-        const blue=!opts.isFielder;
-        const jerseyColor = blue ? '#2563eb' : (opts.isHandling ? '#d97706' : '#1e3a8a');
-        const capColor    = blue ? '#1d4ed8' : (opts.isHandling ? '#b45309' : '#0f172a');
-        const hairColor   = '#111827'; // 平頭黑色粗髮
-        const skinColor   = '#fbcfe8'; // 健美暖膚色
-        const skinShadow  = '#f472b6';
-        const outline     = '#090d16'; // 經典熱血硬派粗黑邊框
-
-        const p=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h);};
-
-        // 腳底深色投影
-        c.fillStyle='rgba(15,23,42,0.35)';
-        c.beginPath();c.ellipse(0,9,10,3.5,0,0,Math.PI*2);c.fill();
-
-        const running=opts.state==='run';
-        const sliding=opts.state==='slide';
-        const resting=!running && !['slide','out','safe'].includes(opts.state);
+        if (!characterImage.complete || !characterImage.naturalWidth) return;
+        const moving=opts.state==='run' || opts.state==='moving';
+        let index=opts.isFielder ? 3 : 0;
+        if (opts.isFielder && moving) index=4;
+        if (opts.isFielder && opts.state==='throw') index=5;
+        if (!opts.isFielder && moving) index=1;
+        if (!opts.isFielder && opts.state==='slide') index=2;
+        const [sx,sy,sw,sh]=poses[index];
+        const unit=28/455;
+        const w=sw*unit,h=sh*unit;
         const phase=Date.now()/1000+cx*.071+cy*.043;
-        const idleBob=resting?Math.round(Math.sin(phase*2)*.65):0;
-        const stride=running?Math.sin((opts.frame||0)*2.1)*3.2:(resting?Math.round(Math.sin(phase*1.5)*.6):0);
-
-        c.translate(0,idleBob);
-
-        if(sliding) {
-            // 熱血高校經典滑壘橫臥動作
-            c.rotate(-0.85);
-            c.translate(-4, -6);
-        }
-
-        // --- 1. 粗曠熱血帽子與黑髮鬢角 (Flat-Top Cap & Sideburns) ---
-        p(-8,-22,16,4,outline);
-        p(-7,-21,14,3,capColor);
-        p(4,-20,6,3,outline); // 往前微凸帽簷邊框
-        p(4,-19,5,2,capColor); // 帽簷
-
-        // 平頭黑髮從帽子邊緣露出 (Square hairline)
-        p(-8,-18,3,4,hairColor);
-        p(-9,-16,2,3,outline);
-
-        // --- 2. 硬派方臉與方下巴 (Square Jaw & Robust Face) ---
-        p(-7,-18,14,9,outline); // 臉部粗黑輪廓
-        p(-6,-17,12,7,'#fcd34d'); // 臉部本體 (健康的陽光膚色)
-        p(-5,-16,10,6,'#fde68a'); // 臉部高光
-        p(-7,-12,13,3,'#f59e0b'); // 方下巴陰影
-
-        // --- 3. 熱血特徵：極粗劍眉與堅毅雙眼 (Bushy Eyebrows & Determined Eyes) ---
-        // 粗黑眉毛 (Bold Angry/Determined Brows)
-        p(-4,-15,4,2,outline);
-        p(1,-15,4,2,outline);
-
-        // 堅毅小黑眼球
-        p(-3,-13,2,2,outline);
-        p(2,-13,2,2,outline);
-        p(-3,-13,1,1,'#ffffff'); // 眼神銳利亮點
-        p(2,-13,1,1,'#ffffff');
-
-        // 咬牙切齒的下巴嘴巴 (Gritted Teeth or Shouting)
-        if(opts.state==='out') {
-            // 出局：倒八字憤怒懊悔眼
-            p(-4,-12,3,1,'#ef4444');
-            p(1,-12,3,1,'#ef4444');
-        } else {
-            // 熱血咬牙線條 (White teeth with outline)
-            p(-2,-10,5,2,outline);
-            p(-1,-10,3,1,'#ffffff'); // 露出白牙咬牙切齒
-        }
-
-        // 熱血奮戰汗滴 (Sweat Drop)
-        p(-7,-16,2,2,'#38bdf8');
-
-        // --- 4. 壯碩軀幹與球衣 (Muscular Torso & Jersey) ---
-        p(-8,-9,16,10,outline);      // 身體大邊框
-        p(-7,-8,14,8,jerseyColor);   // 球衣本體
-        p(-1,-8,2,8,'#ffffff');      // 球衣中央白色條紋 (N/條紋)
-        p(-7,0,14,2,'#0f172a');       // 粗黑皮帶
-
-        // --- 5. 粗壯手臂與厚重手套 (Chunky Limbs & Mitt) ---
-        if(opts.isFielder) {
-            // 守備員手套：深褐厚實棒球手套
-            p(7,-8,7,7,outline);
-            p(8,-7,5,5,opts.isHandling ? '#f59e0b' : '#92400e');
-            p(9,-6,3,3,'#b45309');
-            // 左手插腰/向前握拳
-            p(-9,-7,4,4,outline);
-            p(-8,-6,2,2,'#fcd34d');
-        } else {
-            // 跑者擺臂：雙手握拳大步前衝
-            const armOff = Math.round(stride * 0.8);
-            p(-10,-6 + armOff,4,4,outline);
-            p(-9,-5 + armOff,2,2,'#fcd34d'); // 左拳
-            p(7,-6 - armOff,4,4,outline);
-            p(8,-5 - armOff,2,2,'#fcd34d');  // 右拳
-        }
-
-        // --- 6. 扎實雙腿與厚底釘鞋 (Thick Legs & Heavy Cleats) ---
-        const legStep = Math.round(stride);
-        // 左腿 (白色球褲 + 厚實黑色釘鞋)
-        p(-7,2,5,6 + legStep,outline);
-        p(-6,2,3,4 + legStep,'#f8fafc');
-        p(-8,6 + legStep,6,3,'#1e293b'); // 釘鞋底
-
-        // 右腿
-        p(2,2,5,6 - legStep,outline);
-        p(3,2,3,4 - legStep,'#f8fafc');
-        p(1,6 - legStep,6,3,'#1e293b');
-
+        const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const bob=reduceMotion?0:moving ? Math.round(Math.sin(phase*14)) : Math.round(Math.sin(phase*2)*.6);
+        c.save();c.translate(cx,cy);c.scale(1/X,1/Y);c.imageSmoothingEnabled=false;
+        c.fillStyle='rgba(20,65,44,.24)';c.beginPath();c.ellipse(0,2,w*.38,2.5,0,0,Math.PI*2);c.fill();
+        if (opts.facingLeft) c.scale(-1,1);
+        c.drawImage(characterImage,sx,sy,sw,sh,-w/2,-h+2+bob,w,h);
+        if(opts.state==='out'){c.fillStyle='#dc4545';c.fillRect(-5,-h-3,10,2);}
         c.restore();
     };
-
+    drawPixelBatter = function(c,scale) {
+        drawPixelPlayer(c,181*scale,(bases.home.y-8)*scale,{state:'idle'});
+        c.save();c.translate(181*scale,(bases.home.y-8)*scale);c.scale(1/X,1/Y);
+        c.fillStyle='#b76e39';c.fillRect(-15,-31,2,18);c.fillStyle='#efc68c';c.fillRect(-15,-31,2,9);c.restore();
+    };
     drawFielders = function(scale) {
         const q=generatedQuestions[currentQuestionIdx];
         for(const [key,p] of Object.entries(Object.keys(fieldersState).length?fieldersState:fielders)) {
+            const moving=p.isMoving || p.state==='run';
+            const throwing=throwAnim.active && key===q?.fielderKey;
             drawPixelPlayer(ctx,p.x*scale,p.y*scale,{
-                scale:scale*.78,
-                isFielder:true,
-                isHandling:key===q?.fielderKey,
-                state:p.state||'idle',
-                frame:Math.floor(Date.now()/120)%3
+                isFielder:true,state:throwing?'throw':moving?'run':p.state||'idle'
             });
+        }
+    };
+    drawRunners = function(scale) {
+        for (const runner of fieldRunners) {
+            const moving=runner.animProgress>0 && runner.animProgress<1;
+            const state=runner.taggedOut?'out':moving?(runner.animProgress>.85?'slide':'run'):'idle';
+            const x=(runner.x ?? runner.startX)*scale;
+            const y=(runner.y ?? runner.startY)*scale;
+            drawPixelPlayer(ctx,x,y,{state,isPlayer:runner.isPlayer,facingLeft:moving&&runner.targetX<runner.startX});
+            ctx.save();ctx.translate(x,y);ctx.scale(1/X,1/Y);
+            if (runner.isPlayer) {
+                ctx.fillStyle='#f4c442';ctx.strokeStyle='#8a6920';ctx.lineWidth=.7;
+                ctx.beginPath();ctx.moveTo(-4,-33);ctx.lineTo(4,-33);ctx.lineTo(0,-29);ctx.closePath();ctx.fill();ctx.stroke();
+                ctx.strokeStyle='#f6cf56';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(0,2,10,3,0,0,Math.PI*2);ctx.stroke();
+            }
+            const label=runner.taggedOut?(runner.outLabel||'OUT'):runner.statusLabel;
+            if(label){
+                ctx.font='700 7px "Noto Sans TC",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+                const width=ctx.measureText(label).width+8;
+                ctx.fillStyle=runner.taggedOut?'#ffe6e0':'#ffffffe8';ctx.fillRect(-width/2,-45,width,10);
+                ctx.fillStyle=runner.taggedOut?'#ad3933':'#2b6445';ctx.fillText(label,0,-40);
+            }
+            ctx.restore();
         }
     };
     function drawCatcherShout(scale) {
