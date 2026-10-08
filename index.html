@@ -1958,6 +1958,55 @@
             font-weight: 900 !important;
         }
     </style>
+    <style id="broadcast-layout">
+        /* 2026-10-08: reference-inspired broadcast layout; engine coordinates stay intact. */
+        body { background: #07121b !important; color: #fff; }
+        #gameShell { display: block !important; max-width: 1440px !important; position: relative; padding: 12px !important; }
+        #leftGameColumn { display: block !important; }
+        #fieldStage { width: 100% !important; max-width: none !important; height: auto !important; margin: 0 !important; aspect-ratio: 16 / 10 !important; border: 5px solid #152b3d !important; border-radius: 8px !important; box-shadow: 0 0 0 2px #75a4ac, 0 16px 50px #000; }
+        body > header { background: #0c1e2b !important; border-color: #244152 !important; }
+        #retroScoreboardHud { display: flex !important; position: absolute !important; z-index: 30 !important; }
+        #fieldStage { height: clamp(420px, 70vh, 820px) !important; }
+        #fieldCanvas { position: relative !important; z-index: 0 !important; width: 100% !important; height: calc(100% - 112px) !important; image-rendering: pixelated; filter: saturate(1.55) brightness(1.17); }
+        #fieldStage::after { content: '你是跑壘王!!!'; position: absolute; left: 22px; top: 16px; z-index: 21; font-size: clamp(22px,3.4vw,48px); font-weight: 1000; color: #ffe13b; -webkit-text-stroke: 1px #07121b; text-shadow: 3px 3px #000; pointer-events: none; }
+        #outCounterOverlay { top: 80px !important; left: 22px !important; background: #080e19 !important; border-radius: 2px !important; }
+        #retroScoreboardHud { top: 18px !important; right: 18px !important; transform: scale(1.3); transform-origin: top right; border-radius: 2px !important; border: 3px solid #c8dae1 !important; background: #070b13 !important; }
+        #scorePanel { border-radius: 3px !important; padding: 8px 14px !important; margin-bottom: 10px; background: #0b1e2c !important; }
+        #rightGameColumn { display: block !important; }
+        #coachPanel { position: absolute; top: auto; bottom: auto; margin-top: -122px; left: 27px; right: 27px; height: 104px; z-index: 25; display: grid !important; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 12px; padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+        #coachPanel > div:first-child { grid-column: 1; grid-row: 1 / 3; background: #080d16; border: 3px solid #d2e1e5; padding: 8px 12px; overflow: auto; box-shadow: 3px 3px #000; }
+        #coachPanel > div:first-child > div:first-child { display: none !important; }
+        #coachPanel .sfc-dialogue-box { padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+        #coachPanel .sfc-dialogue-box > div:first-child { margin: 0; padding-bottom: 3px !important; }
+        #situationDesc { font-size: clamp(12px,1.05vw,16px) !important; line-height: 1.5 !important; color: #ffeb78 !important; }
+        #coachPanel > div:nth-child(2) { grid-column: 2; grid-row: 1; margin: 0 !important; padding: 0 !important; border: 0 !important; background: transparent !important; text-align: left; }
+        #targetRunnerText { color: #fff !important; text-shadow: 2px 2px #000; }
+        #optionsContainer { grid-column: 2; grid-row: 2; gap: 10px !important; }
+        #optionsContainer button { border-radius: 2px !important; min-height: 72px !important; padding: 8px 4px !important; background: #080d16 !important; border: 3px solid #46b6ff !important; box-shadow: inset 0 0 0 2px #172f49, 3px 4px #000 !important; }
+        #optionsContainer button:nth-child(2) { border-color: #ffd442 !important; }
+        #optionsContainer button:nth-child(3) { border-color: #ff665d !important; }
+        #optionsContainer button * { color: #fff !important; }
+        #optionsContainer button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+        #optionsContainer button:hover { filter: brightness(1.35); transform: translateY(-2px); }
+        #coachMascotBox { margin-top: 16px; border-radius: 4px !important; background: #10212e !important; }
+        #audioToast { bottom: 118px !important; font-size: 11px !important; padding: 4px !important; }
+        #playEventStatus { bottom: 125px !important; }
+        .tactical-controls { top: 115px !important; }
+        @media(max-width: 700px) {
+            #fieldStage { height: auto !important; aspect-ratio: 1 / 1 !important; }
+            #fieldCanvas { height: 100% !important; }
+            #fieldStage::after { left: 10px; top: 10px; font-size: 24px; }
+            #outCounterOverlay { top: 48px !important; left: 10px !important; }
+            #retroScoreboardHud { transform: scale(.85); top: 8px !important; right: 8px !important; }
+            #coachPanel { position: static; margin: 12px 0 0; height: auto; display: flex !important; gap: 10px; }
+            #coachPanel > div:first-child { max-height: none; }
+            #optionsContainer { display: grid !important; }
+            #optionsContainer button { min-height: 88px !important; }
+            #audioToast { bottom: 8px !important; }
+            #playEventStatus { bottom: 45px !important; }
+            .tactical-controls { top: 88px !important; }
+        }
+    </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden pb-4">
 
@@ -2709,7 +2758,7 @@
 
     <script>
         /* CORE STATES */
-        const APP_VERSION = "v20261006-03";
+        const APP_VERSION = "v20261008-04 BROADCAST";
         let playerJersey = "99";
         let playerName = "王小明";
         let soundEnabled = true;
