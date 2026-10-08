@@ -169,7 +169,7 @@
             }
             const label=runner.taggedOut?(runner.outLabel||'OUT'):runner.statusLabel;
             if(label){
-                ctx.font='700 7px "Noto Sans TC",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+                ctx.font='12px GamePixel,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
                 const width=ctx.measureText(label).width+8;
                 ctx.fillStyle=runner.taggedOut?'#ffe6e0':'#ffffffe8';ctx.fillRect(-width/2,-45,width,10);
                 ctx.fillStyle=runner.taggedOut?'#ad3933':'#2b6445';ctx.fillText(label,0,-40);
@@ -188,7 +188,7 @@
 
         ctx.save();
         ctx.imageSmoothingEnabled = false;
-        ctx.font = `900 ${10.5 * scale}px 'Noto Sans TC', sans-serif`;
+        ctx.font = `${12 * scale}px GamePixel, sans-serif`;
         const textMetrics = ctx.measureText(catcherShoutText);
         const padX = 8 * scale;
         const bW = Math.max(58 * scale, textMetrics.width + padX * 2);
@@ -277,6 +277,7 @@
     };
     resizeCanvas = function(){const width=Math.floor(canvas.parentElement.clientWidth);if(!width)return;canvas.width=800;canvas.height=520;canvas.style.width=width+'px';canvas.style.height=(width*.65)+'px';ctx.imageSmoothingEnabled=false;drawStadium();};
     window.addEventListener('resize',resizeCanvas);
+    document.fonts.ready.then(() => drawStadium());
     resizeCanvas();
 })();
 

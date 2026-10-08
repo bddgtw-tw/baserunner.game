@@ -3391,7 +3391,7 @@
             // 6. 胸前背號或守備代號（精準對齊軀幹位置）
             if (badge) {
                 ctx.fillStyle = isHandling ? "#0f172a" : "#ffffff";
-                ctx.font = `900 ${7.5 * scale}px Inter, Noto Sans TC`;
+                ctx.font = `${7.5 * scale}px GamePixel, sans-serif`;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillText(badge, cx, cy + 2.5 * px);
@@ -3570,13 +3570,13 @@
 
                 // 看板復古字體
                 ctx.fillStyle = bb.fg;
-                ctx.font = `900 ${7.5 * scale}px 'Noto Sans TC', sans-serif`;
+                ctx.font = `${7.5 * scale}px GamePixel, sans-serif`;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillText(bb.text, bb.x + bb.w / 2, bbY + bbH * 0.42);
 
                 // 副標英文字
-                ctx.font = `800 ${4.5 * scale}px 'Press Start 2P', monospace, sans-serif`;
+                ctx.font = `${4.5 * scale}px GamePixel, sans-serif`;
                 ctx.fillStyle = bb.fg === "#ffffff" ? "#fef08a" : "#1e293b";
                 ctx.fillText(bb.sub, bb.x + bb.w / 2, bbY + bbH * 0.78);
             });
@@ -3914,7 +3914,7 @@
             };
             const label = labels[type];
             ctx.fillStyle = "#ffffff";
-            ctx.font = `900 ${11 * scale}px Noto Sans TC`;
+            ctx.font = `${11 * scale}px GamePixel, sans-serif`;
             ctx.textAlign = "center";
             ctx.fillText(label.text, (base.x + label.ox) * scale, (base.y + label.oy) * scale);
         }
@@ -3988,7 +3988,7 @@
                     ctx.imageSmoothingEnabled = false;
 
                     // 測量文字寬度
-                    ctx.font = `900 ${10.5 * scale}px 'Noto Sans TC', sans-serif`;
+                    ctx.font = `${10.5 * scale}px GamePixel, sans-serif`;
                     const textMetrics = ctx.measureText(shoutText);
                     const padX = 8 * scale;
                     const bW = Math.max(58 * scale, textMetrics.width + padX * 2);
@@ -4436,7 +4436,7 @@
                     ctx.fillRect(bx + 1 * scale, by + 1 * scale, bw - 2 * scale, 1.5 * scale);
 
                     // PLAYER 8-bit 文字
-                    ctx.font = `900 ${8.5 * scale}px 'Press Start 2P', monospace, sans-serif`;
+                    ctx.font = `${8.5 * scale}px GamePixel, sans-serif`;
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
                     // 字體黑色立體投影
@@ -4483,7 +4483,7 @@
                 if (runner.taggedOut) {
                     ctx.save();
                     const text = runner.outLabel || "❌ OUT";
-                    ctx.font = `900 ${11 * scale}px 'Noto Sans TC', Inter, sans-serif`;
+                    ctx.font = `${11 * scale}px GamePixel, sans-serif`;
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
                     const tW = ctx.measureText(text).width + 10 * scale;
@@ -4503,7 +4503,7 @@
                     const text = runner.statusLabel;
                     const isWarning = text.includes("塞壘") || text.includes("卡住") || text.includes("佔用");
                     const bounce = isWarning ? Math.sin(Date.now() / 100) * 2 * scale : 0;
-                    ctx.font = `900 ${10.5 * scale}px 'Noto Sans TC', Inter, sans-serif`;
+                    ctx.font = `${10.5 * scale}px GamePixel, sans-serif`;
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
                     const tW = ctx.measureText(text).width + 10 * scale;
@@ -5723,7 +5723,7 @@
             ctx.strokeRect(-bannerW / 2, -bannerH / 2, bannerW, bannerH);
 
             // 左側徽章主文字 (Press Start 2P 街機像素字體)
-            ctx.font = `900 ${10.5 * scale}px 'Press Start 2P', 'Noto Sans TC', sans-serif`;
+            ctx.font = `${10.5 * scale}px GamePixel, sans-serif`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillStyle = "#000000";
@@ -5733,7 +5733,7 @@
 
             // 右側解說文字 (單行清晰排版，絕不擋球)
             const textX = -bannerW / 2 + badgeW + 8 * scale;
-            ctx.font = `900 ${10.5 * scale}px 'Noto Sans TC', Inter, sans-serif`;
+            ctx.font = `${10.5 * scale}px GamePixel, sans-serif`;
             ctx.textAlign = "left";
             ctx.textBaseline = "middle";
             ctx.fillStyle = textAccent;

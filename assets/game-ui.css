@@ -1,6 +1,8 @@
 /* Single presentation layer. Game state, IDs and tactic rules stay in index.html. */
 :root{color-scheme:light;--ink:#24423e;--muted:#647b75;--line:#dbe7df;--paper:#fff;--green:#158066}
-html{scroll-behavior:smooth}body{background:#f5f8f1;color:var(--ink);font-family:'Noto Sans TC',sans-serif;min-height:100vh}
+@font-face{font-family:GamePixel;src:url('fonts/fusion-pixel-12px-proportional-zh_hant.otf.woff2') format('woff2');font-style:normal;font-weight:100 900;font-display:swap}
+html{scroll-behavior:smooth}body{background:#f5f8f1;color:var(--ink);font-family:GamePixel,sans-serif;min-height:100vh}
+body,body :not(i):not([class*="fa-"]){font-family:GamePixel,sans-serif!important;font-synthesis:none;font-weight:400!important}
 *{box-sizing:border-box}button,input,select{font-family:inherit}button{touch-action:manipulation;min-height:44px}button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f2b541;outline-offset:3px}.hidden,[hidden]{display:none!important}
 .text-2xs{font-size:11px}.glass-panel{background:#fff;border:1px solid var(--line);box-shadow:0 4px 18px #2f65400a}
 /* Convert former dark utility surfaces, including generated coach and matrix cards. */
