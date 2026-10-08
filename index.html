@@ -1959,45 +1959,200 @@
         }
     </style>
     <style id="broadcast-layout">
-        /* 2026-10-08: reference-inspired broadcast layout; engine coordinates stay intact. */
-        body { background: #07121b !important; color: #fff; }
-        #gameShell { display: block !important; max-width: 1440px !important; position: relative; padding: 12px !important; }
+        /* 2026-10-08: Sunny Daytime Park Theme & Center Field Clear View */
+        body { 
+            background: linear-gradient(180deg, #ecfdf5 0%, #f0fdf4 40%, #e0f2fe 100%) !important; 
+            color: #0f172a !important; 
+        }
+        #gameShell { 
+            display: block !important; 
+            max-width: 1440px !important; 
+            position: relative; 
+            padding: 12px !important; 
+        }
         #leftGameColumn { display: block !important; }
-        #fieldStage { width: 100% !important; max-width: none !important; height: auto !important; margin: 0 !important; aspect-ratio: 16 / 10 !important; border: 5px solid #152b3d !important; border-radius: 8px !important; box-shadow: 0 0 0 2px #75a4ac, 0 16px 50px #000; }
-        body > header { background: #0c1e2b !important; border-color: #244152 !important; }
-        #retroScoreboardHud { display: flex !important; position: absolute !important; z-index: 30 !important; }
-        #fieldStage { height: clamp(420px, 70vh, 820px) !important; }
-        #fieldCanvas { position: relative !important; z-index: 0 !important; width: 100% !important; height: calc(100% - 112px) !important; image-rendering: pixelated; filter: saturate(1.55) brightness(1.17); }
-        #fieldStage::after { content: '你是跑壘王!!!'; position: absolute; left: 22px; top: 16px; z-index: 21; font-size: clamp(22px,3.4vw,48px); font-weight: 1000; color: #ffe13b; -webkit-text-stroke: 1px #07121b; text-shadow: 3px 3px #000; pointer-events: none; }
-        #outCounterOverlay { top: 80px !important; left: 22px !important; background: #080e19 !important; border-radius: 2px !important; }
-        #retroScoreboardHud { top: 18px !important; right: 18px !important; transform: scale(1.3); transform-origin: top right; border-radius: 2px !important; border: 3px solid #c8dae1 !important; background: #070b13 !important; }
-        #scorePanel { border-radius: 3px !important; padding: 8px 14px !important; margin-bottom: 10px; background: #0b1e2c !important; }
+        #fieldStage { 
+            width: 100% !important; 
+            max-width: none !important; 
+            height: auto !important; 
+            margin: 0 !important; 
+            aspect-ratio: 16 / 10 !important; 
+            border: 4px solid #38bdf8 !important; 
+            border-radius: 12px !important; 
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15) !important; 
+            background: #0f172a !important;
+        }
+        body > header { 
+            background: rgba(255, 255, 255, 0.95) !important; 
+            border-bottom: 2px solid #cbd5e1 !important; 
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06) !important;
+        }
+        body > header h1 {
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
+        }
+        #fieldStage { height: clamp(440px, 72vh, 840px) !important; }
+        #fieldCanvas { 
+            position: relative !important; 
+            z-index: 0 !important; 
+            width: 100% !important; 
+            height: calc(100% - 116px) !important; 
+            image-rendering: pixelated; 
+            filter: saturate(1.2) brightness(1.08); 
+        }
+        /* 移除遮擋中外野的浮動大字，改為精緻左上徽章 */
+        #fieldStage::after { 
+            display: none !important;
+        }
+        #outCounterOverlay { 
+            top: 14px !important; 
+            left: 14px !important; 
+            background: #ffffff !important; 
+            color: #0f172a !important;
+            border: 2px solid #0f172a !important;
+            border-radius: 6px !important; 
+            box-shadow: 2px 2px 0px #0f172a !important;
+        }
+        #outCounterOverlay #outCountText {
+            color: #dc2626 !important;
+        }
+        #retroScoreboardHud { 
+            top: 12px !important; 
+            right: 14px !important; 
+            transform: scale(1.15); 
+            transform-origin: top right; 
+            border-radius: 6px !important; 
+            border: 2px solid #0f172a !important; 
+            background: #ffffff !important; 
+            color: #0f172a !important;
+            box-shadow: 2px 2px 0px #0f172a !important;
+        }
+        #retroScoreboardHud .sfc-hud-text {
+            color: #b45309 !important;
+        }
+        #retroScoreboardHud .sfc-hud-score {
+            color: #047857 !important;
+        }
+        #scorePanel { 
+            border-radius: 8px !important; 
+            padding: 8px 14px !important; 
+            margin-bottom: 10px; 
+            background: #ffffff !important; 
+            border: 2px solid #cbd5e1 !important;
+            color: #0f172a !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+        }
+        #scorePanel span {
+            color: #1e293b !important;
+        }
+        #scoreText { color: #d97706 !important; }
+        #streakText { color: #059669 !important; }
         #rightGameColumn { display: block !important; }
-        #coachPanel { position: absolute; top: auto; bottom: auto; margin-top: -122px; left: 27px; right: 27px; height: 104px; z-index: 25; display: grid !important; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 12px; padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
-        #coachPanel > div:first-child { grid-column: 1; grid-row: 1 / 3; background: #080d16; border: 3px solid #d2e1e5; padding: 8px 12px; overflow: auto; box-shadow: 3px 3px #000; }
+        #coachPanel { 
+            position: absolute; 
+            top: auto; 
+            bottom: auto; 
+            margin-top: -124px; 
+            left: 27px; 
+            right: 27px; 
+            height: 108px; 
+            z-index: 25; 
+            display: grid !important; 
+            grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); 
+            gap: 12px; 
+            padding: 0 !important; 
+            border: 0 !important; 
+            background: transparent !important; 
+            box-shadow: none !important; 
+        }
+        #coachPanel > div:first-child { 
+            grid-column: 1; 
+            grid-row: 1 / 3; 
+            background: #ffffff; 
+            border: 3px solid #0f172a; 
+            border-radius: 8px;
+            padding: 8px 12px; 
+            overflow: auto; 
+            box-shadow: 3px 3px 0px #0f172a; 
+        }
         #coachPanel > div:first-child > div:first-child { display: none !important; }
-        #coachPanel .sfc-dialogue-box { padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
-        #coachPanel .sfc-dialogue-box > div:first-child { margin: 0; padding-bottom: 3px !important; }
-        #situationDesc { font-size: clamp(12px,1.05vw,16px) !important; line-height: 1.5 !important; color: #ffeb78 !important; }
-        #coachPanel > div:nth-child(2) { grid-column: 2; grid-row: 1; margin: 0 !important; padding: 0 !important; border: 0 !important; background: transparent !important; text-align: left; }
-        #targetRunnerText { color: #fff !important; text-shadow: 2px 2px #000; }
-        #optionsContainer { grid-column: 2; grid-row: 2; gap: 10px !important; }
-        #postDecisionActionGroup { position: absolute; top: 116px; right: 0; width: 60%; }
-        #optionsContainer button { border-radius: 2px !important; min-height: 72px !important; padding: 8px 4px !important; background: #080d16 !important; border: 3px solid #46b6ff !important; box-shadow: inset 0 0 0 2px #172f49, 3px 4px #000 !important; }
-        #optionsContainer button:nth-child(2) { border-color: #ffd442 !important; }
-        #optionsContainer button:nth-child(3) { border-color: #ff665d !important; }
-        #optionsContainer button * { color: #fff !important; }
-        #optionsContainer button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
-        #optionsContainer button:hover { filter: brightness(1.35); transform: translateY(-2px); }
-        #coachMascotBox { margin-top: 16px; border-radius: 4px !important; background: #10212e !important; }
-        #audioToast { bottom: 118px !important; font-size: 11px !important; padding: 4px !important; }
-        #playEventStatus { bottom: 125px !important; }
-        .tactical-controls { top: 115px !important; }
+        #coachPanel .sfc-dialogue-box { 
+            padding: 0 !important; 
+            border: 0 !important; 
+            background: transparent !important; 
+            box-shadow: none !important; 
+        }
+        #coachPanel .sfc-dialogue-box > div:first-child { 
+            margin: 0; 
+            padding-bottom: 3px !important; 
+        }
+        #situationDesc { 
+            font-size: clamp(12px,1.05vw,16px) !important; 
+            line-height: 1.5 !important; 
+            color: #1e293b !important; 
+            font-weight: 800 !important;
+        }
+        #coachPanel > div:nth-child(2) { 
+            grid-column: 2; 
+            grid-row: 1; 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            border: 0 !important; 
+            background: transparent !important; 
+            text-align: left; 
+        }
+        #targetRunnerText { 
+            color: #0f172a !important; 
+            font-weight: 900 !important;
+        }
+        #optionsContainer { 
+            grid-column: 2; 
+            grid-row: 2; 
+            gap: 10px !important; 
+        }
+        #postDecisionActionGroup { 
+            position: absolute; 
+            top: 116px; 
+            right: 0; 
+            width: 60%; 
+        }
+        #optionsContainer button { 
+            border-radius: 8px !important; 
+            min-height: 72px !important; 
+            padding: 8px 4px !important; 
+            background: #ffffff !important; 
+            border: 3px solid #2563eb !important; 
+            box-shadow: 2px 3px 0px #0f172a !important; 
+            color: #0f172a !important;
+        }
+        #optionsContainer button:nth-child(2) { border-color: #d97706 !important; }
+        #optionsContainer button:nth-child(3) { border-color: #dc2626 !important; }
+        #optionsContainer button * { color: #0f172a !important; font-weight: 900 !important; }
+        #optionsContainer button:hover { 
+            filter: brightness(1.08); 
+            transform: translateY(-2px); 
+        }
+        #coachMascotBox { 
+            margin-top: 16px; 
+            border-radius: 8px !important; 
+            background: #ffffff !important; 
+            border: 2px solid #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+        #coachFeedback {
+            color: #334155 !important;
+        }
+        #audioToast { 
+            bottom: 122px !important; 
+            font-size: 11px !important; 
+            padding: 4px !important; 
+        }
+        #playEventStatus { bottom: 128px !important; }
+        .tactical-controls { top: 118px !important; }
         @media(max-width: 700px) {
             #fieldStage { height: auto !important; aspect-ratio: 1 / 1 !important; }
             #fieldCanvas { height: 100% !important; }
-            #fieldStage::after { left: 10px; top: 10px; font-size: 24px; }
-            #outCounterOverlay { top: 48px !important; left: 10px !important; }
+            #outCounterOverlay { top: 8px !important; left: 8px !important; }
             #retroScoreboardHud { transform: scale(.85); top: 8px !important; right: 8px !important; }
             #coachPanel { position: static; margin: 12px 0 0; height: auto; display: flex !important; gap: 10px; }
             #coachPanel > div:first-child { max-height: none; }
@@ -7811,24 +7966,59 @@
     </style>
     <style id="compact-field-hud">
         #fieldStage { position:relative !important; }
-        #broadcastStatusBar { position:absolute; top:10px; left:10px; right:10px; z-index:35; display:flex; align-items:center; gap:10px; padding:8px 10px; min-height:0; background:#071923e8; border:1px solid #7193a8; border-radius:10px; box-shadow:0 3px 8px #0005; }
-        #broadcastStatusBar #scorePanel { width:auto !important; flex:1; padding:0 !important; min-height:0 !important; border:0 !important; background:transparent !important; box-shadow:none !important; }
-        #broadcastStatusBar #outCounterOverlay { padding:4px 6px !important; font-size:11px; border:0 !important; box-shadow:none !important; }
-        #broadcastStatusBar #retroScoreboardHud { padding:4px !important; border:0 !important; background:transparent !important; box-shadow:none !important; }
+        #broadcastStatusBar { 
+            position:absolute; 
+            top:8px; 
+            left:8px; 
+            right:8px; 
+            z-index:35; 
+            display:flex; 
+            align-items:center; 
+            gap:8px; 
+            padding:6px 10px; 
+            min-height:0; 
+            background:rgba(255, 255, 255, 0.94); 
+            border:2px solid #0f172a; 
+            border-radius:10px; 
+            box-shadow:0 4px 12px rgba(15, 23, 42, 0.12); 
+            color:#0f172a;
+        }
+        #broadcastStatusBar #scorePanel { 
+            width:auto !important; 
+            flex:1; 
+            padding:0 !important; 
+            min-height:0 !important; 
+            border:0 !important; 
+            background:transparent !important; 
+            box-shadow:none !important; 
+        }
+        #broadcastStatusBar #outCounterOverlay { 
+            padding:4px 6px !important; 
+            font-size:11px; 
+            border:1.5px solid #0f172a !important; 
+            background:#fef2f2 !important;
+            box-shadow:none !important; 
+        }
+        #broadcastStatusBar #retroScoreboardHud { 
+            padding:4px !important; 
+            border:1.5px solid #0f172a !important; 
+            background:#f8fafc !important; 
+            box-shadow:none !important; 
+        }
         #broadcastStatusBar #scorePanel > div:last-child { gap:12px !important; }
         #broadcastStatusBar #scorePanel .text-right { padding:0 !important; }
         #broadcastStatusBar #scoreText,#broadcastStatusBar #streakText { font-size:16px !important; }
         #broadcastStatusBar #progressBar { gap:3px !important; }
         #broadcastStatusBar #progressBar > * { width:7px !important; height:7px !important; }
         #broadcastStatusBar #scorePanel > div:first-child > span { display:none; }
-        #broadcastStatusBar > div:nth-last-child(2) { position:absolute !important; top:76px; right:0; }
+        #broadcastStatusBar > div:nth-last-child(2) { position:absolute !important; top:72px; right:0; }
         @media(max-width:700px){
-            #broadcastStatusBar { top:4px; left:4px; right:4px; gap:4px; padding:5px; border-radius:6px; }
+            #broadcastStatusBar { top:4px; left:4px; right:4px; gap:4px; padding:4px 6px; border-radius:6px; }
             #broadcastStatusBar #scorePanel > div:last-child .text-2xs { display:none; }
             #broadcastStatusBar #scorePanel > div:last-child { gap:6px !important; }
             #broadcastStatusBar #outDots { display:none; }
             #broadcastStatusBar #retroScoreboardHud { font-size:9px; }
-            #broadcastStatusBar > div:nth-last-child(2) { top:60px; }
+            #broadcastStatusBar > div:nth-last-child(2) { top:56px; }
         }
     </style>
     <script>
