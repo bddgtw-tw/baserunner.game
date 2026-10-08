@@ -66,6 +66,9 @@
     characterImage.src = 'assets/characters-approved.png';
     characterImage.onload = () => drawStadium();
     const batterImage = new Image();
+    const plateCrewImage = new Image();
+    plateCrewImage.src = 'assets/plate-crew-v2.png';
+    plateCrewImage.onload = () => drawStadium();
     batterImage.src = 'assets/batter-ready-v2.png';
     batterImage.onload = () => drawStadium();
     let facingQuestion = null;
@@ -83,6 +86,16 @@
         [30,525,413,455], [516,566,474,416], [1071,532,447,455]
     ];
     drawPixelPlayer = function(c,cx,cy,opts={}) {
+        if ((opts.isCatcher || opts.isUmpire) && plateCrewImage.complete && plateCrewImage.naturalWidth) {
+            const crop=opts.isUmpire?[994,69,707,778]:[89,178,786,669];
+            const [sx,sy,sw,sh]=crop,unit=28/778;
+            const w=sw*unit,h=sh*unit;
+            const bob=window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:Math.sin(Date.now()/650)*.35;
+            c.save();c.translate(cx,cy);c.scale(1/X,1/Y);c.imageSmoothingEnabled=false;
+            c.fillStyle='rgba(20,65,44,.24)';c.beginPath();c.ellipse(0,2,w*.32,2,0,0,Math.PI*2);c.fill();
+            c.drawImage(plateCrewImage,sx,sy,sw,sh,-w/2,-h+2+bob,w,h);
+            c.restore();return;
+        }
         if (!characterImage.complete || !characterImage.naturalWidth) return;
         const moving=opts.state==='run' || opts.state==='moving';
         let index=opts.isFielder ? 3 : 0;
@@ -99,30 +112,7 @@
         c.save();c.translate(cx,cy);c.scale(1/X,1/Y);c.imageSmoothingEnabled=false;
         c.fillStyle='rgba(20,65,44,.24)';c.beginPath();c.ellipse(0,2,w*.38,2.5,0,0,Math.PI*2);c.fill();
         if (opts.facingLeft) c.scale(-1,1);
-        if(opts.isUmpire) c.filter='grayscale(1) brightness(.55)';
         c.drawImage(characterImage,sx,sy,sw,sh,-w/2,-h+2+bob,w,h);
-        c.filter='none';
-        if (opts.isCatcher || opts.isUmpire) {
-            // Equipment follows the sprite without inheriting field perspective.
-            const gearY = -h + 2 + bob;
-            c.fillStyle='#163d35';
-            c.fillRect(-7,gearY+7,14,10);
-            c.fillStyle='#a9c8b0';
-            c.fillRect(-7,gearY+7,14,1);
-            c.fillRect(-7,gearY+11,14,1);
-            c.fillRect(-7,gearY+15,14,1);
-            c.fillRect(-7,gearY+7,1,10);
-            c.fillRect(-1,gearY+7,1,10);
-            c.fillRect(6,gearY+7,1,10);
-            c.fillStyle='#163d35';
-            c.fillRect(-5,gearY+18,10,5);
-            c.fillRect(-8,gearY+23,5,4);
-            c.fillRect(4,gearY+23,5,4);
-            c.fillStyle='#8eaf9c';
-            c.fillRect(-4,gearY+19,8,1);
-            c.fillRect(-7,gearY+24,3,1);
-            c.fillRect(5,gearY+24,3,1);
-        }
         if(opts.state==='out'){c.fillStyle='#dc4545';c.fillRect(-5,-h-3,10,2);}
         c.restore();
     };
@@ -139,7 +129,7 @@
     };
     drawFielders = function(scale) {
         // Plate umpire stays behind the catcher, outside the defensive roster.
-        drawPixelPlayer(ctx,212*scale,379*scale,{isFielder:true,isUmpire:true,state:'idle',facingLeft:false});
+        drawPixelPlayer(ctx,217*scale,374*scale,{isFielder:true,isUmpire:true,state:'idle',facingLeft:false});
         const q=generatedQuestions[currentQuestionIdx];
         arrangeDefenderFacings(q);
         const players=Object.keys(fieldersState).length?fieldersState:fielders;
