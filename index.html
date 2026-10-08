@@ -1511,7 +1511,7 @@
                 else if(action==='B') {move(0,640,0,.28);move(640,480,.28,.24);move(1120,480,.24,.35);}
                 let arrival=action==='A'?850:Infinity;
                 let returnAt=action==='C'?0:Infinity;
-                if(caught && !inningEnd) {
+                if(caught && !inningEnd && !batter) {
                     if(tag) {move(touchAt,850,0,1);arrival=touchAt+850;}
                     else if(action!=='C') {
                         const fraction=action==='A'?1:.35;
@@ -1524,15 +1524,17 @@
                     move(secureAt+650,850,0,1);arrival=secureAt+1500;
                 }
                 const advances=seg.some(x=>x.to===1) && (!caught || tag || action==='A');
-                const blocked=advances && next<=3 && occupied.includes(next) && !isForced(next) && !tag;
+                const retired=batter && (caught || infieldFly);
+                if(retired) arrival=Infinity;
+                const blocked=!retired && advances && next<=3 && occupied.includes(next) && !isForced(next) && !tag;
                 if(blocked) {seg.forEach(x=>{x.to=Math.min(x.to,.65);x.from=Math.min(x.from,.65);});arrival=Infinity;}
-                runners.push({base,next,action,isPlayer,batter,forced,tag,blocked,segments:seg,arrival,returnAt});
+                runners.push({base,next,action,isPlayer,batter,retired,forced,tag,blocked,segments:seg,arrival,returnAt});
             }
             for(const base of occupied) {
                 const action=base===q.playerBase?choice: q.outs===2?'A': !airborne?(isForced(base)||q.batType==='clean_hit'?'A':'C'): base===3 && q.hitDepth==='深遠'?'C': q.hitDirection==='外野'?'B':'C';
                 addRunner(base,action,base===q.playerBase);
             }
-            if(!caught && !infieldFly) addRunner(0,'A',false,true);
+            addRunner(0,'A',false,true);
             const player=runners.find(r=>r.isPlayer);
             const appeal=caught && !inningEnd && player.action!=='C';
             const targetBase=appeal?q.playerBase:(force || player.tag || player.arrival<Infinity || player.blocked)?q.playerBase+1:1;
@@ -1629,16 +1631,17 @@
                     const runner=fieldRunners.find(x=>r.batter?x.isBatter:x.base===r.base&&!x.isBatter);
                     if(!runner)continue;
                     const from=r.base===0?bases.home:getBasePosition(r.base),to=getBasePosition(r.next);
-                    const effective=plan.inningEnd?Math.min(t,plan.secureAt):r.isPlayer&&plan.physicalResult==='OUT'?Math.min(t,plan.retireAt):t;
+                    const batterOutAt=plan.infieldFly?600:plan.secureAt;
+                    const effective=r.retired?Math.min(t,batterOutAt):plan.inningEnd?Math.min(t,plan.secureAt):r.isPlayer&&plan.physicalResult==='OUT'?Math.min(t,plan.retireAt):t;
                     let fraction=tacticalFraction(r,effective);
                     const ahead=plan.runners.find(x=>x.base===r.next&&!x.batter);
-                    const trafficBlocked=!plan.appeal&&!plan.inningEnd&&ahead&&!ahead.tag&&tacticalFraction(ahead,Math.min(t,plan.retireAt))<.25&&fraction>.65;
+                    const trafficBlocked=!r.retired&&!plan.appeal&&!plan.inningEnd&&ahead&&!ahead.tag&&tacticalFraction(ahead,Math.min(t,plan.retireAt))<.25&&fraction>.65;
                     if(trafficBlocked)fraction=.65;
                     runner.x=from.x+(to.x-from.x)*fraction;runner.y=from.y+(to.y-from.y)*fraction;
                     const segment=r.segments.find(s=>effective>=s.at&&effective<s.end);
                     runner.animProgress=segment&&!trafficBlocked?(effective-segment.at)/(segment.end-segment.at):1;
                     runner.startX=from.x;runner.startY=from.y;runner.targetX=to.x;runner.targetY=to.y;
-                    runner.taggedOut=r.isPlayer&&plan.physicalResult==='OUT'&&t>=plan.retireAt;
+                    runner.taggedOut=r.retired&&t>=batterOutAt || r.isPlayer&&plan.physicalResult==='OUT'&&t>=plan.retireAt;
                     runner.statusLabel=runner.taggedOut?'OUT 🔴':(trafficBlocked||r.blocked&&fraction>=.65)?'⚠️ 塞壘卡住！停住':t>=plan.finalAt&&r.isPlayer?plan.physicalText:r.tag&&t<plan.touchAt?'踩壘等碰球':r.action==='B'&&t<plan.secureAt?'離壘觀察 👀':null;
                     runner.statusColor=runner.taggedOut?'#f87171':r.blocked?'#facc15':'#6ee7b7';
                 }
@@ -1655,7 +1658,7 @@
             requestAnimationFrame(frame);return plan;
         }
         function finishTacticalPlay(q,outcome,plan){
-            currentVisualOccupiedBases=plan.inningEnd?[]:plan.runners.filter(r=>!(r.isPlayer&&plan.physicalResult==='OUT')).map(r=>{const f=tacticalFraction(r,plan.finalAt);return f===0?r.base:f===1?r.next:null;}).filter(b=>b>=1&&b<=3);
+            currentVisualOccupiedBases=plan.inningEnd?[]:plan.runners.filter(r=>!r.retired&&!(r.isPlayer&&plan.physicalResult==='OUT')).map(r=>{const f=tacticalFraction(r,plan.finalAt);return f===0?r.base:f===1?r.next:null;}).filter(b=>b>=1&&b<=3);
             currentVisualOccupiedBases=[...new Set(currentVisualOccupiedBases)];
             const baseText=document.getElementById('baseStatusText');
             if(baseText)baseText.innerText=plan.physicalText+'｜'+describeOccupiedBases(currentVisualOccupiedBases);
@@ -1671,7 +1674,7 @@
         function drawTacticalVisual(scale){
             if(!tacticalVisual)return;
             const v=tacticalVisual;
-            if(v.ball&&!throwAnim.active){ctx.fillStyle='#0f172a';ctx.fillRect((v.x-4)*scale,(v.y-4)*scale,8*scale,8*scale);ctx.fillStyle='#ffffff';ctx.fillRect((v.x-3)*scale,(v.y-3)*scale,6*scale,6*scale);ctx.fillStyle='#dc2626';ctx.fillRect(v.x*scale,(v.y-2)*scale,2*scale,2*scale);}
+            if(v.ball&&!throwAnim.active) drawBaseballBody(v.x*scale,v.y*scale,4*scale,true);
             if(v.alert){const f=fieldersState[v.alertKey];if(!f)return;const x=(f.x+12)*scale,y=(f.y-29)*scale;ctx.fillStyle='#0f172a';ctx.fillRect(x-2*scale,y-2*scale,11*scale,23*scale);ctx.fillStyle='#facc15';ctx.fillRect(x,y,7*scale,12*scale);ctx.fillRect(x+2*scale,y+15*scale,4*scale,4*scale);}
         }
 

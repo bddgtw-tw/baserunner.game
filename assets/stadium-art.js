@@ -104,6 +104,7 @@
         c.restore();
     };
     drawPixelBatter = function(c,scale) {
+        if (tacticalVisual) return;
         if (!batterImage.complete || !batterImage.naturalWidth) return;
         // Helmet-to-feet height matches the other players; bat adds height above it.
         const unit=28/927,w=939*unit,h=1115*unit;
