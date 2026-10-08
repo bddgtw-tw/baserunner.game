@@ -67,7 +67,7 @@
     characterImage.onload = () => drawStadium();
     const batterImage = new Image();
     const plateCrewImage = new Image();
-    plateCrewImage.src = 'assets/plate-crew-v2.png';
+    plateCrewImage.src = 'assets/plate-crew-back-v3.png';
     plateCrewImage.onload = () => drawStadium();
     batterImage.src = 'assets/batter-ready-v2.png';
     batterImage.onload = () => drawStadium();
@@ -87,8 +87,8 @@
     ];
     drawPixelPlayer = function(c,cx,cy,opts={}) {
         if ((opts.isCatcher || opts.isUmpire) && plateCrewImage.complete && plateCrewImage.naturalWidth) {
-            const crop=opts.isUmpire?[994,69,707,778]:[89,178,786,669];
-            const [sx,sy,sw,sh]=crop,unit=28/778;
+            const crop=opts.isUmpire?[990,68,745,783]:[120,197,718,654];
+            const [sx,sy,sw,sh]=crop,unit=28/783;
             const w=sw*unit,h=sh*unit;
             const bob=window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:Math.sin(Date.now()/650)*.35;
             c.save();c.translate(cx,cy);c.scale(1/X,1/Y);c.imageSmoothingEnabled=false;
