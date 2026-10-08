@@ -16,8 +16,9 @@
 #resetFieldBtn{background:#16795f;color:#fff;padding:8px 14px;border-radius:6px;min-height:44px;white-space:nowrap}
 #fieldStage:has(#fieldResetControls:not(.hidden)) #playEventStatus{bottom:76px!important}
 @media(max-width:600px){#fieldResetControls{bottom:6px;left:6px;right:6px;padding:4px;font-size:10px}#resetFieldBtn{padding:6px 10px}#retroScoreboardHud{top:6px!important;right:6px!important;padding:4px!important}}
-html{scroll-behavior:smooth}body{background:#f5f8f1;color:var(--ink);font-family:GamePixel,sans-serif;min-height:100vh}
-body,body :not(i):not([class*="fa-"]){font-family:GamePixel,sans-serif!important;font-synthesis:none;font-weight:400!important}
+html{scroll-behavior:smooth}body{background:#f5f8f1;color:var(--ink);font-family:'Noto Sans TC',sans-serif;min-height:100vh}
+body :not(i):not([class*="fa-"]){font-family:'Noto Sans TC',sans-serif!important}
+#fieldStage,#fieldStage :not(i):not([class*="fa-"]){font-family:GamePixel,sans-serif!important;font-synthesis:none;font-weight:400!important}
 *{box-sizing:border-box}button,input,select{font-family:inherit}button{touch-action:manipulation;min-height:44px}button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f2b541;outline-offset:3px}.hidden,[hidden]{display:none!important}
 .text-2xs{font-size:11px}.glass-panel{background:#fff;border:1px solid var(--line);box-shadow:0 4px 18px #2f65400a}
 /* Convert former dark utility surfaces, including generated coach and matrix cards. */
