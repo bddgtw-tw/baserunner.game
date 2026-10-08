@@ -7760,5 +7760,90 @@
             }
         });
 </script>
+    <script>
+        // UI-only relocation preserves existing IDs, listeners and game state.
+        const broadcastBar = document.createElement('div');
+        broadcastBar.id = 'broadcastStatusBar';
+        const stage = document.getElementById('fieldStage');
+        if (stage) {
+            stage.before(broadcastBar);
+            const outOverlay = document.getElementById('outCounterOverlay');
+            const hitBadgeParent = document.getElementById('hitTypeBadge')?.parentElement;
+            const retroHud = document.getElementById('retroScoreboardHud');
+            if (outOverlay) broadcastBar.append(outOverlay);
+            if (hitBadgeParent) broadcastBar.append(hitBadgeParent);
+            if (retroHud) broadcastBar.append(retroHud);
+
+            const tacticalDrawer = document.createElement('details');
+            tacticalDrawer.id = 'tacticalDrawer';
+            const tacticalSummary = document.createElement('summary');
+            tacticalSummary.textContent = '教練工具・同題守備演練';
+            const tacticalControls = document.querySelector('.tactical-controls');
+            if (tacticalControls) {
+                tacticalDrawer.append(tacticalSummary, tacticalControls);
+                const coachPanel = document.getElementById('coachPanel');
+                if (coachPanel) coachPanel.append(tacticalDrawer);
+            }
+        }
+    </script>
+    <style>
+        #retroScoreboardHud [hidden] { display:none !important; }
+        #fieldStage { aspect-ratio:auto !important; }
+        #fieldCanvas { aspect-ratio:20/13 !important; height:auto !important; }
+        #tacticalDrawer {
+            margin-top: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            background: rgba(15, 23, 42, 0.6);
+            font-size: 0.82rem;
+        }
+        #tacticalDrawer summary {
+            cursor: pointer;
+            font-weight: 700;
+            color: #38bdf8;
+            user-select: none;
+        }
+        #tacticalDrawer .tactical-controls {
+            position: static !important;
+            margin-top: 0.5rem;
+        }
+    </style>
+    <style id="compact-field-hud">
+        #fieldStage { position:relative !important; }
+        #broadcastStatusBar { position:absolute; top:10px; left:10px; right:10px; z-index:35; display:flex; align-items:center; gap:10px; padding:8px 10px; min-height:0; background:#071923e8; border:1px solid #7193a8; border-radius:10px; box-shadow:0 3px 8px #0005; }
+        #broadcastStatusBar #scorePanel { width:auto !important; flex:1; padding:0 !important; min-height:0 !important; border:0 !important; background:transparent !important; box-shadow:none !important; }
+        #broadcastStatusBar #outCounterOverlay { padding:4px 6px !important; font-size:11px; border:0 !important; box-shadow:none !important; }
+        #broadcastStatusBar #retroScoreboardHud { padding:4px !important; border:0 !important; background:transparent !important; box-shadow:none !important; }
+        #broadcastStatusBar #scorePanel > div:last-child { gap:12px !important; }
+        #broadcastStatusBar #scorePanel .text-right { padding:0 !important; }
+        #broadcastStatusBar #scoreText,#broadcastStatusBar #streakText { font-size:16px !important; }
+        #broadcastStatusBar #progressBar { gap:3px !important; }
+        #broadcastStatusBar #progressBar > * { width:7px !important; height:7px !important; }
+        #broadcastStatusBar #scorePanel > div:first-child > span { display:none; }
+        #broadcastStatusBar > div:nth-last-child(2) { position:absolute !important; top:76px; right:0; }
+        @media(max-width:700px){
+            #broadcastStatusBar { top:4px; left:4px; right:4px; gap:4px; padding:5px; border-radius:6px; }
+            #broadcastStatusBar #scorePanel > div:last-child .text-2xs { display:none; }
+            #broadcastStatusBar #scorePanel > div:last-child { gap:6px !important; }
+            #broadcastStatusBar #outDots { display:none; }
+            #broadcastStatusBar #retroScoreboardHud { font-size:9px; }
+            #broadcastStatusBar > div:nth-last-child(2) { top:60px; }
+        }
+    </style>
+    <script>
+        const compactHud = document.getElementById('broadcastStatusBar');
+        const stageElem = document.getElementById('fieldStage');
+        const scoreElem = document.getElementById('scorePanel');
+        if (compactHud && stageElem) {
+            stageElem.prepend(compactHud);
+            if (scoreElem) compactHud.prepend(scoreElem);
+        }
+        const b1 = document.getElementById('hudBall1');
+        if (b1 && b1.parentElement) b1.parentElement.hidden = true;
+        const s1 = document.getElementById('hudStrike1');
+        if (s1 && s1.parentElement) s1.parentElement.hidden = true;
+    </script>
+    <script src="assets/stadium-art.js"></script>
 </body>
 </html>
